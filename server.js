@@ -11,9 +11,9 @@ const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
+const dataDir = path.join(__dirname, 'data');
 const dbFile = path.join(dataDir, 'db.json');
-const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, 'public', 'uploads');
+const uploadDir = path.join(__dirname, 'public', 'uploads');
 
 fs.mkdirSync(dataDir, { recursive: true });
 fs.mkdirSync(uploadDir, { recursive: true });

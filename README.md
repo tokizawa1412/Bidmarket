@@ -21,6 +21,6 @@ demo / 1234
 
 ---
 
-## Render Ready
+## Sidebar Social Render Ready
 
-ดูวิธี Deploy ได้ที่ `DEPLOY_RENDER.md`
+รวมแถบซ้าย, รายการที่สนใจ, สนทนา, โปรไฟล์, Wallet แบบละเอียด และพร้อม Deploy Render Free แล้ว
