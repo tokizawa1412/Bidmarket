@@ -17,3 +17,10 @@ http://localhost:3000
 
 บัญชี Admin:
 demo / 1234
+
+
+---
+
+## Render Ready
+
+ดูวิธี Deploy ได้ที่ `DEPLOY_RENDER.md`
