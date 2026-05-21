@@ -40,14 +40,71 @@ body{
 @media(max-width:980px){.appShell{grid-template-columns:1fr}.leftSidebar{position:static}.chatLayout{grid-template-columns:1fr}.walletStats{grid-template-columns:1fr}}
 </style>
 
+
+<style id="sidebar-fixed-css">
+body{
+  background:
+    linear-gradient(135deg, rgba(8,13,25,.92), rgba(31,41,55,.74)),
+    url("https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?q=80&w=1800&auto=format&fit=crop") center/cover fixed !important;
+}
+.container{max-width:1280px!important}
+#authArea{display:flex;align-items:center;gap:10px}
+.userChip{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:8px 12px;border-radius:999px;color:#fff}
+.userChip img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #f3d28b}
+.appShellFixed{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start}
+#leftUserSidebar{position:sticky;top:150px;background:rgba(255,255,255,.96);border:1px solid rgba(243,210,139,.55);border-radius:28px;box-shadow:0 24px 70px rgba(0,0,0,.18);overflow:hidden;display:block!important}
+.sideProfile{padding:22px;text-align:center;background:linear-gradient(135deg,#111827,#1f2937);color:white}
+.avatar{width:92px;height:92px;border-radius:50%;object-fit:cover;border:3px solid #f3d28b;background:#e5e7eb}
+.sideMenu{padding:12px}
+.sideMenu button{width:100%;margin:6px 0;text-align:left;border-radius:18px;background:linear-gradient(180deg,#fff,#f8fafc)!important;color:#111827!important;border:1px solid #e8edf5}
+.sideMenu button.active{background:linear-gradient(135deg,#111827,#0f172a)!important;color:white!important;border-color:#d6a34f}
+.mainAreaFixed{min-width:0}
+.auctionCard{position:relative}
+.heartBtn{position:absolute;right:14px;bottom:14px;width:48px;height:48px;border-radius:50%;padding:0;background:rgba(255,255,255,.94)!important;color:#9f1239!important;border:1px solid #fecdd3!important;box-shadow:0 10px 24px #0002;font-size:22px;z-index:3}
+.heartBtn.saved{background:#be123c!important;color:white!important}
+.chatLayout{display:grid;grid-template-columns:300px 1fr;gap:16px}
+.chatList,.chatRoom{background:#fff;border-radius:24px;border:1px solid #e8edf5;overflow:hidden}
+.chatUser{padding:12px;border-bottom:1px solid #edf2f7;cursor:pointer;display:flex;align-items:center;gap:10px}
+.chatUser:hover{background:#f8fafc}
+.chatAvatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#e5e7eb}
+.messages{height:420px;overflow:auto;padding:14px;background:#f8fafc}
+.msg{max-width:72%;padding:10px 12px;border-radius:16px;margin:8px 0;background:white;box-shadow:0 4px 14px #0000000d}
+.msg.me{margin-left:auto;background:#dcfce7}
+.msg img{max-width:220px;border-radius:14px;display:block;margin-top:8px}
+.walletStats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0}
+.walletStat{background:linear-gradient(135deg,#fff,#f8fafc);border:1px solid #e8edf5;border-radius:22px;padding:18px}
+@media(max-width:980px){
+  .appShellFixed{grid-template-columns:1fr}
+  #leftUserSidebar{position:static}
+  .chatLayout{grid-template-columns:1fr}
+  .walletStats{grid-template-columns:1fr}
+}
+</style>
+
 </head>
 <body>
-<header><div class="top"><div><div class="logo">🔨 BidMarket</div><div class="small">Sidebar Social Complete • Render Ready</div></div><div class="actions"><button class="light" onclick="showPage('login')">เข้าสู่ระบบ</button><button class="gold" onclick="showPage('register')">สมัครสมาชิก</button><button class="danger" onclick="logout()">ออกจากระบบ</button></div></div></header>
+<header><div class="top"><div><div class="logo">🔨 BidMarket</div><div class="small">Sidebar Fixed • Profile Header</div></div><div class="actions" id="authArea"><button class="light" onclick="showPage(\'login\')">เข้าสู่ระบบ</button><button class="gold" onclick="showPage(\'register\')">สมัครสมาชิก</button></div></div></header>
 <nav class="nav"><div class="tabs">
 <button data-page="home" onclick="showPage('home')">หน้าหลัก</button><button data-page="vipzone" onclick="showVip()">VIP Zone</button><button data-page="sell" onclick="showPage('sell')">ลงสินค้า</button><button data-page="ads" onclick="showPage('ads')">ดูโฆษณา</button><button data-page="createAd" onclick="showPage('createAd')">ลงโฆษณา</button><button data-page="wallet" onclick="showPage('wallet')">กระเป๋าเงิน</button><button data-page="vip" onclick="showPage('vip')">สมัคร VIP</button><button data-page="winners" onclick="showPage('winners')">ผู้ชนะ</button><button data-page="history" onclick="showPage('history')">ประวัติ</button><button data-page="profile" onclick="showPage('profile')">โปรไฟล์</button><button data-page="admin" onclick="showAdmin()">Admin</button><button data-page="rules" onclick="showPage('rules')">กติกา</button>
 </div></nav>
 <main class="container">
 <section class="hero"><h1 id="pageTitle">หน้าหลัก</h1><p id="pageDesc" class="muted">รวมรายการประมูลทั่วไป สินค้าแนะนำ และการประมูลที่ทุกบัญชีสามารถเข้าร่วมได้</p></section>
+
+<div class="appShellFixed">
+<aside id="leftUserSidebar">
+  <div class="sideProfile">
+    <img id="sideAvatar" class="avatar" src="https://ui-avatars.com/api/?name=User&background=111827&color=fff">
+    <h3 id="sideName">Guest</h3>
+    <div id="sideStatus" class="small">กรุณาเข้าสู่ระบบ</div>
+  </div>
+  <div class="sideMenu">
+    <button data-side="profile" onclick="showPage('profile')">👤 บัญชีผู้ใช้</button>
+    <button data-side="wallet" onclick="showPage('wallet')">💰 กระเป๋าเงิน</button>
+    <button data-side="favorites" onclick="showPage('favorites')">❤️ รายการที่สนใจ</button>
+    <button data-side="chat" onclick="showPage('chat')">💬 สนทนา</button>
+  </div>
+</aside>
+<div class="mainAreaFixed">
 
 <section id="home"><div class="panel content"><h2>หน้าหลัก</h2><div id="homeMsg"></div></div><div id="generalGrid" class="grid"></div></section>
 <section id="vipzone" class="hidden"><div class="panel content"><h2>VIP Zone</h2><div id="vipGate"></div></div><div id="vipGrid" class="grid"></div></section>
@@ -145,6 +202,7 @@ body{
 </section>
 
 <section id="rules" class="hidden"><div class="panel content"><h2>กติกาและวิธีการประมูล</h2><div class="grid"><div class="card content"><h3>Forward Auction</h3><p class="muted">ผู้ประมูลเสนอราคาสูงกว่าราคาปัจจุบัน ผู้เสนอราคาสูงสุดเมื่อหมดเวลาชนะ</p></div><div class="card content"><h3>Sealed-Bid Auction</h3><p class="muted">ปิดซองเสนอราคาได้ครั้งเดียว ไม่เปิดเผยราคา ใช้ใน VIP Zone</p></div><div class="card content"><h3>English Auction</h3><p class="muted">ผู้ขายกำหนดราคาเคาะ ขั้นต่ำ 5% เมื่อเคาะครั้งแรกจะเข้าสู่เวลานับถอยหลัง 10-60 วินาที</p></div></div></div></section>
+</div></div>
 </main>
 <div id="adModal" class="modal"><div class="modalBox"><div id="adModalContent"></div><button class="danger" onclick="closeAdModal()">ปิด</button></div></div>
 <script>
@@ -155,8 +213,42 @@ function money(n,c){return Number(n||0).toLocaleString('th-TH',{maximumFractionD
 async function api(url,opts={}){const r=await fetch(url,{headers:{'Content-Type':'application/json'},...opts});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'เกิดข้อผิดพลาด');return j}
 function showPage(id){Object.keys(pageInfo).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');$('pageTitle').textContent=pageInfo[id][0];$('pageDesc').textContent=pageInfo[id][1];document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));refresh();}
 function showVip(){if(!me){alert('กรุณาเข้าสู่ระบบก่อน');showPage('login');return}showPage('vipzone')}
-async function refresh(){await loadMe();renderSidebar();await loadFavoritesIds();renderWallet();renderVip();if(!$('home').classList.contains('hidden'))loadAuctions('general');if(!$('vipzone').classList.contains('hidden'))loadAuctions('vip');if(!$('ads').classList.contains('hidden'))loadAds();if(!$('winners').classList.contains('hidden'))loadWinners();if(!$('history').classList.contains('hidden'))loadHistory();if(!$('favorites').classList.contains('hidden'))loadFavorites();if(!$('chat').classList.contains('hidden')){searchUsers();loadThreads();}if(!$('profile').classList.contains('hidden'))renderProfile();if(!$('admin').classList.contains('hidden'))loadAdmin();renderHeartButtons();}
+async function refresh(){await loadMe();renderHeaderAuth();renderSidebar();await loadFavoritesIds();renderSidebar();await loadFavoritesIds();renderWallet();renderVip();if(!$('home').classList.contains('hidden'))loadAuctions('general');if(!$('vipzone').classList.contains('hidden'))loadAuctions('vip');if(!$('ads').classList.contains('hidden'))loadAds();if(!$('winners').classList.contains('hidden'))loadWinners();if(!$('history').classList.contains('hidden'))loadHistory();if($('favorites')&&!$('favorites').classList.contains('hidden'))loadFavorites();if($('chat')&&!$('chat').classList.contains('hidden')){searchUsers();loadThreads();}if(!$('profile').classList.contains('hidden'))renderProfile();if(!$('admin').classList.contains('hidden'))loadAdmin();renderHeartButtons();}
 async function loadMe(){const j=await api('/api/me');me=j.user}
+let favoriteIds=[];
+let selectedChatUser=null;
+function userAvatarUrl(user){
+  const name=user?(user.display_name||user.username):'User';
+  return user&&user.avatar_url?user.avatar_url:`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=111827&color=fff`;
+}
+function renderHeaderAuth(){
+  const area=$('authArea');
+  if(!area)return;
+  if(me){
+    area.innerHTML=`<button class="userChip" onclick="showPage('profile')"><img src="${userAvatarUrl(me)}"><span>${me.display_name||me.username}</span></button><button class="danger" onclick="logout()">ออกจากระบบ</button>`;
+  }else{
+    area.innerHTML=`<button class="light" onclick="showPage('login')">เข้าสู่ระบบ</button><button class="gold" onclick="showPage('register')">สมัครสมาชิก</button>`;
+  }
+}
+function renderSidebar(){
+  const name=me?(me.display_name||me.username):'Guest';
+  const avatar=me?userAvatarUrl(me):`https://ui-avatars.com/api/?name=Guest&background=111827&color=fff`;
+  if($('sideName'))$('sideName').textContent=name;
+  if($('sideAvatar'))$('sideAvatar').src=avatar;
+  if($('sideStatus'))$('sideStatus').textContent=me?(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป'):'กรุณาเข้าสู่ระบบ';
+  document.querySelectorAll('.sideMenu button').forEach(b=>b.classList.toggle('active',b.dataset.side&&!$(b.dataset.side)?.classList.contains('hidden')));
+}
+async function loadFavoritesIds(){if(!me){favoriteIds=[];return}try{const j=await api('/api/favorites');favoriteIds=j.favorite_ids||[]}catch{favoriteIds=[]}}
+async function toggleFavorite(ev,id){ev.stopPropagation();if(!requireLogin())return;const saved=favoriteIds.includes(id);try{if(saved)await fetch('/api/favorites/'+id,{method:'DELETE'});else await api('/api/favorites/'+id,{method:'POST'});await loadFavoritesIds();renderHeartButtons();if($('favorites')&&!$('favorites').classList.contains('hidden'))loadFavorites()}catch(e){alert(e.message)}}
+function renderHeartButtons(){document.querySelectorAll('.heartBtn').forEach(btn=>{const id=Number(btn.id.replace('heart-',''));const saved=favoriteIds.includes(id);btn.classList.toggle('saved',saved);btn.textContent=saved?'♥':'♡'})}
+async function loadFavorites(){if(!requireLogin())return;const j=await api('/api/favorites');favoriteIds=j.favorite_ids||[];favoritesBox.innerHTML=j.auctions.length?j.auctions.map(a=>auctionCard(a)).join(''):'<div class="notice">ยังไม่มีรายการที่สนใจ</div>';renderHeartButtons()}
+async function withdrawMoney(){if(!requireLogin())return;try{await api('/api/wallet/withdraw',{method:'POST',body:JSON.stringify({currency:withdrawCurrency.value,amount:Number(withdrawAmount.value),note:withdrawNote.value})});alert('ส่งคำขอถอนเงินแล้ว');refresh()}catch(e){alert(e.message)}}
+async function searchUsers(){if(!me)return;const j=await api('/api/users/search?q='+encodeURIComponent(chatSearch.value||''));chatUsers.innerHTML=j.users.map(u=>`<div class="chatUser" onclick="openChat(${u.id},'${u.display_name||u.username}')"><img class="chatAvatar" src="${u.avatar_url||`https://ui-avatars.com/api/?name=${encodeURIComponent(u.display_name||u.username)}`}"><div><b>${u.display_name||u.username}</b><br><span class="muted">@${u.username}</span></div></div>`).join('')||'<div class="notice">ไม่พบผู้ใช้</div>'}
+async function loadThreads(){if(!me)return;const j=await api('/api/messages/threads');chatThreads.innerHTML=j.threads.map(t=>`<div class="chatUser" onclick="openChat(${t.user.id},'${t.user.display_name||t.user.username}')"><img class="chatAvatar" src="${t.user.avatar_url||`https://ui-avatars.com/api/?name=${encodeURIComponent(t.user.display_name||t.user.username)}`}"><div><b>${t.user.display_name||t.user.username}</b><br><span class="muted">${t.last_message?.text||'รูปภาพ'}</span></div></div>`).join('')||'<div class="muted">ยังไม่มีห้องสนทนา</div>'}
+async function openChat(id,name){selectedChatUser=id;chatTitle.textContent='สนทนากับ '+name;const j=await api('/api/messages/'+id);messages.innerHTML=j.messages.map(m=>`<div class="msg ${m.from_id===me.id?'me':''}">${m.text?`<div>${m.text}</div>`:''}${m.image_url?`<img src="${m.image_url}">`:''}<small>${new Date(m.created_at).toLocaleString('th-TH')}</small></div>`).join('');messages.scrollTop=messages.scrollHeight}
+async function sendMessage(){if(!selectedChatUser){chatMsg.innerHTML='<div class="notice error">กรุณาเลือกผู้รับก่อน</div>';return}try{const fd=new FormData();fd.append('text',chatText.value);if(chatFile.files[0])fd.append('file',chatFile.files[0]);const r=await fetch('/api/messages/'+selectedChatUser,{method:'POST',body:fd});const j=await r.json();if(!r.ok)throw new Error(j.error);chatText.value='';chatFile.value='';await openChat(selectedChatUser,chatTitle.textContent.replace('สนทนากับ ',''));loadThreads()}catch(e){chatMsg.innerHTML=`<div class="notice error">${e.message}</div>`}}
+async function loadWalletTransactions(){if(!me||!$('walletTransactions'))return;try{const j=await api('/api/transactions');const rows=j.transactions.filter(t=>['coin','credit','token'].includes(t.currency));walletTransactions.innerHTML=rows.length?`<table><tr><th>รายการ</th><th>จำนวน</th><th>สกุลเงิน</th><th>หมายเหตุ</th></tr>${rows.map(t=>`<tr><td>${t.type}</td><td>${t.amount}</td><td>${t.currency}</td><td>${t.note||''}</td></tr>`).join('')}</table>`:'<div class="notice">ยังไม่มีรายการใช้จ่ายเงิน</div>'}catch{}}
+
 let favoriteIds=[];
 let selectedChatUser=null;
 function renderSidebar(){
@@ -197,6 +289,10 @@ function renderProfile(){
   profileBox.innerHTML=`<div class="notice success">เข้าสู่ระบบเป็น <b>${me.username}</b> (${me.role})</div>`;
   profileDisplayName.value=me.display_name||me.username;
   profileEmail.value=me.email||'';
+  if($('profilePhone'))profilePhone.value=me.phone||'';
+  if($('profileBio'))profileBio.value=me.bio||'';
+  if($('profileAddress'))profileAddress.value=me.address||'';
+  if($('profileAvatarUrl'))profileAvatarUrl.value=me.avatar_url||'';
   profilePhone.value=me.phone||'';
   profileBio.value=me.bio||'';
   profileAddress.value=me.address||'';
