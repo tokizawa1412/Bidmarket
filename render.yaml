@@ -10,7 +10,3 @@ services:
         value: 22.11.0
       - key: SESSION_SECRET
         generateValue: true
-      - key: DATA_DIR
-        value: /var/data
-      - key: UPLOAD_DIR
-        value: /var/data/uploads
