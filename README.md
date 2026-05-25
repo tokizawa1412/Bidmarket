@@ -1,26 +1,36 @@
-# BidMarket Sidebar Social Update
+# BidMarket Advanced Auction Update
 
-เพิ่ม:
-- แถบด้านซ้ายในหน้าหลัก
-- บัญชีผู้ใช้ พร้อมรายละเอียดส่วนตัวและรูปโปรไฟล์
-- กระเป๋าเงิน พร้อมเติม ถอน โอน ยอดคงเหลือ และรายการใช้จ่าย
-- รายการที่สนใจ พร้อมปุ่มหัวใจบนรายการประมูล
-- สนทนา ส่งข้อความและรูปภาพถึงผู้ใช้อื่น
-- พื้นหลังใหม่ให้เหมาะกับเว็บประมูล
+เพิ่มตามคำขอ:
+- ลบเมนู ผู้ชนะ/ประวัติ ด้านบน
+- เปลี่ยน กติกา เป็น กฏ/เงื่อนไข
+- แสดงประวัติการประมูลในบัญชีผู้ใช้
+- ตั้งเวลาเริ่มประมูลล่วงหน้าได้ไม่เกิน 30 วัน
+- รายการสินค้าใช้ปุ่ม “เข้าร่วมประมูล” และมีห้องประมูล
+- ห้องประมูลมีรูป/วิดีโอ รายละเอียด จำนวนผู้เสนอราคา และแชท
+- VIP Zone มี Credit ขั้นต่ำเข้าร่วม และ % Credit ประมูล
+- คำนวณ Credit ผู้แพ้ VIP และแบ่ง 50% ให้เว็บไซต์
+- Admin Dashboard แสดงจำนวนสินค้า รายการปิดประมูล และรายได้รายเดือน
+- ค่าบริการเว็บไซต์จาก Credit: ผู้ขายทั่วไป 7%, ผู้ขาย VIP 4%
 
-รัน:
-npm install
-npm start
+## Deploy
 
-เปิด:
-http://localhost:3000
+```bash
+git init
+git add .
+git commit -m "advanced auction update"
+git branch -M main
+git remote set-url origin https://github.com/tokizawa1412/Bidmarket.git
+git push -f origin main
+```
 
-บัญชี Admin:
-demo / 1234
+ถ้า remote ไม่มี:
+```bash
+git remote add origin https://github.com/tokizawa1412/Bidmarket.git
+git push -f origin main
+```
 
+จากนั้น Render > Manual Deploy > Deploy latest commit
 
----
-
-## Sidebar Social Render Ready
-
-รวมแถบซ้าย, รายการที่สนใจ, สนทนา, โปรไฟล์, Wallet แบบละเอียด และพร้อม Deploy Render Free แล้ว
+บัญชีทดสอบ:
+- demo / 1234 (Admin)
+- seller / 1234 (VIP Seller)
