@@ -93,4 +93,66 @@ app.post('/api/ai/price-estimate',need,up.array('photos',6),async(req,res)=>{try
 app.get('/api/favorites',need,(req,res)=>{let ids=db.favorites.filter(f=>f.user_id==req.session.userId).map(f=>f.auction_id);res.json({favorite_ids:ids,auctions:db.auctions.filter(a=>ids.includes(a.id)&&a.status=='active').map(a=>au(a,req.session.userId))})});app.post('/api/favorites/:id',need,(req,res)=>{let id=Number(req.params.id);if(!db.favorites.find(f=>f.user_id==req.session.userId&&f.auction_id==id))db.favorites.push({user_id:req.session.userId,auction_id:id});save();res.json({ok:true})});app.delete('/api/favorites/:id',need,(req,res)=>{db.favorites=db.favorites.filter(f=>!(f.user_id==req.session.userId&&f.auction_id==req.params.id));save();res.json({ok:true})});
 app.get('/api/admin/escrow',admin,(req,res)=>res.json({held:db.orders.filter(o=>!['COMPLETED','REFUNDED'].includes(o.status)).reduce((s,o)=>s+o.amount,0),waitShipping:db.orders.filter(o=>o.status=='WAIT_SHIPPING').length,shipped:db.orders.filter(o=>['SHIPPED','DELIVERED'].includes(o.status)).length,disputes:db.orders.filter(o=>o.status=='DISPUTE').length,orders:db.orders}));app.post('/api/admin/orders/:id/release',admin,(req,res)=>{let o=db.orders.find(x=>x.id==req.params.id);release(o);save();res.json({order:o})});app.post('/api/admin/orders/:id/refund',admin,(req,res)=>{let o=db.orders.find(x=>x.id==req.params.id);bal(o.buyer_id,o.currency,o.amount,'คืนเงิน Escrow',o.item_title);o.status='REFUNDED';save();res.json({order:o})});
 app.get('/api/admin/summary',admin,(req,res)=>res.json({active:{general:db.auctions.filter(a=>a.status=='active'&&a.level=='general').length,vip:db.auctions.filter(a=>a.status=='active'&&a.level=='vip').length,total:db.auctions.filter(a=>a.status=='active').length},total_revenue:db.company_revenue.reduce((s,r)=>s+r.amount,0),monthly_revenue:{},closed_count:db.winners.length}));app.get('/api/admin/closed-auctions',admin,(req,res)=>res.json({rows:db.winners,total:db.winners.length}));app.get('/api/admin/users',admin,(req,res)=>res.json({users:db.users.map(pub)}));
+
+function reviewAuctionDetails(order){
+  const a=db.auctions.find(x=>x.id==order.auction_id)||{};
+  const seller=user(order.seller_id), buyer=user(order.buyer_id);
+  return {
+    order_id:order.id,
+    auction_id:order.auction_id,
+    item_title:order.item_title||a.title||'-',
+    description:a.description||order.description||'',
+    category:a.category||'',
+    level:a.level||'',
+    method:a.method||'',
+    seller_id:order.seller_id,
+    seller_name:seller?.username||'-',
+    buyer_id:order.buyer_id,
+    winner_id:order.buyer_id,
+    winner_name:buyer?.username||'-',
+    close_price:order.amount,
+    final_price:order.amount,
+    currency:order.currency||a.currency||'credit',
+    status:order.status,
+    success:order.status==='COMPLETED',
+    created_at:order.created_at,
+    released_at:order.released_at||null,
+    shipping_company:order.shipping_company||'',
+    tracking_number:order.tracking_number||'',
+    image_url:a.image_url||'',
+    seller_success_rate:trust(seller),
+    buyer_success_rate:trust(buyer)
+  };
+}
+function reviewSummaryFor(uid){
+  const rows=db.orders.filter(o=>o.buyer_id==uid||o.seller_id==uid);
+  const completed=rows.filter(o=>o.status==='COMPLETED').length;
+  return {bought_count:rows.filter(o=>o.buyer_id==uid).length,sold_count:rows.filter(o=>o.seller_id==uid).length,total_trades:rows.length,completed_trades:completed,success_rate:rows.length?Math.round(completed/rows.length*100):0};
+}
+app.get('/api/reviews/users',(req,res)=>{
+  const q=String(req.query.q||'').trim().toLowerCase();
+  const matchedOrderUserIds=new Set();
+  if(q){
+    db.orders.forEach(o=>{
+      const a=db.auctions.find(x=>x.id==o.auction_id)||{};
+      const hay=[o.item_title,a.title,a.description,a.category,String(o.id),String(o.auction_id)].join(' ').toLowerCase();
+      if(hay.includes(q)){matchedOrderUserIds.add(o.buyer_id);matchedOrderUserIds.add(o.seller_id)}
+    });
+  }
+  let rows=db.users.filter(u=>{
+    const hasTrade=db.orders.some(o=>o.buyer_id==u.id||o.seller_id==u.id);
+    if(!q)return hasTrade || u.trust_total_orders>0 || u.trust_completed_sales>0;
+    const uh=[u.username,u.display_name,u.email,String(u.id),'#'+u.id,'ID '+u.id].join(' ').toLowerCase();
+    return uh.includes(q)||matchedOrderUserIds.has(u.id);
+  }).map(u=>({...pub(u),...reviewSummaryFor(u.id)}));
+  rows.sort((a,b)=>(b.total_trades-a.total_trades)||(b.success_rate-a.success_rate)||a.id-b.id);
+  res.json({users:rows});
+});
+app.get('/api/reviews/users/:id',(req,res)=>{
+  const u=user(Number(req.params.id));
+  if(!u)return res.status(404).json({error:'ไม่พบผู้ใช้'});
+  const history=db.orders.filter(o=>o.buyer_id==u.id||o.seller_id==u.id).map(reviewAuctionDetails).sort((a,b)=>(b.created_at||0)-(a.created_at||0));
+  res.json({user:pub(u),summary:reviewSummaryFor(u.id),history});
+});
+
 app.get('/api/transactions',need,(req,res)=>res.json({transactions:db.transactions.filter(t=>t.user_id==req.session.userId)}));app.get('*',(_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));serverHttp.listen(PORT,()=>console.log('BidMarket Escrow AI Trust http://localhost:'+PORT));
