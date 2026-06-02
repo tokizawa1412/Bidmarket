@@ -10,3 +10,5 @@ services:
         value: 22.11.0
       - key: SESSION_SECRET
         generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
