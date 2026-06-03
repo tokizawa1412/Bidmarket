@@ -155,4 +155,22 @@ app.get('/api/reviews/users/:id',(req,res)=>{
   res.json({user:pub(u),summary:reviewSummaryFor(u.id),history});
 });
 
+
+app.get('/api/messages/:userId',need,(req,res)=>{
+  const meId=req.session.userId;
+  const otherId=Number(req.params.userId);
+  if(!user(otherId))return res.status(404).json({error:'ไม่พบผู้ใช้'});
+  const messages=db.messages.filter(m=>(m.from_id==meId&&m.to_id==otherId)||(m.from_id==otherId&&m.to_id==meId)).sort((a,b)=>(a.created_at||0)-(b.created_at||0)).map(m=>({...m,from_name:user(m.from_id)?.display_name||user(m.from_id)?.username||'ผู้ใช้'}));
+  res.json({messages});
+});
+app.post('/api/messages/:userId',need,(req,res)=>{
+  const meId=req.session.userId;
+  const otherId=Number(req.params.userId);
+  if(!user(otherId))return res.status(404).json({error:'ไม่พบผู้ใช้'});
+  const text=String(req.body.text||'').trim();
+  if(!text)return res.status(400).json({error:'กรุณาพิมพ์ข้อความ'});
+  const msg={id:nid('msg'),from_id:meId,to_id:otherId,text,created_at:now(),read:false};
+  db.messages.push(msg);save();res.json({message:msg});
+});
+
 app.get('/api/transactions',need,(req,res)=>res.json({transactions:db.transactions.filter(t=>t.user_id==req.session.userId)}));app.get('*',(_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));serverHttp.listen(PORT,()=>console.log('BidMarket Escrow AI Trust http://localhost:'+PORT));

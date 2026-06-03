@@ -15,8 +15,14 @@ body.admin .adminOnly{display:inline-block}
 .chatBubble.me{background:#ecfdf5;border-color:#bbf7d0;margin-left:36px}
 .chatComposer{display:flex;gap:8px;padding:10px;background:#fff;border-top:1px solid #eee}
 .chatComposer input{margin:0}.chatComposer button{white-space:nowrap;margin:0}
+.topUserSearch{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:260px;max-width:430px;flex:1}
+.topUserSearch input{margin:0;border:2px solid #facc15;background:#fff;padding:10px 14px;border-radius:0;width:100%}
+.topSearchPanel{max-width:1280px;margin:0 auto 12px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 14px 40px #0002;padding:14px}
+.searchUserCard{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px;border:1px solid #eee;border-radius:16px;margin:8px 0;background:#fafafa}
+.muted{color:#64748b;font-size:13px}
+.userDetailBox{background:#f8fafc;border:1px solid #e5e7eb;border-radius:18px;padding:14px;margin-top:10px}
 @media(max-width:900px){.chatFloating{right:14px;bottom:14px}.chatWindow{width:calc(100vw - 28px)}}
-</style></head><body><header><div class="top"><div><div class="logo">🔨 BidMarket</div><div class="small">Escrow Credit • AI Price • Trust</div></div><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button></div></nav><main class="container"><section class="hero"><h1 id="title">หน้าหลัก</h1><p id="desc">ระบบประมูลพร้อม Escrow Credit, AI ประเมินราคา และความน่าเชื่อถือผู้ขาย</p></section><div class="app"><aside class="side"><div class="sideTop"><img id="sideAvatar" class="avatar"><h3 id="sideName">Guest</h3><div id="sideStatus" class="small">กรุณาเข้าสู่ระบบ</div></div><div class="sideMenu"><button onclick="show('profile')">👤 บัญชีผู้ใช้</button><button onclick="show('vip')">⭐ สมัคร VIP</button><button onclick="show('wallet')">💰 กระเป๋าเงิน</button><button onclick="show('estimate')">🤖 ประเมิณราคา</button><button onclick="show('favorites')">❤️ รายการที่สนใจ</button><button onclick="show('sell')">📦 ลงสินค้า</button><button onclick="show('createAd')">📣 ลงโฆษณา</button></div></aside><div>
+</style></head><body><header><div class="top"><div><div class="logo">🔨 BidMarket</div><div class="small">Escrow Credit • AI Price • Trust</div></div><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav><main class="container"><div class="hidden"><h1 id="title">หน้าหลัก</h1><p id="desc">BidMarket</p></div><div class="app"><aside class="side"><div class="sideTop"><img id="sideAvatar" class="avatar"><h3 id="sideName">Guest</h3><div id="sideStatus" class="small">กรุณาเข้าสู่ระบบ</div></div><div class="sideMenu"><button onclick="show('profile')">👤 บัญชีผู้ใช้</button><button onclick="show('vip')">⭐ สมัคร VIP</button><button onclick="show('wallet')">💰 กระเป๋าเงิน</button><button onclick="show('estimate')">🤖 ประเมิณราคา</button><button onclick="show('favorites')">❤️ รายการที่สนใจ</button><button onclick="show('sell')">📦 ลงสินค้า</button><button onclick="show('createAd')">📣 ลงโฆษณา</button></div></aside><div>
 <section id="home"><div class="panel content"><h2>หน้าหลัก</h2></div><div id="generalGrid" class="grid"></div></section><section id="vipzone" class="hidden"><div class="panel content"><h2>VIP Zone</h2><div class="notice">ผู้เข้าร่วมต้องใส่ Credit และหากแพ้จะเสีย Credit ประมูลตาม % ที่ผู้ขายตั้งไว้</div></div><div id="vipGrid" class="grid"></div></section>
 <section id="sell" class="hidden"><div class="panel content"><h2>ลงสินค้า</h2><input id="sellTitle" placeholder="ชื่อสินค้า"><textarea id="sellDesc" placeholder="รายละเอียด"></textarea><div class="row"><select id="sellLevel" onchange="rulesSell()"><option value="general">ทั่วไป</option><option value="vip">VIP</option></select><select id="sellMethod" onchange="rulesSell()"></select></div><div class="row"><select id="sellCurrency"></select><input id="sellCategory" placeholder="หมวดหมู่"></div><input id="sellStart" type="number" placeholder="ราคาเริ่มต้น"><label>เวลาเริ่มประมูล</label><input id="sellStartAt" type="datetime-local"><div id="vipBox" class="hidden"><input id="vipMin" type="number" placeholder="Credit ขั้นต่ำ 100-1,000,000"><input id="vipFee" type="number" placeholder="Credit ประมูล 1-10%"></div><input id="sellHours" type="number" placeholder="ระยะเวลา ชั่วโมง" value="24"><select id="mediaType"><option value="image">รูปภาพ</option><option value="video">วิดีโอ</option></select><input id="sellFile" type="file" accept="image/*,video/*"><input id="sellUrl" placeholder="หรือ URL รูป/วิดีโอ"><button onclick="createAuction()">เพิ่มสินค้า</button><div id="sellMsg"></div></div></section>
 <section id="estimate" class="hidden"><div class="panel content"><h2>ประเมิณราคา AI</h2><input id="estTitle" placeholder="ชื่อสินค้า"><input id="estCat" placeholder="หมวดหมู่"><input id="estCond" placeholder="สภาพสินค้า"><textarea id="estNotes" placeholder="รายละเอียด"></textarea><input id="estPhotos" type="file" accept="image/*" multiple><button class="green" onclick="estimatePrice()">ประเมิณราคา</button><div id="estResult"></div><h3>ประวัติ</h3><div id="estHistory"></div></div></section>
@@ -95,7 +101,7 @@ async function loadReviews(){
 async function loadReviewDetail(id){
   const j = await api('/api/reviews/users/' + id);
   const u = j.user;
-  reviewDetailBox.innerHTML = `<div class="panel content" style="margin-top:18px"><h2>ข้อมูลรีวิว: ${u.display_name||u.username} (#${u.id})</h2><div class="grid"><div class="card content"><h3>อัตราความสำเร็จ</h3><div class="price">${u.trust_rate||0}%</div><p class="muted">ซื้อขายสำเร็จ ${u.trust_completed_sales||0}/${u.trust_total_orders||0} รายการ</p></div><div class="card content"><h3>ประวัติ</h3><div>ซื้อ: <b>${j.summary.bought_count}</b></div><div>ขาย: <b>${j.summary.sold_count}</b></div><div>ทั้งหมด: <b>${j.summary.total_trades}</b></div></div></div><h3>รายการซื้อขาย/ประมูลที่ผ่านมา</h3>${j.history.length ? `<table><tr><th>สินค้า</th><th>รายละเอียด</th><th>ราคาปิด</th><th>ผู้ชนะ</th><th>สถานะ</th><th>เวลา</th></tr>${j.history.map(h=>`<tr><td><b>${h.item_title||'-'}</b><br><span class="muted">${h.level||''} / ${h.method||''}</span></td><td>${h.description||'-'}</td><td>${money(h.close_price,h.currency||'Credit')}</td><td>${h.winner_name||'-'}</td><td>${status(h.status)}</td><td>${h.created_at?new Date(h.created_at).toLocaleString('th-TH'):'-'}</td></tr>`).join('')}</table>` : '<div class="notice">ยังไม่มีประวัติซื้อขาย</div>'}</div>`;
+  reviewDetailBox.innerHTML = `<div class="panel content" style="margin-top:18px"><h2>ข้อมูลรีวิว: ${u.display_name||u.username} (#${u.id})</h2><button class="green" onclick="openChatWithUser(${u.id})">💬 ติดต่อส่งข้อความ</button><div class="grid"><div class="card content"><h3>อัตราความสำเร็จ</h3><div class="price">${u.trust_rate||0}%</div><p class="muted">ซื้อขายสำเร็จ ${u.trust_completed_sales||0}/${u.trust_total_orders||0} รายการ</p></div><div class="card content"><h3>ประวัติ</h3><div>ซื้อ: <b>${j.summary.bought_count}</b></div><div>ขาย: <b>${j.summary.sold_count}</b></div><div>ทั้งหมด: <b>${j.summary.total_trades}</b></div></div></div><h3>รายการซื้อขาย/ประมูลที่ผ่านมา</h3>${j.history.length ? `<table><tr><th>สินค้า</th><th>รายละเอียด</th><th>ราคาปิด</th><th>ผู้ชนะ</th><th>สถานะ</th><th>เวลา</th></tr>${j.history.map(h=>`<tr><td><b>${h.item_title||'-'}</b><br><span class="muted">${h.level||''} / ${h.method||''}</span></td><td>${h.description||'-'}</td><td>${money(h.close_price,h.currency||'Credit')}</td><td>${h.winner_name||'-'}</td><td>${status(h.status)}</td><td>${h.created_at?new Date(h.created_at).toLocaleString('th-TH'):'-'}</td></tr>`).join('')}</table>` : '<div class="notice">ยังไม่มีประวัติซื้อขาย</div>'}</div>`;
 }
 
 function showAdmin(){if(!me){Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));login.classList.remove('hidden');title.textContent=pages.login;desc.textContent='BidMarket';refresh();return}if(me.role!='admin')return alert('เฉพาะ Admin');Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));admin.classList.remove('hidden');title.textContent=pages.admin;desc.textContent='BidMarket';loadAdmin()}async function loadAdmin(){let e=await api('/api/admin/escrow');let pj=await api('/api/admin/payments');adminBox.innerHTML=`<div class="grid"><div class="card content"><h3>เงินพัก Escrow</h3><div class="price">${money(e.held,'Credit')}</div></div><div class="card content"><h3>รอจัดส่ง</h3><div class="price">${e.waitShipping}</div></div><div class="card content"><h3>ข้อพิพาท</h3><div class="price">${e.disputes}</div></div></div><h3>ตรวจสอบสลิปเติม Credit</h3>${pj.payments.length?`<table><tr><th>ผู้ใช้</th><th>ยอด</th><th>Credit</th><th>สถานะ</th><th>สลิป</th><th>จัดการ</th></tr>${pj.payments.map(p=>`<tr><td>${p.user?.username||p.user_id}</td><td>${p.baht_amount||0} บาท</td><td>${p.credit_amount}</td><td>${payStatus(p.status)}</td><td>${p.slip_url?`<a href="${p.slip_url}" target="_blank">ดูสลิป</a>`:'-'}</td><td>${p.status==='approved'?'-':`<button class="green" onclick="adminApprovePay('${p.id}')">อนุมัติ</button><button class="danger" onclick="adminRejectPay('${p.id}')">ปฏิเสธ</button>`}</td></tr>`).join('')}</table>`:'<div class="notice">ยังไม่มีรายการเติม Credit</div>'}<h3>คำสั่งซื้อ / Escrow</h3><table><tr><th>สินค้า</th><th>สถานะ</th><th>ยอด</th><th>จัดการ</th></tr>${e.orders.map(o=>`<tr><td>${o.item_title}</td><td>${status(o.status)}</td><td>${money(o.amount,o.currency)}</td><td><button onclick="adminRel(${o.id})">ปล่อยเงิน</button><button class="danger" onclick="adminRef(${o.id})">คืนเงิน</button></td></tr>`).join('')}</table>`}
@@ -104,17 +110,54 @@ async function adminApprovePay(id){await api('/api/admin/payments/'+id+'/approve
 async function adminRejectPay(id){let note=prompt('เหตุผลที่ปฏิเสธ')||'';await api('/api/admin/payments/'+id+'/reject',{method:'POST',body:JSON.stringify({note})});loadAdmin()}
 async function adminRel(id){await api('/api/admin/orders/'+id+'/release',{method:'POST'});loadAdmin()}async function adminRef(id){await api('/api/admin/orders/'+id+'/refund',{method:'POST'});loadAdmin()}
 
-function toggleFloatingChat(){
+
+async function topSearchUsers(){
+  const q=(topUserSearch.value||'').trim();
+  if(!q){topSearchPanel.classList.add('hidden');topSearchPanel.innerHTML='';return}
+  const j=await api('/api/reviews/users?q='+encodeURIComponent(q));
+  topSearchPanel.classList.remove('hidden');
+  topSearchPanel.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b>ผลการค้นหา: ${escapeHtml(q)}</b><button class="light" onclick="topSearchPanel.classList.add('hidden')">ปิด</button></div>` +
+  (j.users.length?j.users.map(u=>`<div class="searchUserCard"><div><b>${escapeHtml(u.display_name||u.username)}</b> <span class="muted">#${u.id} / @${escapeHtml(u.username)}</span><br><span class="muted">ซื้อ ${u.bought_count||0} / ขาย ${u.sold_count||0} • สำเร็จ ${u.success_rate||u.trust_rate||0}%</span><div id="topUserDetail_${u.id}" class="userDetailBox hidden"></div></div><div><button onclick="topShowUser(${u.id})">ตรวจสอบข้อมูล</button><button class="green" onclick="openChatWithUser(${u.id})">ส่งข้อความ</button></div></div>`).join(''):'<div class="notice">ไม่พบชื่อบัญชีหรือ ID ที่ตรงกัน</div>');
+}
+async function topShowUser(id){
+  const box=document.getElementById('topUserDetail_'+id);
+  if(!box)return;
+  if(!box.classList.contains('hidden')){box.classList.add('hidden');return}
+  const j=await api('/api/reviews/users/'+id);
+  const u=j.user;
+  box.classList.remove('hidden');
+  box.innerHTML=`<b>ข้อมูลบัญชี</b><br>ชื่อ: ${escapeHtml(u.display_name||u.username)}<br>ID: #${u.id}<br>Username: @${escapeHtml(u.username)}<br>อัตราความสำเร็จ: ${u.trust_rate||j.summary.success_rate||0}%<br>ซื้อขายทั้งหมด: ${j.summary.total_trades||0} รายการ<br><button class="light" onclick="show('reviews');reviewSearch.value='${u.id}';loadReviewDetail(${u.id});topSearchPanel.classList.add('hidden')">ดูหน้ารีวิวเต็ม</button>`;
+}
+let currentChatUserId=null;
+async function openChatWithUser(id){
+  if(!me){show('login');return}
+  currentChatUserId=id;
+  const j=await api('/api/reviews/users/'+id);
+  const u=j.user;
+  chatWindow.classList.remove('hidden');
+  document.querySelector('.chatHeader span').textContent='สนทนากับ '+(u.display_name||u.username)+' (#'+u.id+')';
+  await loadFloatingConversation();
+}
+async function loadFloatingConversation(){
+  if(!currentChatUserId){floatingChatMessages.innerHTML='<div class="chatBubble">ค้นหาผู้ใช้จากช่องค้นหาด้านบน แล้วกด “ส่งข้อความ” เพื่อเริ่มสนทนา</div>';return}
+  const j=await api('/api/messages/'+currentChatUserId);
+  floatingChatMessages.innerHTML=j.messages.length?j.messages.map(m=>`<div class="chatBubble ${m.from_id===me.id?'me':''}"><b>${m.from_id===me.id?'คุณ':escapeHtml(m.from_name||'ผู้ใช้')}:</b> ${escapeHtml(m.text)}<br><span class="muted">${new Date(m.created_at).toLocaleString('th-TH')}</span></div>`).join(''):'<div class="chatBubble">ยังไม่มีข้อความ เริ่มพิมพ์ข้อความได้เลย</div>';
+  floatingChatMessages.scrollTop=floatingChatMessages.scrollHeight;
+}
+
+async function toggleFloatingChat(){
   if(!me){show('login');return}
   chatWindow.classList.toggle('hidden');
+  if(!chatWindow.classList.contains('hidden')) await loadFloatingConversation();
 }
-function sendFloatingChat(){
+async function sendFloatingChat(){
   if(!me){show('login');return}
+  if(!currentChatUserId)return alert('กรุณาค้นหาและเลือกผู้ใช้ที่ต้องการส่งข้อความก่อน');
   const text=(floatingChatInput.value||'').trim();
   if(!text)return;
-  floatingChatMessages.insertAdjacentHTML('beforeend',`<div class="chatBubble me"><b>${me.display_name||me.username}:</b> ${escapeHtml(text)}</div>`);
+  await api('/api/messages/'+currentChatUserId,{method:'POST',body:JSON.stringify({text})});
   floatingChatInput.value='';
-  floatingChatMessages.scrollTop=floatingChatMessages.scrollHeight;
+  await loadFloatingConversation();
 }
 function escapeHtml(t){return String(t).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
