@@ -1,80 +1,97 @@
-# BidMarket Review System - QR Topup Manual Approval
+# BidMarket - Persistent Database Version
 
-เวอร์ชันนี้แก้ระบบเติม Credit ให้ใช้ QR ที่ผู้ใช้อัปโหลดมา พร้อมการตรวจสอบสลิปแบบ Admin อนุมัติเอง
+เวอร์ชันนี้แก้ให้เว็บไซต์เชื่อมฐานข้อมูลถาวรจริงด้วย PostgreSQL แล้ว
 
-## ระบบเติม Credit
+## สิ่งที่เปลี่ยน
 
-- อัตราแลกเปลี่ยน: 5 บาท = 1 Credit
-- เติมเงินขั้นต่ำ: 50 บาท
-- ผู้ใช้สร้างรายการเติมเงินในเมนู กระเป๋าเงิน
-- เว็บจะแสดง QR สำหรับโอนเงิน
-- ผู้ใช้อัปโหลดสลิป
-- Admin ตรวจสอบสลิปและกดอนุมัติ
-- เมื่ออนุมัติ ระบบจะเพิ่ม Credit ให้อัตโนมัติ
+- เพิ่มการเชื่อมต่อ PostgreSQL ผ่าน `DATABASE_URL`
+- เก็บข้อมูลหลักของเว็บลงตาราง `app_state` ใน PostgreSQL
+- เก็บ session login ลง PostgreSQL เมื่อมี `DATABASE_URL`
+- ถ้าไม่ได้ตั้งค่า `DATABASE_URL` จะ fallback ไปใช้ `data/db.json` สำหรับทดสอบบนเครื่อง
 
-## บัญชีทดสอบ
+## Environment Variables บน Render
 
-- Admin: demo / 1234
-- User: seller / 1234
+ต้องมีอย่างน้อย:
 
-## วิธีรันในเครื่อง
+```text
+NODE_ENV=production
+SESSION_SECRET=สุ่มข้อความยาวๆ
+DATABASE_URL=postgresql://...
+PGSSLMODE=require
+```
+
+ถ้าใช้ Blueprint จาก `render.yaml` ระบบจะสร้าง PostgreSQL และผูก `DATABASE_URL` ให้อัตโนมัติ
+
+## Deploy บน Render แบบ Manual
+
+1. สร้าง PostgreSQL ใน Render
+2. คัดลอก Internal Database URL
+3. ไปที่ Web Service > Environment
+4. เพิ่ม `DATABASE_URL`
+5. เพิ่ม `SESSION_SECRET`
+6. Redeploy
+
+## หมายเหตุสำคัญเรื่องรูป/สลิป
+
+ข้อมูลธุรกรรม เครดิต ผู้ใช้ แชท รีวิว และรายการประมูลจะอยู่ใน PostgreSQL แล้ว
+
+แต่ไฟล์อัปโหลด เช่น รูปสินค้าและสลิป ถูกเก็บใน `public/uploads` ซึ่งบน Render Free อาจหายเมื่อ service restart หรือ redeploy ได้ หากต้องการถาวรจริงสำหรับไฟล์ด้วย ให้ใช้ Render Persistent Disk หรือ S3/Cloudinary เพิ่มเติม
+
+## รันบนเครื่อง
 
 ```bash
 npm install
 npm start
 ```
 
-เปิดเว็บที่ http://localhost:3000
-
-## ไฟล์สำคัญที่แก้ไข
-
-- `server.js` เพิ่ม API เติมเงินด้วยสลิปและ Admin approve/reject
-- `public/index.html` เพิ่มหน้าเติม Credit ด้วย QR และ Admin ตรวจสลิป
-- `public/assets/payment-qr.jfif` รูป QR รับเงิน
-
-## คำเตือน
-
-ระบบนี้เป็นการรับเงินจริงแบบตรวจสอบสลิปด้วยมือ เหมาะกับช่วงเริ่มต้นหรือเว็บขนาดเล็ก ถ้าต้องการอนุมัติอัตโนมัติควรเชื่อม Payment Gateway ที่มี webhook
-
-## ระบบรีวิวผู้ซื้อ-ผู้ขาย
-
-เวอร์ชันนี้เพิ่มเมนู **รีวิว** ที่แถบด้านบนและเมนูด้านข้างแล้ว
-
-ความสามารถ:
-- แสดงรายชื่อผู้ใช้ที่เคยมีประวัติซื้อขาย/ประมูล
-- ค้นหาได้จากชื่อผู้ใช้, User ID หรือชื่อสินค้า
-- กดชื่อผู้ใช้หรือ ID เพื่อดูประวัติสินค้าในรายการประมูลที่ผ่านมา
-- แสดงชื่อสินค้า, รายละเอียดสินค้า, ราคาปิดประมูล, ผู้ขาย, ผู้ชนะประมูล, สถานะรายการ และอัตราความสำเร็จ
-- ระบบดึงข้อมูลจาก Order/Escrow จริงของเว็บ เมื่อปิดประมูลและสร้างคำสั่งซื้อแล้ว
-
-API ที่เพิ่ม:
-- `GET /api/reviews/users?q=keyword`
-- `GET /api/reviews/users/:id`
-
-หมายเหตุ: รายการรีวิวจะปรากฏเมื่อมีคำสั่งซื้อจากการประมูลแล้ว หากเว็บยังไม่มีรายการซื้อขายจริง หน้านี้จะแสดงว่าไม่พบข้อมูล
-
-## อัปเดตล่าสุด: ปรับเมนู Admin / Review / Chat
-
-เวอร์ชันนี้แก้ไขตามคำขอแล้ว:
-
-- ลบเมนู **คำสั่งซื้อ / Escrow** ออกจากแถบด้านซ้าย
-- ย้าย **คำสั่งซื้อ / Escrow** ไปอยู่ในหน้า **Admin Dashboard**
-- ลบเมนู **รีวิวผู้ซื้อ-ผู้ขาย** ออกจากแถบด้านซ้าย
-- เปลี่ยนชื่อหน้ารีวิวเป็น **รีวิว** และคงไว้ที่แถบด้านบน
-- ลบเมนู **สนทนา** ออกจากแถบด้านซ้าย
-- เพิ่มปุ่มแชทลอยมุมขวาล่าง เมื่อกดแล้วจะแสดงหน้าต่างแชท
-- ซ่อนเมนู **Admin** จากแถบด้านบนสำหรับผู้ใช้ทั่วไป
-- เมนู **Admin** จะแสดงเฉพาะหลังล็อกอินด้วยบัญชี role = admin
-- Backend ยังป้องกัน API Admin ด้วย middleware admin เช่นเดิม
-
-บัญชีทดสอบ Admin:
+เปิดที่:
 
 ```text
-demo / 1234
+http://localhost:3000
 ```
 
-บัญชีทดสอบผู้ใช้ทั่วไป:
+บัญชีเริ่มต้น:
 
 ```text
-seller / 1234
+admin: demo / 1234
+user: seller / 1234
 ```
+
+## Google Login + PostgreSQL
+
+เวอร์ชันนี้รองรับ Login ด้วย Gmail จริงผ่าน Google OAuth และเก็บข้อมูลถาวรใน PostgreSQL ผ่าน `DATABASE_URL`
+
+### Environment Variables ที่ต้องตั้งใน Render
+
+```text
+DATABASE_URL=ได้จาก Render PostgreSQL
+NODE_ENV=production
+SESSION_SECRET=ข้อความสุ่มยาวๆ
+GOOGLE_CLIENT_ID=Client ID จาก Google Cloud
+GOOGLE_CLIENT_SECRET=Client Secret จาก Google Cloud
+GOOGLE_CALLBACK_URL=https://bidmarket-lxou.onrender.com/auth/google/callback
+ADMIN_EMAILS=Gmail ที่ให้เป็น Admin เช่น tokizawa1412@gmail.com
+```
+
+### Google Cloud OAuth
+
+Authorized JavaScript origins:
+
+```text
+https://bidmarket-lxou.onrender.com
+```
+
+Authorized redirect URIs:
+
+```text
+https://bidmarket-lxou.onrender.com/auth/google/callback
+```
+
+### การทำงาน
+
+- กดปุ่ม “เข้าสู่ระบบด้วย Gmail”
+- ระบบพาไป Google Login
+- Login สำเร็จแล้วกลับมาที่ `/auth/google/callback`
+- ถ้า Gmail ยังไม่เคยมีบัญชี ระบบจะสร้างบัญชีใหม่อัตโนมัติ
+- ถ้า Gmail อยู่ใน `ADMIN_EMAILS` ระบบจะตั้ง role เป็น `admin`
+- ข้อมูลผู้ใช้ถูกบันทึกถาวรใน PostgreSQL

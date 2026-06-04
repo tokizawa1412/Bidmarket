@@ -1,6 +1,12 @@
 require('dotenv').config();
 const express=require('express'), session=require('express-session'), bcrypt=require('bcryptjs'), fs=require('fs'), path=require('path'), multer=require('multer'), {v4:uuid}=require('uuid');
+const passport=require('passport');
+const GoogleStrategy=require('passport-google-oauth20').Strategy;
+const {Pool}=require('pg');
+const PgSession=require('connect-pg-simple')(session);
 const app=express(), PORT=process.env.PORT||3000, dataDir=path.join(__dirname,'data'), dbFile=path.join(dataDir,'db.json'), uploadDir=path.join(__dirname,'public','uploads');
+const USE_POSTGRES=!!process.env.DATABASE_URL;
+const pgPool=USE_POSTGRES?new Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.PGSSLMODE==='disable'?false:{rejectUnauthorized:false}}):null;
 const http=require('http');
 const serverHttp=http.createServer(app);
 const {Server}=require('socket.io');
@@ -8,8 +14,50 @@ const io=new Server(serverHttp);
 const auctionApi=(a)=>au(a);
 fs.mkdirSync(dataDir,{recursive:true}); fs.mkdirSync(uploadDir,{recursive:true});
 const now=()=>Date.now(), img='https://images.unsplash.com/photo-1560472354-b33ff0c44a43?q=80&w=1200&auto=format&fit=crop';
-function fresh(){const h=bcrypt.hashSync('1234',10);return {next:{user:3,auc:3,tx:1,order:1,escrow:1,dispute:1,estimate:1,ad:1},users:[{id:1,username:'demo',email:'demo@x.local',password_hash:h,role:'admin',status:'active',display_name:'Demo Admin',avatar_url:'',bio:'',coin:5e6,credit:50000,token:20,vip_until:now()+31536e6,trust_completed_sales:0,trust_total_orders:0},{id:2,username:'seller',email:'seller@x.local',password_hash:h,role:'user',status:'active',display_name:'VIP Seller',avatar_url:'',bio:'',coin:2e6,credit:30000,token:5,vip_until:now()+15552e6,trust_completed_sales:0,trust_total_orders:0}],auctions:[{id:1,seller_id:2,level:'vip',method:'forward',currency:'credit',title:'Rolex Submariner Vintage',description:'ตัวอย่าง VIP + Escrow',category:'ของสะสม',image_url:'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:10000,current_bid:10000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+7200e3,status:'active',vip_entry_min_credit:7000,vip_entry_fee_percent:5},{id:2,seller_id:1,level:'general',method:'forward',currency:'credit',title:'iPhone 15 Pro Max',description:'ตัวอย่างประมูลทั่วไป + Escrow',category:'มือถือ',image_url:'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:20000,current_bid:20000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+86400e3,status:'active',vip_entry_min_credit:0,vip_entry_fee_percent:0}],orders:[],escrow:[],disputes:[],transactions:[],favorites:[],messages:[],estimates:[],ads:[],company_revenue:[],winners:[]}}
-function load(){if(!fs.existsSync(dbFile))fs.writeFileSync(dbFile,JSON.stringify(fresh(),null,2));let d=JSON.parse(fs.readFileSync(dbFile));['orders','escrow','disputes','transactions','favorites','messages','estimates','ads','company_revenue','winners','payments'].forEach(k=>d[k]||(d[k]=[]));d.users.forEach(u=>{u.trust_completed_sales??=0;u.trust_total_orders??=0;u.avatar_url??='';u.display_name??=u.username;u.role??='user';u.status??='active'});return d}let db=load();const save=()=>fs.writeFileSync(dbFile,JSON.stringify(db,null,2));const nid=k=>(db.next[k]=db.next[k]||1,db.next[k]++);const user=id=>db.users.find(u=>u.id==id);const uname=n=>db.users.find(u=>u.username==n);const vip=u=>u&&u.vip_until>now();const trust=u=>u&&u.trust_total_orders?Math.round(u.trust_completed_sales/u.trust_total_orders*100):0;
+function fresh(){const h=bcrypt.hashSync('1234',10);return {next:{user:3,auc:3,tx:1,order:1,escrow:1,dispute:1,estimate:1,ad:1,msg:1,payment:1},users:[{id:1,username:'demo',email:'demo@x.local',password_hash:h,role:'admin',status:'active',display_name:'Demo Admin',avatar_url:'',bio:'',coin:5e6,credit:50000,token:20,vip_until:now()+31536e6,trust_completed_sales:0,trust_total_orders:0},{id:2,username:'seller',email:'seller@x.local',password_hash:h,role:'user',status:'active',display_name:'VIP Seller',avatar_url:'',bio:'',coin:2e6,credit:30000,token:5,vip_until:now()+15552e6,trust_completed_sales:0,trust_total_orders:0}],auctions:[{id:1,seller_id:2,level:'vip',method:'forward',currency:'credit',title:'Rolex Submariner Vintage',description:'ตัวอย่าง VIP + Escrow',category:'ของสะสม',image_url:'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:10000,current_bid:10000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+7200e3,status:'active',vip_entry_min_credit:7000,vip_entry_fee_percent:5},{id:2,seller_id:1,level:'general',method:'forward',currency:'credit',title:'iPhone 15 Pro Max',description:'ตัวอย่างประมูลทั่วไป + Escrow',category:'มือถือ',image_url:'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:20000,current_bid:20000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+86400e3,status:'active',vip_entry_min_credit:0,vip_entry_fee_percent:0}],orders:[],escrow:[],disputes:[],transactions:[],favorites:[],messages:[],estimates:[],ads:[],company_revenue:[],winners:[]}}
+function normalizeDb(d){
+  ['orders','escrow','disputes','transactions','favorites','messages','estimates','ads','company_revenue','winners','payments'].forEach(k=>d[k]||(d[k]=[]));
+  d.next||(d.next={});
+  ['user','auc','tx','order','escrow','dispute','estimate','ad','msg','payment'].forEach(k=>d.next[k]||(d.next[k]=1));
+  (d.users||[]).forEach(u=>{u.trust_completed_sales??=0;u.trust_total_orders??=0;u.avatar_url??='';u.display_name??=u.username;u.role??='user';u.status??='active';u.google_id??='';u.auth_provider??=(u.google_id?'google':'local')});
+  return d;
+}
+function loadLocal(){
+  if(!fs.existsSync(dbFile))fs.writeFileSync(dbFile,JSON.stringify(fresh(),null,2));
+  return normalizeDb(JSON.parse(fs.readFileSync(dbFile)));
+}
+async function initPostgres(){
+  await pgPool.query(`CREATE TABLE IF NOT EXISTS app_state (
+    id TEXT PRIMARY KEY,
+    state JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
+  const row=(await pgPool.query('SELECT state FROM app_state WHERE id=$1',['main'])).rows[0];
+  if(row&&row.state)return normalizeDb(row.state);
+  let initial=fs.existsSync(dbFile)?JSON.parse(fs.readFileSync(dbFile)):fresh();
+  initial=normalizeDb(initial);
+  await pgPool.query('INSERT INTO app_state(id,state,updated_at) VALUES($1,$2,now()) ON CONFLICT(id) DO UPDATE SET state=EXCLUDED.state, updated_at=now()',['main',initial]);
+  return initial;
+}
+let db;
+async function load(){
+  if(USE_POSTGRES)return await initPostgres();
+  return loadLocal();
+}
+let saveQueue=Promise.resolve();
+function save(){
+  const snapshot=JSON.stringify(db,null,2);
+  fs.writeFileSync(dbFile,snapshot);
+  if(USE_POSTGRES){
+    saveQueue=saveQueue.then(()=>pgPool.query('UPDATE app_state SET state=$1, updated_at=now() WHERE id=$2',[JSON.parse(snapshot),'main'])).catch(e=>console.error('PostgreSQL save failed:',e.message));
+  }
+}
+const nid=k=>(db.next[k]=db.next[k]||1,db.next[k]++);const user=id=>db.users.find(u=>u.id==id);const uname=n=>db.users.find(u=>u.username==n);const vip=u=>u&&u.vip_until>now();const trust=u=>u&&u.trust_total_orders?Math.round(u.trust_completed_sales/u.trust_total_orders*100):0;
+const googleEnabled=()=>!!(process.env.GOOGLE_CLIENT_ID&&process.env.GOOGLE_CLIENT_SECRET);
+const adminEmails=()=>String(process.env.ADMIN_EMAILS||'tokizawa1412@gmail.com').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+function usernameFromEmail(email){const base=String(email||'user').split('@')[0].replace(/[^a-zA-Z0-9_ก-๙.-]/g,'').slice(0,24)||'user';let name=base,i=1;while(uname(name))name=base+i++;return name}
+function findOrCreateGoogleUser(profile){const email=(profile.emails&&profile.emails[0]&&profile.emails[0].value||'').toLowerCase();const googleId=profile.id;let u=db.users.find(x=>String(x.google_id||'')===String(googleId));if(!u&&email)u=db.users.find(x=>String(x.email||'').toLowerCase()===email);const displayName=profile.displayName||email||'Google User';const avatar=(profile.photos&&profile.photos[0]&&profile.photos[0].value)||'';if(u){u.google_id=googleId;u.auth_provider='google';u.email=email||u.email;u.display_name=u.display_name||displayName;u.avatar_url=u.avatar_url||avatar;if(adminEmails().includes(String(u.email||'').toLowerCase()))u.role='admin';save();return u}u={id:nid('user'),username:usernameFromEmail(email),email,password_hash:'',google_id:googleId,auth_provider:'google',role:adminEmails().includes(email)?'admin':'user',status:'active',display_name:displayName,avatar_url:avatar,bio:'',coin:0,credit:0,token:0,vip_until:0,trust_completed_sales:0,trust_total_orders:0};db.users.push(u);save();return u}
+
 function pub(u){return u&&{id:u.id,username:u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name,avatar_url:u.avatar_url,bio:u.bio||'',coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders}}
 function au(a,viewer){return {...a,seller_name:user(a.seller_id)?.username,seller_trust_rate:trust(user(a.seller_id)),is_started:now()>=a.start_at,time_until_start:Math.max(0,a.start_at-now()),participant_count:Object.keys(a.bidder_last_amounts||{}).length,winner_name:a.winner_id?user(a.winner_id)?.username:null,viewer_vip_entry:(a.vip_entries||[]).find(e=>e.user_id==viewer)||null}}
 function need(req,res,next){if(!req.session.userId)return res.status(401).json({error:'กรุณาเข้าสู่ระบบ'});let u=user(req.session.userId);if(!u||u.status!=='active')return res.status(403).json({error:'บัญชีถูกระงับ'});next()}function admin(req,res,next){let u=user(req.session.userId);if(!u||u.role!='admin')return res.status(403).json({error:'เฉพาะ Admin'});next()}
@@ -43,9 +91,24 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use(express.json({limit:'25mb'}));app.use(express.urlencoded({extended:true}));app.use(session({secret:process.env.SESSION_SECRET||'dev',resave:false,saveUninitialized:false,cookie:{maxAge:6048e5}}));app.use(express.static(path.join(__dirname,'public')));app.use('/uploads',express.static(uploadDir));const up=multer({storage:multer.diskStorage({destination:(_,__,cb)=>cb(null,uploadDir),filename:(_,f,cb)=>cb(null,Date.now()+'-'+uuid()+path.extname(f.originalname))}),limits:{fileSize:50*1024*1024}});
+app.use(express.json({limit:'25mb'}));app.use(express.urlencoded({extended:true}));
+const sessionOptions={secret:process.env.SESSION_SECRET||'dev-change-me',resave:false,saveUninitialized:false,cookie:{maxAge:6048e5,secure:process.env.NODE_ENV==='production',sameSite:'lax'}};
+if(USE_POSTGRES){sessionOptions.store=new PgSession({pool:pgPool,tableName:'user_sessions',createTableIfMissing:true});}
+app.use(session(sessionOptions));
+passport.serializeUser((u,done)=>done(null,u.id));
+passport.deserializeUser((id,done)=>done(null,user(id)||false));
+if(googleEnabled()){
+  passport.use(new GoogleStrategy({clientID:process.env.GOOGLE_CLIENT_ID,clientSecret:process.env.GOOGLE_CLIENT_SECRET,callbackURL:process.env.GOOGLE_CALLBACK_URL||'/auth/google/callback'},(accessToken,refreshToken,profile,done)=>{
+    try{return done(null,findOrCreateGoogleUser(profile))}catch(e){return done(e)}
+  }));
+}
+app.use(passport.initialize());app.use(passport.session());
+app.use(express.static(path.join(__dirname,'public')));app.use('/uploads',express.static(uploadDir));const up=multer({storage:multer.diskStorage({destination:(_,__,cb)=>cb(null,uploadDir),filename:(_,f,cb)=>cb(null,Date.now()+'-'+uuid()+path.extname(f.originalname))}),limits:{fileSize:50*1024*1024}});
+app.get('/auth/google',(req,res,next)=>{if(!googleEnabled())return res.status(500).send('Google Login ยังไม่ได้ตั้งค่า GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET ใน Render');passport.authenticate('google',{scope:['profile','email'],prompt:'select_account'})(req,res,next)});
+app.get('/auth/google/callback',(req,res,next)=>{if(!googleEnabled())return res.redirect('/?google=not_configured');passport.authenticate('google',{failureRedirect:'/?google=failed'},(err,u)=>{if(err||!u)return res.redirect('/?google=failed');req.logIn(u,(loginErr)=>{if(loginErr)return res.redirect('/?google=failed');req.session.userId=u.id;return res.redirect('/')})})(req,res,next)});
+app.get('/api/auth/google-status',(req,res)=>res.json({enabled:googleEnabled(),callback:process.env.GOOGLE_CALLBACK_URL||'/auth/google/callback'}));
 app.post('/api/register',(req,res)=>{let {username,email,password}=req.body;if(!username||!email||!password)return res.status(400).json({error:'กรอกข้อมูลให้ครบ'});if(uname(username))return res.status(400).json({error:'ชื่อซ้ำ'});let u={id:nid('user'),username,email,password_hash:bcrypt.hashSync(password,10),role:'user',status:'active',display_name:username,avatar_url:'',bio:'',coin:0,credit:0,token:0,vip_until:0,trust_completed_sales:0,trust_total_orders:0};db.users.push(u);req.session.userId=u.id;save();res.json({user:pub(u)})});
-app.post('/api/login',(req,res)=>{let u=uname(req.body.username);if(!u||!bcrypt.compareSync(req.body.password||'',u.password_hash))return res.status(401).json({error:'ผิด'});req.session.userId=u.id;res.json({user:pub(u)})});app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));app.get('/api/me',(req,res)=>res.json({user:pub(user(req.session.userId))}));
+app.post('/api/login',(req,res)=>{let u=uname(req.body.username);if(!u||!bcrypt.compareSync(req.body.password||'',u.password_hash))return res.status(401).json({error:'ผิด'});req.session.userId=u.id;res.json({user:pub(u)})});app.post('/api/logout',(req,res)=>{if(req.logout)req.logout(()=>req.session.destroy(()=>res.json({ok:true})));else req.session.destroy(()=>res.json({ok:true}))});app.get('/api/me',(req,res)=>res.json({user:pub(user(req.session.userId))}));
 app.put('/api/me/profile',need,(req,res)=>{let u=user(req.session.userId);['display_name','email','bio','avatar_url'].forEach(k=>{if(req.body[k]!=null)u[k]=String(req.body[k])});save();res.json({user:pub(u)})});app.post('/api/upload',need,up.single('file'),(req,res)=>res.json({url:'/uploads/'+req.file.filename}));
 app.post('/api/wallet/buy-coin',need,(req,res)=>{bal(req.session.userId,'coin',Number(req.body.baht)*100,'ซื้อ Coin');save();res.json({user:pub(user(req.session.userId))})});
 app.post('/api/payments/create-credit-topup',need,(req,res)=>{
@@ -173,4 +236,5 @@ app.post('/api/messages/:userId',need,(req,res)=>{
   db.messages.push(msg);save();res.json({message:msg});
 });
 
-app.get('/api/transactions',need,(req,res)=>res.json({transactions:db.transactions.filter(t=>t.user_id==req.session.userId)}));app.get('*',(_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));serverHttp.listen(PORT,()=>console.log('BidMarket Escrow AI Trust http://localhost:'+PORT));
+app.get('/api/transactions',need,(req,res)=>res.json({transactions:db.transactions.filter(t=>t.user_id==req.session.userId)}));app.get('*',(_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+load().then(initialDb=>{db=initialDb;serverHttp.listen(PORT,()=>console.log('BidMarket Persistent DB '+(USE_POSTGRES?'PostgreSQL':'JSON local')+' http://localhost:'+PORT));}).catch(err=>{console.error('Cannot start server:',err);process.exit(1);});
