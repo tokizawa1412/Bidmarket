@@ -57,41 +57,30 @@ admin: demo / 1234
 user: seller / 1234
 ```
 
-## Google Login + PostgreSQL
 
-เวอร์ชันนี้รองรับ Login ด้วย Gmail จริงผ่าน Google OAuth และเก็บข้อมูลถาวรใน PostgreSQL ผ่าน `DATABASE_URL`
+## Google Login / Gmail OAuth
 
-### Environment Variables ที่ต้องตั้งใน Render
+เวอร์ชันนี้รองรับการเข้าสู่ระบบด้วย Gmail จริงโดยไม่ต้องติดตั้ง package เพิ่มเติม
+
+ตั้งค่าใน Render > Environment Variables:
 
 ```text
-DATABASE_URL=ได้จาก Render PostgreSQL
-NODE_ENV=production
-SESSION_SECRET=ข้อความสุ่มยาวๆ
 GOOGLE_CLIENT_ID=Client ID จาก Google Cloud
 GOOGLE_CLIENT_SECRET=Client Secret จาก Google Cloud
-GOOGLE_CALLBACK_URL=https://bidmarket-lxou.onrender.com/auth/google/callback
-ADMIN_EMAILS=Gmail ที่ให้เป็น Admin เช่น tokizawa1412@gmail.com
+GOOGLE_CALLBACK_URL=https://ชื่อเว็บ.onrender.com/auth/google/callback
+ADMIN_EMAILS=อีเมลแอดมิน@gmail.com
+SESSION_SECRET=ข้อความสุ่มยาวๆ
+DATABASE_URL=ได้จาก Render PostgreSQL
 ```
 
-### Google Cloud OAuth
-
-Authorized JavaScript origins:
+ใน Google Cloud OAuth Client ต้องตั้งค่า:
 
 ```text
-https://bidmarket-lxou.onrender.com
-```
+Authorized JavaScript origins:
+https://ชื่อเว็บ.onrender.com
 
 Authorized redirect URIs:
-
-```text
-https://bidmarket-lxou.onrender.com/auth/google/callback
+https://ชื่อเว็บ.onrender.com/auth/google/callback
 ```
 
-### การทำงาน
-
-- กดปุ่ม “เข้าสู่ระบบด้วย Gmail”
-- ระบบพาไป Google Login
-- Login สำเร็จแล้วกลับมาที่ `/auth/google/callback`
-- ถ้า Gmail ยังไม่เคยมีบัญชี ระบบจะสร้างบัญชีใหม่อัตโนมัติ
-- ถ้า Gmail อยู่ใน `ADMIN_EMAILS` ระบบจะตั้ง role เป็น `admin`
-- ข้อมูลผู้ใช้ถูกบันทึกถาวรใน PostgreSQL
+สำคัญ: ไฟล์นี้ลบ package-lock.json ออกเพื่อให้ Render ดาวน์โหลด dependency จาก registry.npmjs.org โดยตรง และไม่อ้างอิง registry ภายในที่ทำให้ ETIMEDOUT

@@ -24,13 +24,5 @@ services:
           property: connectionString
       - key: PGSSLMODE
         value: require
-      - key: GOOGLE_CLIENT_ID
-        sync: false
-      - key: GOOGLE_CLIENT_SECRET
-        sync: false
-      - key: GOOGLE_CALLBACK_URL
-        value: https://bidmarket-lxou.onrender.com/auth/google/callback
-      - key: ADMIN_EMAILS
-        value: tokizawa1412@gmail.com
       - key: OPENAI_API_KEY
         sync: false

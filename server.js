@@ -1,7 +1,5 @@
 require('dotenv').config();
 const express=require('express'), session=require('express-session'), bcrypt=require('bcryptjs'), fs=require('fs'), path=require('path'), multer=require('multer'), {v4:uuid}=require('uuid');
-const passport=require('passport');
-const GoogleStrategy=require('passport-google-oauth20').Strategy;
 const {Pool}=require('pg');
 const PgSession=require('connect-pg-simple')(session);
 const app=express(), PORT=process.env.PORT||3000, dataDir=path.join(__dirname,'data'), dbFile=path.join(dataDir,'db.json'), uploadDir=path.join(__dirname,'public','uploads');
@@ -53,12 +51,27 @@ function save(){
   }
 }
 const nid=k=>(db.next[k]=db.next[k]||1,db.next[k]++);const user=id=>db.users.find(u=>u.id==id);const uname=n=>db.users.find(u=>u.username==n);const vip=u=>u&&u.vip_until>now();const trust=u=>u&&u.trust_total_orders?Math.round(u.trust_completed_sales/u.trust_total_orders*100):0;
-const googleEnabled=()=>!!(process.env.GOOGLE_CLIENT_ID&&process.env.GOOGLE_CLIENT_SECRET);
-const adminEmails=()=>String(process.env.ADMIN_EMAILS||'tokizawa1412@gmail.com').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
-function usernameFromEmail(email){const base=String(email||'user').split('@')[0].replace(/[^a-zA-Z0-9_ก-๙.-]/g,'').slice(0,24)||'user';let name=base,i=1;while(uname(name))name=base+i++;return name}
-function findOrCreateGoogleUser(profile){const email=(profile.emails&&profile.emails[0]&&profile.emails[0].value||'').toLowerCase();const googleId=profile.id;let u=db.users.find(x=>String(x.google_id||'')===String(googleId));if(!u&&email)u=db.users.find(x=>String(x.email||'').toLowerCase()===email);const displayName=profile.displayName||email||'Google User';const avatar=(profile.photos&&profile.photos[0]&&profile.photos[0].value)||'';if(u){u.google_id=googleId;u.auth_provider='google';u.email=email||u.email;u.display_name=u.display_name||displayName;u.avatar_url=u.avatar_url||avatar;if(adminEmails().includes(String(u.email||'').toLowerCase()))u.role='admin';save();return u}u={id:nid('user'),username:usernameFromEmail(email),email,password_hash:'',google_id:googleId,auth_provider:'google',role:adminEmails().includes(email)?'admin':'user',status:'active',display_name:displayName,avatar_url:avatar,bio:'',coin:0,credit:0,token:0,vip_until:0,trust_completed_sales:0,trust_total_orders:0};db.users.push(u);save();return u}
-
-function pub(u){return u&&{id:u.id,username:u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name,avatar_url:u.avatar_url,bio:u.bio||'',coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders}}
+function pub(u){return u&&{id:u.id,username:u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name,avatar_url:u.avatar_url,bio:u.bio||'',coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders,google_linked:!!u.google_id}}
+function adminEmailSet(){return new Set(String(process.env.ADMIN_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean))}
+function isAdminEmail(email){return !!email&&adminEmailSet().has(String(email).toLowerCase())}
+function uniqueUsername(base){let clean=String(base||'user').toLowerCase().replace(/[^a-z0-9_ก-๙.-]+/g,'').replace(/^[.-]+|[.-]+$/g,'')||'user';let name=clean, i=1;while(uname(name))name=clean+i++;return name}
+function googleCallbackUrl(req){return process.env.GOOGLE_CALLBACK_URL||`${req.protocol}://${req.get('host')}/auth/google/callback`}
+function upsertGoogleUser(profile){
+  const email=String(profile.email||'').toLowerCase();
+  if(!email)throw new Error('Google ไม่ส่งอีเมลกลับมา');
+  let u=db.users.find(x=>x.google_id===profile.sub)||db.users.find(x=>String(x.email||'').toLowerCase()===email);
+  if(!u){
+    const base=email.split('@')[0];
+    u={id:nid('user'),username:uniqueUsername(base),email,password_hash:'',role:isAdminEmail(email)?'admin':'user',status:'active',display_name:profile.name||base,avatar_url:profile.picture||'',bio:'',coin:0,credit:0,token:0,vip_until:0,trust_completed_sales:0,trust_total_orders:0,google_id:profile.sub,auth_provider:'google',created_at:now()};
+    db.users.push(u);
+  }else{
+    u.google_id=profile.sub;u.auth_provider=u.auth_provider||'google';u.email=email;
+    if(profile.name&&!u.display_name)u.display_name=profile.name;
+    if(profile.picture)u.avatar_url=profile.picture;
+    if(isAdminEmail(email))u.role='admin';
+  }
+  return u;
+}
 function au(a,viewer){return {...a,seller_name:user(a.seller_id)?.username,seller_trust_rate:trust(user(a.seller_id)),is_started:now()>=a.start_at,time_until_start:Math.max(0,a.start_at-now()),participant_count:Object.keys(a.bidder_last_amounts||{}).length,winner_name:a.winner_id?user(a.winner_id)?.username:null,viewer_vip_entry:(a.vip_entries||[]).find(e=>e.user_id==viewer)||null}}
 function need(req,res,next){if(!req.session.userId)return res.status(401).json({error:'กรุณาเข้าสู่ระบบ'});let u=user(req.session.userId);if(!u||u.status!=='active')return res.status(403).json({error:'บัญชีถูกระงับ'});next()}function admin(req,res,next){let u=user(req.session.userId);if(!u||u.role!='admin')return res.status(403).json({error:'เฉพาะ Admin'});next()}
 function tx(uid,type,amount,currency,note=''){db.transactions.unshift({id:nid('tx'),user_id:uid,type,amount,currency,note,created_at:now()})}function bal(uid,c,delta,type,note=''){let u=user(uid);if(!u)throw Error('ไม่พบผู้ใช้');if((u[c]||0)+delta<0)throw Error('ยอดเงินไม่พอ');u[c]=(u[c]||0)+delta;tx(uid,type,delta,c,note)}
@@ -91,24 +104,36 @@ io.on('connection', (socket) => {
   });
 });
 
+app.set('trust proxy',1);
 app.use(express.json({limit:'25mb'}));app.use(express.urlencoded({extended:true}));
 const sessionOptions={secret:process.env.SESSION_SECRET||'dev-change-me',resave:false,saveUninitialized:false,cookie:{maxAge:6048e5,secure:process.env.NODE_ENV==='production',sameSite:'lax'}};
 if(USE_POSTGRES){sessionOptions.store=new PgSession({pool:pgPool,tableName:'user_sessions',createTableIfMissing:true});}
-app.use(session(sessionOptions));
-passport.serializeUser((u,done)=>done(null,u.id));
-passport.deserializeUser((id,done)=>done(null,user(id)||false));
-if(googleEnabled()){
-  passport.use(new GoogleStrategy({clientID:process.env.GOOGLE_CLIENT_ID,clientSecret:process.env.GOOGLE_CLIENT_SECRET,callbackURL:process.env.GOOGLE_CALLBACK_URL||'/auth/google/callback'},(accessToken,refreshToken,profile,done)=>{
-    try{return done(null,findOrCreateGoogleUser(profile))}catch(e){return done(e)}
-  }));
-}
-app.use(passport.initialize());app.use(passport.session());
-app.use(express.static(path.join(__dirname,'public')));app.use('/uploads',express.static(uploadDir));const up=multer({storage:multer.diskStorage({destination:(_,__,cb)=>cb(null,uploadDir),filename:(_,f,cb)=>cb(null,Date.now()+'-'+uuid()+path.extname(f.originalname))}),limits:{fileSize:50*1024*1024}});
-app.get('/auth/google',(req,res,next)=>{if(!googleEnabled())return res.status(500).send('Google Login ยังไม่ได้ตั้งค่า GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET ใน Render');passport.authenticate('google',{scope:['profile','email'],prompt:'select_account'})(req,res,next)});
-app.get('/auth/google/callback',(req,res,next)=>{if(!googleEnabled())return res.redirect('/?google=not_configured');passport.authenticate('google',{failureRedirect:'/?google=failed'},(err,u)=>{if(err||!u)return res.redirect('/?google=failed');req.logIn(u,(loginErr)=>{if(loginErr)return res.redirect('/?google=failed');req.session.userId=u.id;return res.redirect('/')})})(req,res,next)});
-app.get('/api/auth/google-status',(req,res)=>res.json({enabled:googleEnabled(),callback:process.env.GOOGLE_CALLBACK_URL||'/auth/google/callback'}));
+app.use(session(sessionOptions));app.use(express.static(path.join(__dirname,'public')));app.use('/uploads',express.static(uploadDir));const up=multer({storage:multer.diskStorage({destination:(_,__,cb)=>cb(null,uploadDir),filename:(_,f,cb)=>cb(null,Date.now()+'-'+uuid()+path.extname(f.originalname))}),limits:{fileSize:50*1024*1024}});
 app.post('/api/register',(req,res)=>{let {username,email,password}=req.body;if(!username||!email||!password)return res.status(400).json({error:'กรอกข้อมูลให้ครบ'});if(uname(username))return res.status(400).json({error:'ชื่อซ้ำ'});let u={id:nid('user'),username,email,password_hash:bcrypt.hashSync(password,10),role:'user',status:'active',display_name:username,avatar_url:'',bio:'',coin:0,credit:0,token:0,vip_until:0,trust_completed_sales:0,trust_total_orders:0};db.users.push(u);req.session.userId=u.id;save();res.json({user:pub(u)})});
-app.post('/api/login',(req,res)=>{let u=uname(req.body.username);if(!u||!bcrypt.compareSync(req.body.password||'',u.password_hash))return res.status(401).json({error:'ผิด'});req.session.userId=u.id;res.json({user:pub(u)})});app.post('/api/logout',(req,res)=>{if(req.logout)req.logout(()=>req.session.destroy(()=>res.json({ok:true})));else req.session.destroy(()=>res.json({ok:true}))});app.get('/api/me',(req,res)=>res.json({user:pub(user(req.session.userId))}));
+app.post('/api/login',(req,res)=>{let u=uname(req.body.username);if(!u||!u.password_hash||!bcrypt.compareSync(req.body.password||'',u.password_hash))return res.status(401).json({error:'ผิด'});req.session.userId=u.id;res.json({user:pub(u)})});app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));app.get('/api/me',(req,res)=>res.json({user:pub(user(req.session.userId))}));
+app.get('/auth/google',(req,res)=>{
+  if(!process.env.GOOGLE_CLIENT_ID)return res.status(500).send('Missing GOOGLE_CLIENT_ID in Render Environment');
+  const state=uuid();req.session.googleOAuthState=state;
+  const params=new URLSearchParams({client_id:process.env.GOOGLE_CLIENT_ID,redirect_uri:googleCallbackUrl(req),response_type:'code',scope:'openid email profile',state,prompt:'select_account'});
+  res.redirect('https://accounts.google.com/o/oauth2/v2/auth?'+params.toString());
+});
+app.get('/auth/google/callback',async(req,res)=>{
+  try{
+    if(!process.env.GOOGLE_CLIENT_ID||!process.env.GOOGLE_CLIENT_SECRET)return res.status(500).send('Missing Google OAuth Environment Variables');
+    if(!req.query.code)return res.redirect('/?google_error=no_code');
+    if(!req.session.googleOAuthState||req.query.state!==req.session.googleOAuthState)return res.status(400).send('Invalid OAuth state');
+    delete req.session.googleOAuthState;
+    const tokenResp=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code:String(req.query.code),client_id:process.env.GOOGLE_CLIENT_ID,client_secret:process.env.GOOGLE_CLIENT_SECRET,redirect_uri:googleCallbackUrl(req),grant_type:'authorization_code'})});
+    const token=await tokenResp.json();
+    if(!tokenResp.ok)throw new Error(token.error_description||token.error||'Google token exchange failed');
+    const profileResp=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:`Bearer ${token.access_token}`}});
+    const profile=await profileResp.json();
+    if(!profileResp.ok)throw new Error(profile.error_description||profile.error||'Cannot read Google profile');
+    if(profile.email_verified===false)throw new Error('อีเมล Google ยังไม่ได้ยืนยัน');
+    const u=upsertGoogleUser(profile);req.session.userId=u.id;save();
+    res.redirect('/?google_login=success');
+  }catch(e){console.error('Google OAuth failed:',e);res.redirect('/?google_error='+encodeURIComponent(e.message));}
+});
 app.put('/api/me/profile',need,(req,res)=>{let u=user(req.session.userId);['display_name','email','bio','avatar_url'].forEach(k=>{if(req.body[k]!=null)u[k]=String(req.body[k])});save();res.json({user:pub(u)})});app.post('/api/upload',need,up.single('file'),(req,res)=>res.json({url:'/uploads/'+req.file.filename}));
 app.post('/api/wallet/buy-coin',need,(req,res)=>{bal(req.session.userId,'coin',Number(req.body.baht)*100,'ซื้อ Coin');save();res.json({user:pub(user(req.session.userId))})});
 app.post('/api/payments/create-credit-topup',need,(req,res)=>{
