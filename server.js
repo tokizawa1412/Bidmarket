@@ -14,9 +14,9 @@ fs.mkdirSync(dataDir,{recursive:true}); fs.mkdirSync(uploadDir,{recursive:true})
 const now=()=>Date.now(), img='https://images.unsplash.com/photo-1560472354-b33ff0c44a43?q=80&w=1200&auto=format&fit=crop';
 function fresh(){const h=bcrypt.hashSync('1234',10);return {next:{user:3,auc:3,tx:1,order:1,escrow:1,dispute:1,estimate:1,ad:1,msg:1,payment:1},users:[{id:1,username:'demo',email:'demo@x.local',password_hash:h,role:'admin',status:'active',display_name:'Demo Admin',avatar_url:'',bio:'',coin:5e6,credit:50000,token:20,vip_until:now()+31536e6,trust_completed_sales:0,trust_total_orders:0},{id:2,username:'seller',email:'seller@x.local',password_hash:h,role:'user',status:'active',display_name:'VIP Seller',avatar_url:'',bio:'',coin:2e6,credit:30000,token:5,vip_until:now()+15552e6,trust_completed_sales:0,trust_total_orders:0}],auctions:[{id:1,seller_id:2,level:'vip',method:'forward',currency:'credit',title:'Rolex Submariner Vintage',description:'ตัวอย่าง VIP + Escrow',category:'ของสะสม',image_url:'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:10000,current_bid:10000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+7200e3,status:'active',vip_entry_min_credit:7000,vip_entry_fee_percent:5},{id:2,seller_id:1,level:'general',method:'forward',currency:'credit',title:'iPhone 15 Pro Max',description:'ตัวอย่างประมูลทั่วไป + Escrow',category:'มือถือ',image_url:'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:20000,current_bid:20000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+86400e3,status:'active',vip_entry_min_credit:0,vip_entry_fee_percent:0}],orders:[],escrow:[],disputes:[],transactions:[],favorites:[],messages:[],estimates:[],ads:[],company_revenue:[],winners:[]}}
 function normalizeDb(d){
-  ['orders','escrow','disputes','transactions','favorites','messages','estimates','ads','ad_views','ad_checks','company_revenue','winners','payments','audit_logs','escrow_events','activities','activity_reports','activity_participants','reward_codes','reward_claims','topup_reward_claims','review_queue','fee_logs','pin_logs'].forEach(k=>d[k]||(d[k]=[]));
+  ['orders','escrow','disputes','transactions','favorites','messages','estimates','ads','ad_views','ad_checks','company_revenue','winners','payments','audit_logs','escrow_events','activities','activity_reports','activity_participants','reward_codes','reward_claims','topup_reward_claims','review_queue','fee_logs','pin_logs','notifications'].forEach(k=>d[k]||(d[k]=[]));
   d.next||(d.next={});
-  ['user','auc','tx','order','escrow','dispute','estimate','ad','ad_view','msg','payment','audit','escrow_event','activity','activity_report','activity_participant','reward_code','reward_claim','topup_reward_claim','review_queue','fee_log','pin_log'].forEach(k=>d.next[k]||(d.next[k]=1));
+  ['user','auc','tx','order','escrow','dispute','estimate','ad','ad_view','msg','payment','audit','escrow_event','activity','activity_report','activity_participant','reward_code','reward_claim','topup_reward_claim','review_queue','fee_log','pin_log','notification'].forEach(k=>d.next[k]||(d.next[k]=1));
   (d.users||[]).forEach(u=>{u.trust_completed_sales??=0;u.trust_total_orders??=0;u.avatar_url??='';u.display_name??=u.username;u.role??='user';u.status??='active';u.google_id??='';u.auth_provider??=(u.google_id?'google':'local');u.credit??=0;u.coin??=0;u.token??=0;u.vip_until??=0;u.vip_level??=(u.vip_until>now()?'Member':'Member');u.vip_points??=0;u.vip_coin_spent_for_silver??=0;u.vip_credit_spent_for_silver??=0;u.username_change_count??=0;u.elite_free_pin_month??='';u.lifetime_credit_topup??=0});
   (d.orders||[]).forEach(o=>{o.escrow_version??='v1';o.timeline??=[];o.audit_refs??=[];o.locked_amount??=Number(o.amount||0);o.service_fee??=Number(o.service_fee||0);o.escrow_status??=(['COMPLETED','REFUNDED'].includes(o.status)?o.status:'HELD')});
   (d.ads||[]).forEach(a=>{a.status??='active';a.reward_currency??='coin';a.reward_amount=Number(a.reward_amount||0);a.type??='video';a.view_seconds=Math.min(120,Math.max(10,Number(a.view_seconds||10)));a.cover_url??='';a.media_url??='';a.description??='';a.question??='';a.answer??='';a.created_at??=now();a.deleted_reason??='';a.reward_code??='';a.reward_code_trigger??='none';a.activity_link??=''});
@@ -147,7 +147,7 @@ function spendCreditForVipPoints(u,amount,note='ใช้จ่าย Credit'){a
   }}
 function spendCoinForVipSilver(u,amount){amount=Math.floor(Number(amount||0));if(!u||amount<=0||!isVipActive(u))return;if(currentVipLevel(u)==='Member'){u.vip_coin_spent_for_silver=Number(u.vip_coin_spent_for_silver||0)+amount;spendCreditForVipPoints(u,0)}}
 function recordCompanyRevenue(amount,currency,type,ref={}){amount=ceilFee(amount);if(amount>0)db.company_revenue.unshift({amount,currency,type,ref_type:ref.ref_type||'',ref_id:ref.ref_id||'',created_at:now()})}
-function bal(uid,c,delta,type,note='',meta={}){let u=user(uid);if(!u)throw Error('ไม่พบผู้ใช้');delta=Number(delta||0);const before=Number(u[c]||0), after=before+delta;if(after<0)throw Error('ยอด '+c+' ไม่พอ');u[c]=after;tx(uid,type,delta,c,note,{...meta,before_balance:before,after_balance:after});if(delta<0&&c==='credit')spendCreditForVipPoints(u,Math.abs(delta),type);if(delta<0&&c==='coin')spendCoinForVipSilver(u,Math.abs(delta));}
+function bal(uid,c,delta,type,note='',meta={}){let u=user(uid);if(!u)throw Error('ไม่พบผู้ใช้');delta=Number(delta||0);const before=Number(u[c]||0), after=before+delta;if(after<0)throw Error('ยอด '+c+' ไม่พอ');u[c]=after;tx(uid,type,delta,c,note,{...meta,before_balance:before,after_balance:after});if(delta<0&&c==='credit')spendCreditForVipPoints(u,Math.abs(delta),type);if(delta<0&&c==='coin')spendCoinForVipSilver(u,Math.abs(delta));emitWalletUpdate(uid,type);}
 
 function normalizeAuctionMethod(m){
   m=String(m||'english').toLowerCase();
@@ -256,33 +256,87 @@ function runQuestionAdPolicyCheck(force=false){
 }
 setInterval(()=>{try{runQuestionAdPolicyCheck(false)}catch(e){console.error('Ad policy check failed:',e.message)}},60*1000);
 
+
+function roomUser(uid){return `user:${Number(uid)}`}
+function roomAuction(id){return `auction:${Number(id)}`}
+function roomOrder(id){return `escrow:${Number(id)}`}
+function emitWalletUpdate(uid, reason='wallet:update'){
+  try{const u=user(uid); if(u) io.to(roomUser(uid)).emit('wallet:update',{user:pub(u),reason,at:now()});}catch(e){console.warn('emit wallet update failed',e.message)}
+}
+function notifyUser(uid,title,body='',meta={}){
+  try{
+    if(!uid)return null;
+    db.notifications=db.notifications||[];
+    const n={id:nid('notification'),user_id:Number(uid),title:String(title||''),body:String(body||''),meta,read:false,created_at:now()};
+    db.notifications.unshift(n);
+    io.to(roomUser(uid)).emit('notification:new',n);
+    return n;
+  }catch(e){console.warn('notify user failed',e.message);return null}
+}
+function notifyAdmin(title,body='',meta={}){
+  try{io.to('admin').emit('admin:notification',{title,body,meta,created_at:now()});}catch(e){console.warn('notify admin failed',e.message)}
+}
+function emitChatMessage(msg){
+  try{
+    const payload={...msg,from_name:user(msg.from_id)?.display_name||user(msg.from_id)?.username||'ผู้ใช้'};
+    io.to(roomUser(msg.from_id)).emit('chat:message',payload);
+    io.to(roomUser(msg.to_id)).emit('chat:message',payload);
+  }catch(e){console.warn('emit chat failed',e.message)}
+}
+function emitEscrowUpdate(order,event='escrow:update'){
+  try{
+    if(!order)return;
+    const payload=orderPublic(order);
+    io.to(roomUser(order.buyer_id)).emit(event,payload);
+    io.to(roomUser(order.seller_id)).emit(event,payload);
+    io.to(roomOrder(order.id)).emit(event,payload);
+    io.to('admin').emit(event,payload);
+  }catch(e){console.warn('emit escrow update failed',e.message)}
+}
 function realtimeAuctionPayload(a) {
   return auctionApi(a);
 }
 function emitAuctionUpdate(a, event='auction:update') {
   try {
-    io.to(`auction:${a.id}`).emit(event, realtimeAuctionPayload(a));
+    const payload=realtimeAuctionPayload(a);
+    io.to(roomAuction(a.id)).emit(event, payload);
+    io.emit('auction:list:update',{id:a.id,level:a.level,status:a.status,current_bid:a.current_bid,currency:a.currency,method:a.method,at:now()});
   } catch (e) {
     console.warn('emit auction update failed', e.message);
   }
 }
 function emitOrderUpdate(order) {
   try {
-    io.emit('order:update', order);
+    emitEscrowUpdate(order,'order:update');
   } catch (e) {
     console.warn('emit order update failed', e.message);
   }
 }
 io.on('connection', (socket) => {
+  socket.on('user:join', ({userId,role}={}) => {
+    if(userId) socket.join(roomUser(userId));
+    if(role==='admin') socket.join('admin');
+    socket.emit('realtime:ready',{ok:true,at:now()});
+  });
   socket.on('auction:join', (auctionId) => {
-    socket.join(`auction:${Number(auctionId)}`);
+    socket.join(roomAuction(auctionId));
     const a = db.auctions.find(x => x.id === Number(auctionId));
     if (a) socket.emit('auction:update', realtimeAuctionPayload(a));
   });
-  socket.on('auction:leave', (auctionId) => {
-    socket.leave(`auction:${Number(auctionId)}`);
-  });
+  socket.on('auction:leave', (auctionId) => socket.leave(roomAuction(auctionId)));
+  socket.on('escrow:join', (orderId) => socket.join(roomOrder(orderId)));
+  socket.on('chat:typing', ({toUserId}={}) => { if(toUserId) io.to(roomUser(toUserId)).emit('chat:typing',{from_id:null,at:now()}); });
 });
+setInterval(()=>{
+  if(!db||!db.auctions)return;
+  db.auctions.filter(a=>a.status==='active'&&now()>=Number(a.start_at||0)).forEach(a=>{
+    const remaining=a.end_at?Math.max(0,Number(a.end_at)-now()):null;
+    io.to(roomAuction(a.id)).emit('auction:timer',{auction_id:a.id,remaining,end_at:a.end_at||null,current_bid:a.current_bid,currency:a.currency,status:a.status});
+    if(remaining===0 && a.status==='active' && a.winner_id){
+      try{closeAuction(a);save();}catch(e){console.warn('auto close auction failed',a.id,e.message)}
+    }
+  });
+},1000);
 
 app.set('trust proxy',1);
 app.use(express.json({limit:'25mb'}));app.use(express.urlencoded({extended:true}));
@@ -330,14 +384,14 @@ app.post('/api/payments/upload-slip',need,up.single('slip'),(req,res)=>{
   if(!p)return res.status(404).json({error:'ไม่พบรายการเติมเงิน'});
   if(p.status==='approved')return res.status(400).json({error:'รายการนี้อนุมัติแล้ว'});
   if(!req.file)return res.status(400).json({error:'กรุณาอัปโหลดสลิป'});
-  p.slip_url='/uploads/'+req.file.filename;p.status='waiting_admin';p.updated_at=now();save();
+  p.slip_url='/uploads/'+req.file.filename;p.status='waiting_admin';p.updated_at=now();notifyAdmin('มีสลิปเติมเงินใหม่',`ผู้ใช้ #${p.user_id} เติม ${p.credit_amount} Credit`,{type:'payment',payment_id:p.id});save();
   res.json({payment:p});
 });
 app.get('/api/payments/my',need,(req,res)=>res.json({payments:(db.payments||[]).filter(p=>p.user_id==req.session.userId)}));
 app.get('/api/admin/payments',admin,(req,res)=>res.json({payments:(db.payments||[]).map(p=>({...p,user:pub(user(p.user_id))}))}));
 app.post('/api/admin/payments/:id/approve',admin,(req,res)=>{
   const p=(db.payments||[]).find(x=>x.id==req.params.id);if(!p)return res.status(404).json({error:'ไม่พบรายการ'});
-  if(p.status!=='approved'){p.status='approved';p.updated_at=now();p.admin_note=req.body.note||'';bal(p.user_id,'credit',p.credit_amount,'เติม Credit ผ่าน QR',`รายการ ${p.id} / ${p.baht_amount} บาท`);let tu=user(p.user_id);if(tu)tu.lifetime_credit_topup=Number(tu.lifetime_credit_topup||0)+Number(p.credit_amount||0);recordCompanyRevenue(p.credit_amount,'credit','Credit ที่เติมเข้าสู่ระบบ',{ref_type:'payment',ref_id:p.id});save();}
+  if(p.status!=='approved'){p.status='approved';p.updated_at=now();p.admin_note=req.body.note||'';bal(p.user_id,'credit',p.credit_amount,'เติม Credit ผ่าน QR',`รายการ ${p.id} / ${p.baht_amount} บาท`);let tu=user(p.user_id);if(tu)tu.lifetime_credit_topup=Number(tu.lifetime_credit_topup||0)+Number(p.credit_amount||0);recordCompanyRevenue(p.credit_amount,'credit','Credit ที่เติมเข้าสู่ระบบ',{ref_type:'payment',ref_id:p.id});notifyUser(p.user_id,'เติม Credit สำเร็จ',`ได้รับ ${p.credit_amount} Credit`,{type:'payment',payment_id:p.id});save();}
   res.json({payment:p,user:pub(user(p.user_id))});
 });
 app.post('/api/admin/payments/:id/reject',admin,(req,res)=>{const p=(db.payments||[]).find(x=>x.id==req.params.id);if(!p)return res.status(404).json({error:'ไม่พบรายการ'});p.status='rejected';p.admin_note=req.body.note||'';p.updated_at=now();save();res.json({payment:p})});
@@ -382,7 +436,7 @@ app.post('/api/auctions',need,(req,res)=>{try{
   if(!a.title)throw Error('กรุณากรอกชื่อสินค้า');
   db.auctions.push(a);save();res.json({auction:au(a,u.id)})
 }catch(e){res.status(400).json({error:e.message})}});
-app.post('/api/auctions/:id/join',need,(req,res)=>{try{let a=db.auctions.find(x=>x.id==req.params.id),u=user(req.session.userId);if(!a)throw Error('ไม่พบ');if(a.status!=='active')throw Error('การประมูลนี้ปิดแล้ว');if(a.seller_id==u.id)throw Error('เข้าร่วมสินค้าของตัวเองไม่ได้');if(a.level=='vip'){let need=Math.max(Number(a.vip_entry_min_credit||0),a.method==='english'?Math.ceil(Number(a.start_price||0)*.7):0),amt=Number(req.body.credit_amount||0);if(need>0){if(amt<need)throw Error('ต้องใส่ Credit อย่างน้อย '+need);if(u.credit<amt)throw Error('Credit ไม่พอ');let e=a.vip_entries.find(e=>e.user_id==u.id);e?e.credit_amount=amt:a.vip_entries.push({user_id:u.id,credit_amount:amt})}else if(!a.vip_entries.find(e=>e.user_id==u.id))a.vip_entries.push({user_id:u.id,credit_amount:0})}if(!a.participants.includes(u.id))a.participants.push(u.id);save();res.json({auction:au(a,u.id)})}catch(e){res.status(400).json({error:e.message})}});
+app.post('/api/auctions/:id/join',need,(req,res)=>{try{let a=db.auctions.find(x=>x.id==req.params.id),u=user(req.session.userId);if(!a)throw Error('ไม่พบ');if(a.status!=='active')throw Error('การประมูลนี้ปิดแล้ว');if(a.seller_id==u.id)throw Error('เข้าร่วมสินค้าของตัวเองไม่ได้');if(a.level=='vip'){let need=Math.max(Number(a.vip_entry_min_credit||0),a.method==='english'?Math.ceil(Number(a.start_price||0)*.7):0),amt=Number(req.body.credit_amount||0);if(need>0){if(amt<need)throw Error('ต้องใส่ Credit อย่างน้อย '+need);if(u.credit<amt)throw Error('Credit ไม่พอ');let e=a.vip_entries.find(e=>e.user_id==u.id);e?e.credit_amount=amt:a.vip_entries.push({user_id:u.id,credit_amount:amt})}else if(!a.vip_entries.find(e=>e.user_id==u.id))a.vip_entries.push({user_id:u.id,credit_amount:0})}if(!a.participants.includes(u.id))a.participants.push(u.id);save();emitAuctionUpdate(a,'auction:joined');notifyUser(a.seller_id,'มีผู้เข้าร่วมประมูล',`${u.display_name||u.username} เข้าร่วม ${a.title}`,{type:'auction',auction_id:a.id});res.json({auction:au(a,u.id)})}catch(e){res.status(400).json({error:e.message})}});
 
 const ESCROW_TERMINAL=new Set(['COMPLETED','REFUNDED','CANCELLED']);
 const ESCROW_ACTIVE=new Set(['WAIT_SHIPPING','SHIPPED','DELIVERED','DISPUTE']);
@@ -439,7 +493,7 @@ app.post('/api/auctions/:id/bid',need,(req,res)=>{
       holdBidFunds(u,a.currency,amount-prev,'เสนอราคาแบบปิดซอง: '+a.title);
       a.sealed_bids=(a.sealed_bids||[]).filter(b=>b.user_id!==u.id);a.sealed_bids.push({user_id:u.id,amount,created_at:now()});a.bidder_last_amounts[u.id]=amount;a.highest_bid_by_user[u.id]=amount;a.bids_count++;a.chats.push({system:true,text:`${u.display_name||u.username} ส่งราคาแบบปิดซองแล้ว`});
     }
-    save();emitAuctionUpdate(a,'auction:bid');res.json({auction:au(a,u.id),user:pub(u)})
+    notifyUser(a.seller_id,'มีการประมูลใหม่',`${u.display_name||u.username} อัปเดตราคา ${a.current_bid} ${a.currency}`,{type:'auction',auction_id:a.id});save();emitAuctionUpdate(a,'auction:bid');res.json({auction:au(a,u.id),user:pub(u)})
   }catch(e){res.status(400).json({error:e.message})}
 });
 
@@ -459,7 +513,7 @@ function makeOrder(a,winner,price,escrowFee,saleFee,escrowCashback,penaltyCompan
   db.escrow.unshift({id:nid('escrow'),order_id:o.id,amount:price,currency:a.currency,status:'HELD',type:'HOLD',created_at:created,note:'Escrow V2: พักเงินผู้ชนะประมูล'});
   escrowEvent(o,'HOLD',winner.id,'พักเงินผู้ชนะประมูล',{auction_id:a.id,price,escrow_fee:escrowFee,sale_success_fee:saleFee,escrow_cashback:escrowCashback});
   audit(winner.id,'ESCROW_HOLD','order',o.id,{amount:price,currency:a.currency,auction_id:a.id});
-  emitOrderUpdate(o);
+  emitOrderUpdate(o);notifyUser(o.buyer_id,'สร้าง Escrow แล้ว',`รายการ ${o.item_title} รอผู้ขายจัดส่ง`,{type:'escrow',order_id:o.id});notifyUser(o.seller_id,'มีคำสั่งซื้อใหม่',`กรุณาจัดส่ง ${o.item_title}`,{type:'escrow',order_id:o.id});notifyAdmin('Escrow ใหม่',o.item_title,{type:'escrow',order_id:o.id});
   return o;
 }
 function refundNonWinningHolds(a,wid){
@@ -524,7 +578,7 @@ app.post('/api/orders/:id/ship',need,(req,res)=>{
   if(o.seller_id!=req.session.userId)return res.status(403).json({error:'เฉพาะผู้ขาย'});
   if(!['WAIT_SHIPPING','SHIPPED'].includes(o.status))return res.status(400).json({error:'สถานะนี้ไม่สามารถแจ้งจัดส่งได้'});
   o.shipping_company=String(req.body.shipping_company||'');o.tracking_number=String(req.body.tracking_number||'');o.delivery_note=String(req.body.delivery_note||'');
-  o.status='SHIPPED';o.seller_confirmed=true;o.shipped_at=now();o.updated_at=now();escrowEvent(o,'SELLER_SHIPPED',req.session.userId,'ผู้ขายแจ้งจัดส่ง',{shipping_company:o.shipping_company,tracking_number:o.tracking_number});audit(req.session.userId,'ORDER_SHIPPED','order',o.id,{shipping_company:o.shipping_company,tracking_number:o.tracking_number});save();emitOrderUpdate(o);res.json({order:orderPublic(o)})
+  o.status='SHIPPED';o.seller_confirmed=true;o.shipped_at=now();o.updated_at=now();escrowEvent(o,'SELLER_SHIPPED',req.session.userId,'ผู้ขายแจ้งจัดส่ง',{shipping_company:o.shipping_company,tracking_number:o.tracking_number});audit(req.session.userId,'ORDER_SHIPPED','order',o.id,{shipping_company:o.shipping_company,tracking_number:o.tracking_number});notifyUser(o.buyer_id,'ผู้ขายแจ้งจัดส่งแล้ว',o.item_title,{type:'escrow',order_id:o.id});save();emitOrderUpdate(o);res.json({order:orderPublic(o)})
 });
 function release(o,by='system',actor_id=null,note=''){
   if(!o)throw Error('ไม่พบคำสั่งซื้อ');
@@ -542,7 +596,7 @@ function release(o,by='system',actor_id=null,note=''){
   const held=db.escrow.find(e=>e.order_id==o.id&&e.status==='HELD');if(held){held.status='RELEASED';held.updated_at=now()}
   db.escrow.push({id:nid('escrow'),order_id:o.id,amount:o.amount,currency:o.currency,status:'RELEASED',type:'RELEASE',created_at:now(),note:'Escrow V2: ปล่อยเงินให้ผู้ขาย'});
   escrowEvent(o,'RELEASE',actor_id,note||'ปล่อยเงินให้ผู้ขาย',{payout,service_fee:o.service_fee,sale_success_fee:o.sale_success_fee,escrow_cashback:o.escrow_cashback,by});audit(actor_id,'ESCROW_RELEASE','order',o.id,{payout,service_fee:o.service_fee,sale_success_fee:o.sale_success_fee,escrow_cashback:o.escrow_cashback,by,note});
-  emitOrderUpdate(o);return o;
+  emitOrderUpdate(o);notifyUser(o.seller_id,'Escrow ปล่อยเงินแล้ว',`ได้รับเงินจาก ${o.item_title}`,{type:'escrow',order_id:o.id});notifyUser(o.buyer_id,'คำสั่งซื้อเสร็จสมบูรณ์',o.item_title,{type:'escrow',order_id:o.id});return o;
 }
 function refundOrder(o,by='admin',actor_id=null,note=''){
   if(!o)throw Error('ไม่พบคำสั่งซื้อ');
@@ -554,7 +608,7 @@ function refundOrder(o,by='admin',actor_id=null,note=''){
   const held=db.escrow.find(e=>e.order_id==o.id&&e.status==='HELD');if(held){held.status='REFUNDED';held.updated_at=now()}
   db.escrow.push({id:nid('escrow'),order_id:o.id,amount:o.amount,currency:o.currency,status:'REFUNDED',type:'REFUND',created_at:now(),note:'Escrow V2: คืนเงินให้ผู้ซื้อ'});
   escrowEvent(o,'REFUND',actor_id,note||'คืนเงินให้ผู้ซื้อ',{amount:o.amount,by});audit(actor_id,'ESCROW_REFUND','order',o.id,{amount:o.amount,by,note});
-  emitOrderUpdate(o);return o;
+  emitOrderUpdate(o);notifyUser(o.buyer_id,'Escrow คืนเงินแล้ว',o.item_title,{type:'escrow',order_id:o.id});notifyUser(o.seller_id,'Escrow ถูกคืนเงิน',o.item_title,{type:'escrow',order_id:o.id});return o;
 }
 app.post('/api/orders/:id/confirm',need,(req,res)=>{
   try{
@@ -573,7 +627,7 @@ app.post('/api/orders/:id/dispute',need,up.array('files',6),(req,res)=>{
   if(![o.buyer_id,o.seller_id].includes(req.session.userId))return res.status(403).json({error:'ไม่มีสิทธิ์'});
   if(['COMPLETED','REFUNDED'].includes(o.status))return res.status(400).json({error:'รายการนี้จบแล้ว'});
   let d={id:nid('dispute'),order_id:o.id,opened_by:req.session.userId,reason:req.body.reason||'',evidence:(req.files||[]).map(f=>'/uploads/'+f.filename),status:'OPEN',admin_note:'',created_at:now(),updated_at:now()};
-  db.disputes.unshift(d);o.status='DISPUTE';o.dispute_id=d.id;o.updated_at=now();escrowEvent(o,'DISPUTE_OPENED',req.session.userId,d.reason,{evidence:d.evidence});audit(req.session.userId,'DISPUTE_OPENED','order',o.id,{reason:d.reason,evidence_count:d.evidence.length});save();emitOrderUpdate(o);res.json({dispute:d})
+  db.disputes.unshift(d);o.status='DISPUTE';o.dispute_id=d.id;o.updated_at=now();escrowEvent(o,'DISPUTE_OPENED',req.session.userId,d.reason,{evidence:d.evidence});audit(req.session.userId,'DISPUTE_OPENED','order',o.id,{reason:d.reason,evidence_count:d.evidence.length});notifyAdmin('มีข้อพิพาทใหม่',o.item_title,{type:'dispute',order_id:o.id,dispute_id:d.id});notifyUser(o.buyer_id,'มีข้อพิพาทในคำสั่งซื้อ',o.item_title,{type:'dispute',order_id:o.id});notifyUser(o.seller_id,'มีข้อพิพาทในคำสั่งซื้อ',o.item_title,{type:'dispute',order_id:o.id});save();emitOrderUpdate(o);res.json({dispute:d})
 });
 
 function fdata(file){let ext=path.extname(file.path).toLowerCase(),mime=ext=='.png'?'image/png':ext=='.webp'?'image/webp':'image/jpeg';return `data:${mime};base64,${fs.readFileSync(file.path).toString('base64')}`}
@@ -711,8 +765,10 @@ app.post('/api/messages/:userId',need,(req,res)=>{
   const text=String(req.body.text||'').trim();
   if(!text)return res.status(400).json({error:'กรุณาพิมพ์ข้อความ'});
   const msg={id:nid('msg'),from_id:meId,to_id:otherId,text,created_at:now(),read:false};
-  db.messages.push(msg);save();res.json({message:msg});
+  db.messages.push(msg);notifyUser(otherId,'ข้อความใหม่',text.slice(0,80),{type:'chat',from_id:meId});save();emitChatMessage(msg);res.json({message:msg});
 });
 
+app.get('/api/notifications',need,(req,res)=>res.json({notifications:(db.notifications||[]).filter(n=>n.user_id==req.session.userId).slice(0,50)}));
+app.post('/api/notifications/read',need,(req,res)=>{(db.notifications||[]).filter(n=>n.user_id==req.session.userId).forEach(n=>n.read=true);save();res.json({ok:true})});
 app.get('/api/transactions',need,(req,res)=>res.json({transactions:db.transactions.filter(t=>t.user_id==req.session.userId)}));app.get('*',(_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 load().then(initialDb=>{db=initialDb;ensureSystemDefaults();save();serverHttp.listen(PORT,()=>console.log('BidMarket Persistent DB '+(USE_POSTGRES?'PostgreSQL':'JSON local')+' http://localhost:'+PORT));}).catch(err=>{console.error('Cannot start server:',err);process.exit(1);});

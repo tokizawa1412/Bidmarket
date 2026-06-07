@@ -73,3 +73,41 @@ npm start
 กฎสกุลเงิน:
 - ทุกแบบใช้ได้เฉพาะ Credit หรือ Coin
 - หากใช้ Coin ต้องขั้นต่ำ 100 Coin และต้องเป็นจำนวนเต็มร้อยเท่านั้น
+
+## Realtime V1 Update
+
+เพิ่มระบบ Realtime ด้วย Socket.io สำหรับส่วนหลักของเว็บ:
+
+- ห้องประมูล `auction:{auctionId}`
+- ห้องผู้ใช้ `user:{userId}`
+- ห้อง Admin `admin`
+- ห้อง Escrow `escrow:{orderId}`
+
+Event ที่เพิ่ม:
+
+- `auction:created`
+- `auction:joined`
+- `auction:bid`
+- `auction:closed`
+- `auction:timer`
+- `auction:list:update`
+- `wallet:update`
+- `order:update`
+- `escrow:update`
+- `chat:message`
+- `notification:new`
+- `admin:notification`
+
+ระบบจะอัปเดตราคา/ผู้เข้าร่วม/เวลานับถอยหลัง/สถานะ Escrow/ยอด Coin-Credit/ข้อความแชท และแจ้งเตือนโดยไม่ต้องรีเฟรชหน้าเว็บ
+
+## Realtime Notification Sounds
+
+เพิ่มเสียงแจ้งเตือนใน Realtime V1:
+- มีคนเสนอราคาสูงกว่าคุณ: `public/assets/sounds/outbid.wav`
+- เหลือเวลาประมูลต่ำกว่า 10 วินาที: ใช้ไฟล์ที่ผู้ใช้อัปโหลด `public/assets/sounds/timer-warning.mp3`
+- ชนะประมูล: `public/assets/sounds/hammer-close.wav`
+- ได้รับข้อความใหม่: `public/assets/sounds/chat-new.wav`
+- Escrow เปลี่ยนสถานะ: `public/assets/sounds/escrow-update.wav`
+- VIP เลื่อนระดับ: `public/assets/sounds/vip-levelup.wav`
+
+ผู้ใช้สามารถเปิด/ปิดเสียงแจ้งเตือนได้ในหน้า “บัญชีผู้ใช้” ระบบจะบันทึกค่าไว้ใน `localStorage` ของ Browser
