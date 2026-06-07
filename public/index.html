@@ -99,6 +99,28 @@ body.admin .adminOnly{display:inline-block}
   .pager{margin:14px 0 20px}.pager button{min-width:34px!important;padding:8px 10px!important;font-size:12px!important}
   .chatFab{width:58px!important;height:58px!important}
 }
+
+
+/* Mobile drawer swipe + compact auction card v3 */
+@media(max-width:768px){
+  .mobileMenuOverlay{background:rgba(2,6,23,.56)!important;z-index:90!important;touch-action:pan-y}
+  .mobileMenuOverlay.open{display:block!important}
+  .mobileMenuPanel{height:100vh!important;max-height:100vh!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;padding:128px 16px 24px!important;width:min(82vw,330px)!important;transform:translateX(0);transition:transform .22s ease;border-radius:0 26px 26px 0!important}
+  .mobileMenuOverlay:not(.open) .mobileMenuPanel{transform:translateX(-105%)}
+  .mobileMenuHead{position:sticky;top:0;background:#fff;z-index:2;margin-top:-112px;margin-bottom:72px;border-bottom:0;padding:0 0 10px}
+  .mobileMenuClose{position:absolute;right:0;top:0}
+  .mobileMenuPanel button.menuItem{padding:12px 14px!important;margin-bottom:8px!important}
+  .auction.card .content{display:flex;flex-direction:column;gap:4px}
+  .auction.card .tag:first-of-type{display:none!important}
+  .auction.card .tag{align-self:flex-start;font-size:10px!important;padding:3px 7px!important}
+  .auction.card .meta{display:none!important}
+  .auction.card h3{font-size:14px!important;min-height:30px!important;margin:3px 0 0!important}
+  .auction.card .price{font-size:17px!important;margin:0 0 4px!important;line-height:1.1}
+  .auction.card img,.auction.card video{height:74px!important}
+  .auction.card button:not(.heart){font-size:10.5px!important;padding:7px 8px!important;line-height:1.1}
+  .auction.card .heart{bottom:7px!important;right:7px!important}
+}
+
 </style></head><body><header><div class="top"><a href="#home" class="brandLink" onclick="show('home');return false"><div class="logo">🔨 BidMarket</div><div class="small">เว็บประมูลสินค้า</div></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
 <div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
   <div class="mobileMenuPanel" onclick="event.stopPropagation()">
@@ -165,6 +187,9 @@ body.admin .adminOnly{display:inline-block}
 let me=null,favs=[],selected=null,lastPage='home',currentAuctionCache=null,realtimeJoinedAuction=null;
 function openMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.add('open')}
 function closeMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.remove('open')}
+let mobileSwipeStartX=null,mobileSwipeStartY=null;
+document.addEventListener('touchstart',e=>{const t=e.touches&&e.touches[0];if(!t)return;mobileSwipeStartX=t.clientX;mobileSwipeStartY=t.clientY},{passive:true});
+document.addEventListener('touchend',e=>{if(mobileSwipeStartX===null)return;const t=e.changedTouches&&e.changedTouches[0];if(!t)return;const dx=t.clientX-mobileSwipeStartX,dy=Math.abs(t.clientY-mobileSwipeStartY);const overlay=document.getElementById('mobileMenuOverlay');const isOpen=overlay&&overlay.classList.contains('open');if(dy<70&&dx>80&&mobileSwipeStartX<36&&!isOpen)openMobileMenu();if(dy<70&&dx<-80&&isOpen)closeMobileMenu();mobileSwipeStartX=null;mobileSwipeStartY=null},{passive:true});
 function mobileGo(page){closeMobileMenu();show(page)}
 function mobileVip(){closeMobileMenu();showVip()}
 function mobileAdmin(){closeMobileMenu();showAdmin()}
