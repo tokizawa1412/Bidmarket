@@ -43,7 +43,49 @@ body.admin .adminOnly{display:inline-block}
 .adLock{background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:16px;padding:12px;margin:12px 0}
 .adViewerBox video{width:100%;max-height:430px;background:#000;border-radius:18px}.adTimer{font-size:30px;font-weight:900;color:#047857;margin:12px 0}
 .adReadBox{background:#f8fafc;border:1px solid #e5e7eb;border-radius:18px;padding:16px;white-space:pre-wrap;line-height:1.7}.deletedAd{opacity:.65;filter:grayscale(.4)}
-</style></head><body><header><div class="top"><a href="#home" class="brandLink" onclick="show('home');return false"><div class="logo">🔨 BidMarket</div><div class="small">Escrow Credit • AI Price • Trust</div></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav><main class="container"><div class="hidden"><h1 id="title">หน้าหลัก</h1><p id="desc">BidMarket</p></div><div class="app"><aside class="side"><div class="sideTop"><img id="sideAvatar" class="avatar"><h3 id="sideName">Guest</h3><div id="sideStatus" class="small">กรุณาเข้าสู่ระบบ</div></div><div class="sideMenu"><button onclick="show('profile')">👤 บัญชีผู้ใช้</button><button onclick="show('vip')">⭐ สมัคร VIP</button><button onclick="show('wallet')">💰 กระเป๋าเงิน</button><button onclick="show('orders')">🛡️ คำสั่งซื้อของฉัน</button><button onclick="show('estimate')">🤖 ประเมิณราคา</button><button onclick="show('favorites')">❤️ รายการที่สนใจ</button><button onclick="show('sell')">📦 ลงสินค้า</button><button onclick="show('createAd')">📣 ลงโฆษณา</button><button onclick="show('createActivity')">🎯 สร้างกิจกรรม</button></div></aside><div>
+
+/* Mobile compact navigation with overlay drawer */
+.mobileMenuBtn{display:none}
+.mobileMenuOverlay{display:none}
+@media(max-width:768px){
+  .nav{top:86px}
+  .tabs{padding:10px 12px;display:flex;align-items:center;gap:8px;flex-wrap:nowrap!important;overflow:visible}
+  .tabs>button:not(.mobileMenuBtn){display:none!important}
+  .mobileMenuBtn{display:inline-flex!important;align-items:center;justify-content:center;width:46px;min-width:46px;height:46px;border-radius:14px;margin:0;padding:0;background:#111827;color:#fff;border:1px solid #f3d28b;font-size:24px;line-height:1;box-shadow:0 8px 18px rgba(0,0,0,.18)}
+  .topUserSearch{display:flex!important;align-items:center;gap:8px;flex:1!important;min-width:0!important;max-width:none!important;margin-left:0!important}
+  .topUserSearch input{height:46px;margin:0;font-size:14px;padding:0 13px;border-radius:999px}
+  .topUserSearch button{height:46px;min-width:76px;margin:0;padding:0 14px;border-radius:999px}
+  .topSearchPanel{margin:8px 12px 12px;border-radius:18px}
+}
+.mobileMenuOverlay{position:fixed;inset:0;background:rgba(2,6,23,.62);z-index:50;backdrop-filter:blur(4px)}
+.mobileMenuOverlay.open{display:block}
+.mobileMenuPanel{width:min(82vw,330px);height:100%;background:#fff;border-radius:0 26px 26px 0;box-shadow:20px 0 60px rgba(0,0,0,.35);padding:18px;display:flex;flex-direction:column;gap:10px;animation:mobileDrawerIn .18s ease-out}
+@keyframes mobileDrawerIn{from{transform:translateX(-100%);opacity:.7}to{transform:translateX(0);opacity:1}}
+.mobileMenuHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;padding-bottom:12px;border-bottom:1px solid #e5e7eb}
+.mobileMenuTitle{font-size:22px;font-weight:900;color:#111827}.mobileMenuSub{font-size:12px;color:#8a4b00;margin-top:3px}
+.mobileMenuClose{width:42px;height:42px;border-radius:14px;margin:0;padding:0;background:#111827;color:#fff;font-size:22px}
+.mobileMenuPanel button.menuItem{width:100%;text-align:left;background:#fff;color:#111827;border:1px solid #e5e7eb;margin:0;padding:13px 14px;border-radius:16px;font-weight:900;box-shadow:0 6px 18px rgba(15,23,42,.05)}
+.mobileMenuPanel button.menuItem:active{transform:scale(.99);background:#f8fafc}
+@media(min-width:769px){.mobileMenuOverlay.open{display:none!important}}
+
+</style></head><body><header><div class="top"><a href="#home" class="brandLink" onclick="show('home');return false"><div class="logo">🔨 BidMarket</div><div class="small">Escrow Credit • AI Price • Trust</div></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
+<div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
+  <div class="mobileMenuPanel" onclick="event.stopPropagation()">
+    <div class="mobileMenuHead">
+      <div><div class="mobileMenuTitle">🔨 BidMarket</div><div class="mobileMenuSub">Escrow Credit • AI Price • Trust</div></div>
+      <button class="mobileMenuClose" onclick="closeMobileMenu()" aria-label="ปิดเมนู">×</button>
+    </div>
+    <button class="menuItem" onclick="mobileGo('home')">🏠 หน้าหลัก</button>
+    <button class="menuItem" onclick="mobileVip()">⭐ VIP Zone</button>
+    <button class="menuItem" onclick="mobileGo('ads')">📺 ดูโฆษณา</button>
+    <button class="menuItem" onclick="mobileGo('activities')">🎉 กิจกรรม</button>
+    <button class="menuItem" onclick="mobileGo('rules')">📜 กฎ/เงื่อนไข</button>
+    <button class="menuItem" onclick="mobileGo('reviews')">⭐ รีวิว</button>
+    <button class="menuItem" onclick="mobileGo('profile')">👤 บัญชีผู้ใช้</button>
+    <button id="mobileAdminBtn" class="menuItem adminOnly" onclick="mobileAdmin()">🛠️ Admin</button>
+  </div>
+</div>
+<main class="container"><div class="hidden"><h1 id="title">หน้าหลัก</h1><p id="desc">BidMarket</p></div><div class="app"><aside class="side"><div class="sideTop"><img id="sideAvatar" class="avatar"><h3 id="sideName">Guest</h3><div id="sideStatus" class="small">กรุณาเข้าสู่ระบบ</div></div><div class="sideMenu"><button onclick="show('profile')">👤 บัญชีผู้ใช้</button><button onclick="show('vip')">⭐ สมัคร VIP</button><button onclick="show('wallet')">💰 กระเป๋าเงิน</button><button onclick="show('orders')">🛡️ คำสั่งซื้อของฉัน</button><button onclick="show('estimate')">🤖 ประเมิณราคา</button><button onclick="show('favorites')">❤️ รายการที่สนใจ</button><button onclick="show('sell')">📦 ลงสินค้า</button><button onclick="show('createAd')">📣 ลงโฆษณา</button><button onclick="show('createActivity')">🎯 สร้างกิจกรรม</button></div></aside><div>
 <section id="home"><div class="panel content"><h2>หน้าหลัก</h2></div><div id="generalGrid" class="grid"></div></section><section id="vipzone" class="hidden"><div class="panel content"><h2>VIP Zone</h2><div class="notice">ผู้เข้าร่วมต้องใส่ Credit และหากแพ้จะเสีย Credit ประมูลตาม % ที่ผู้ขายตั้งไว้</div></div><div id="vipGrid" class="grid"></div></section>
 <section id="sell" class="hidden"><div class="panel content"><h2>ลงสินค้า</h2><input id="sellTitle" placeholder="ชื่อสินค้า"><textarea id="sellDesc" placeholder="รายละเอียด"></textarea><div class="row"><select id="sellLevel" onchange="rulesSell()"><option value="general">ทั่วไป</option><option value="vip">VIP</option></select><select id="sellMethod" onchange="rulesSell()"></select></div><div class="row"><select id="sellCurrency"></select><input id="sellCategory" placeholder="หมวดหมู่"></div><input id="sellStart" type="number" placeholder="ราคาเริ่มต้น"><label>เวลาเริ่มประมูล</label><input id="sellStartAt" type="datetime-local"><div id="vipBox" class="hidden"><input id="vipMin" type="number" placeholder="Credit ขั้นต่ำ 100-1,000,000"><input id="vipFee" type="number" placeholder="Credit ประมูล 1-10%"></div><input id="sellHours" type="number" placeholder="ระยะเวลา ชั่วโมง" value="24"><select id="mediaType"><option value="image">รูปภาพ</option><option value="video">วิดีโอ</option></select><input id="sellFile" type="file" accept="image/*,video/*"><input id="sellUrl" placeholder="หรือ URL รูป/วิดีโอ"><button onclick="createAuction()">เพิ่มสินค้า</button><div id="sellMsg"></div></div></section>
 <section id="estimate" class="hidden"><div class="panel content"><h2>ประเมิณราคา AI</h2><input id="estTitle" placeholder="ชื่อสินค้า"><input id="estCat" placeholder="หมวดหมู่"><input id="estCond" placeholder="สภาพสินค้า"><textarea id="estNotes" placeholder="รายละเอียด"></textarea><input id="estPhotos" type="file" accept="image/*" multiple><button class="green" onclick="estimatePrice()">ประเมิณราคา</button><div id="estResult"></div><h3>ประวัติ</h3><div id="estHistory"></div></div></section>
@@ -90,9 +132,15 @@ body.admin .adminOnly{display:inline-block}
 
 
 let me=null,favs=[],selected=null,lastPage='home',currentAuctionCache=null,realtimeJoinedAuction=null;
+function openMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.add('open')}
+function closeMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.remove('open')}
+function mobileGo(page){closeMobileMenu();show(page)}
+function mobileVip(){closeMobileMenu();showVip()}
+function mobileAdmin(){closeMobileMenu();showAdmin()}
+
 const socket = io();
 const VIP_LEVEL_ORDER=['Member','Silver','Gold','Sapphire','Platinum','Diamond','Emerald','Elite'];
-const soundFiles={outbid:'/assets/sounds/outbid.wav',timer:'/assets/sounds/timer-warning.mp3',win:'/assets/sounds/hammer-close.wav',chat:'/assets/sounds/chat-new.wav',escrow:'/assets/sounds/escrow-update.wav',vip:'/assets/sounds/vip-levelup.wav'};
+const soundFiles={outbid:'/assets/sounds/outbid.wav',timer:'/assets/sounds/timer-warning.mp3',win:'/assets/sounds/auction-win.mp3',chat:'/assets/sounds/chat-new.wav',escrow:'/assets/sounds/escrow-update.wav',vip:'/assets/sounds/vip-levelup.wav'};
 const audioPool={};
 let soundEnabled=localStorage.getItem('bidmarket_sound_enabled')!=='0';
 let audioUnlocked=false;

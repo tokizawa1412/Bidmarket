@@ -1,9 +1,15 @@
 
 
 let me=null,favs=[],selected=null,lastPage='home',currentAuctionCache=null,realtimeJoinedAuction=null;
+function openMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.add('open')}
+function closeMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.remove('open')}
+function mobileGo(page){closeMobileMenu();show(page)}
+function mobileVip(){closeMobileMenu();showVip()}
+function mobileAdmin(){closeMobileMenu();showAdmin()}
+
 const socket = io();
 const VIP_LEVEL_ORDER=['Member','Silver','Gold','Sapphire','Platinum','Diamond','Emerald','Elite'];
-const soundFiles={outbid:'/assets/sounds/outbid.wav',timer:'/assets/sounds/timer-warning.mp3',win:'/assets/sounds/hammer-close.wav',chat:'/assets/sounds/chat-new.wav',escrow:'/assets/sounds/escrow-update.wav',vip:'/assets/sounds/vip-levelup.wav'};
+const soundFiles={outbid:'/assets/sounds/outbid.wav',timer:'/assets/sounds/timer-warning.mp3',win:'/assets/sounds/auction-win.mp3',chat:'/assets/sounds/chat-new.wav',escrow:'/assets/sounds/escrow-update.wav',vip:'/assets/sounds/vip-levelup.wav'};
 const audioPool={};let soundEnabled=localStorage.getItem('bidmarket_sound_enabled')!=='0';let audioUnlocked=false;let timerWarnedByAuction={};
 function audio(name){if(!audioPool[name]){audioPool[name]=new Audio(soundFiles[name]);audioPool[name].preload='auto';audioPool[name].volume=name==='timer'?0.45:0.75}return audioPool[name]}
 function unlockAudio(){if(audioUnlocked)return;audioUnlocked=true;Object.keys(soundFiles).forEach(k=>{try{const a=audio(k);a.muted=true;const pr=a.play();if(pr&&pr.then)pr.then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{a.muted=false});else{a.pause();a.currentTime=0;a.muted=false}}catch(e){}})}
