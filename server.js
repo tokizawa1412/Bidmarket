@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express=require('express'), session=require('express-session'), bcrypt=require('bcryptjs'), fs=require('fs'), path=require('path'), multer=require('multer'), {v4:uuid}=require('uuid');
 const {Pool}=require('pg');
+let S3Client, PutObjectCommand;
+try{({S3Client,PutObjectCommand}=require('@aws-sdk/client-s3'))}catch(_){/* optional Cloudflare R2/S3 storage disabled until dependency is installed */}
 const PgSession=require('connect-pg-simple')(session);
 const app=express(), PORT=process.env.PORT||3000, dataDir=path.join(__dirname,'data'), dbFile=path.join(dataDir,'db.json'), uploadDir=path.join(__dirname,'public','uploads');
 const USE_POSTGRES=!!process.env.DATABASE_URL;
@@ -11,6 +13,29 @@ const {Server}=require('socket.io');
 const io=new Server(serverHttp);
 const auctionApi=(a)=>au(a);
 fs.mkdirSync(dataDir,{recursive:true}); fs.mkdirSync(uploadDir,{recursive:true});
+
+const STORAGE_DRIVER=(process.env.STORAGE_DRIVER||'local').toLowerCase();
+function mediaStorageEnabled(){return STORAGE_DRIVER==='r2'&&S3Client&&process.env.R2_ACCOUNT_ID&&process.env.R2_ACCESS_KEY_ID&&process.env.R2_SECRET_ACCESS_KEY&&process.env.R2_BUCKET}
+function mediaPublicBase(){return String(process.env.R2_PUBLIC_URL||'').replace(/\/+$/,'')}
+function safeExt(name,mime){let ext=path.extname(name||'').toLowerCase();if(ext&&/^[.][a-z0-9]{1,8}$/.test(ext))return ext; if(String(mime||'').includes('png'))return '.png'; if(String(mime||'').includes('webp'))return '.webp'; if(String(mime||'').includes('gif'))return '.gif'; if(String(mime||'').includes('mp4'))return '.mp4'; if(String(mime||'').includes('webm'))return '.webm'; return '.jpg'}
+function mediaKey(folder,file){folder=String(folder||'uploads').replace(/[^a-zA-Z0-9_/-]/g,'').replace(/^\/+|\/+$/g,'')||'uploads';return `${folder}/${new Date().toISOString().slice(0,10)}/${Date.now()}-${uuid()}${safeExt(file?.originalname,file?.mimetype)}`}
+async function saveUploadedFile(file,folder='uploads'){
+  if(!file)return '';
+  const key=mediaKey(folder,file);
+  const body=file.buffer||fs.readFileSync(file.path);
+  if(mediaStorageEnabled()){
+    const client=new S3Client({region:'auto',endpoint:`https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,credentials:{accessKeyId:process.env.R2_ACCESS_KEY_ID,secretAccessKey:process.env.R2_SECRET_ACCESS_KEY}});
+    await client.send(new PutObjectCommand({Bucket:process.env.R2_BUCKET,Key:key,Body:body,ContentType:file.mimetype||'application/octet-stream'}));
+    const base=mediaPublicBase();
+    if(base)return `${base}/${key}`;
+    return `r2://${process.env.R2_BUCKET}/${key}`;
+  }
+  const out=path.join(uploadDir,path.basename(key));
+  fs.writeFileSync(out,body);
+  return '/uploads/'+path.basename(out);
+}
+async function saveUploadedFiles(files,folder='uploads'){return await Promise.all((files||[]).map(f=>saveUploadedFile(f,folder)))}
+function storageStatus(){return {driver:mediaStorageEnabled()?'r2':'local',configured_driver:STORAGE_DRIVER,r2_ready:mediaStorageEnabled(),public_url:mediaPublicBase()||null,warning:mediaStorageEnabled()?null:'ยังไม่ได้ตั้งค่า Cloudflare R2 ครบ ระบบจะเก็บไฟล์ใน /public/uploads ซึ่งไม่ถาวรบน Render Free'}}
 const now=()=>Date.now(), img='https://images.unsplash.com/photo-1560472354-b33ff0c44a43?q=80&w=1200&auto=format&fit=crop';
 function fresh(){const h=bcrypt.hashSync('1234',10);return {next:{user:3,auc:3,tx:1,order:1,escrow:1,dispute:1,estimate:1,ad:1,msg:1,payment:1},users:[{id:1,username:'demo',email:'demo@x.local',password_hash:h,role:'admin',status:'active',display_name:'Demo Admin',avatar_url:'',bio:'',coin:5e6,credit:50000,token:20,vip_until:now()+31536e6,trust_completed_sales:0,trust_total_orders:0},{id:2,username:'seller',email:'seller@x.local',password_hash:h,role:'user',status:'active',display_name:'VIP Seller',avatar_url:'',bio:'',coin:2e6,credit:30000,token:5,vip_until:now()+15552e6,trust_completed_sales:0,trust_total_orders:0}],auctions:[{id:1,seller_id:2,level:'vip',method:'forward',currency:'credit',title:'Rolex Submariner Vintage',description:'ตัวอย่าง VIP + Escrow',category:'ของสะสม',image_url:'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:10000,current_bid:10000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+7200e3,status:'active',vip_entry_min_credit:7000,vip_entry_fee_percent:5},{id:2,seller_id:1,level:'general',method:'forward',currency:'credit',title:'iPhone 15 Pro Max',description:'ตัวอย่างประมูลทั่วไป + Escrow',category:'มือถือ',image_url:'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:20000,current_bid:20000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+86400e3,status:'active',vip_entry_min_credit:0,vip_entry_fee_percent:0}],orders:[],escrow:[],disputes:[],transactions:[],favorites:[],messages:[],estimates:[],ads:[],company_revenue:[],winners:[]}}
 function normalizeDb(d){
@@ -342,7 +367,7 @@ app.set('trust proxy',1);
 app.use(express.json({limit:'25mb'}));app.use(express.urlencoded({extended:true}));
 const sessionOptions={secret:process.env.SESSION_SECRET||'dev-change-me',resave:false,saveUninitialized:false,cookie:{maxAge:6048e5,secure:process.env.NODE_ENV==='production',sameSite:'lax'}};
 if(USE_POSTGRES){sessionOptions.store=new PgSession({pool:pgPool,tableName:'user_sessions',createTableIfMissing:true});}
-app.use(session(sessionOptions));app.use(express.static(path.join(__dirname,'public')));app.use('/uploads',express.static(uploadDir));const up=multer({storage:multer.diskStorage({destination:(_,__,cb)=>cb(null,uploadDir),filename:(_,f,cb)=>cb(null,Date.now()+'-'+uuid()+path.extname(f.originalname))}),limits:{fileSize:50*1024*1024}});
+app.use(session(sessionOptions));app.use(express.static(path.join(__dirname,'public')));app.use('/uploads',express.static(uploadDir));const up=multer({storage:multer.memoryStorage(),limits:{fileSize:Number(process.env.MAX_UPLOAD_MB||300)*1024*1024}});
 app.post('/api/register',(req,res)=>{let {username,email,password}=req.body;if(!username||!email||!password)return res.status(400).json({error:'กรอกข้อมูลให้ครบ'});if(uname(username))return res.status(400).json({error:'ชื่อซ้ำ'});let u={id:nid('user'),username,email,password_hash:bcrypt.hashSync(password,10),role:'user',status:'active',display_name:username,avatar_url:'',bio:'',coin:0,credit:0,token:0,vip_until:0,vip_level:'Member',vip_points:0,vip_coin_spent_for_silver:0,vip_credit_spent_for_silver:0,username_change_count:0,lifetime_credit_topup:0,trust_completed_sales:0,trust_total_orders:0};db.users.push(u);req.session.userId=u.id;save();res.json({user:pub(u)})});
 app.post('/api/login',(req,res)=>{let u=uname(req.body.username);if(!u||!u.password_hash||!bcrypt.compareSync(req.body.password||'',u.password_hash))return res.status(401).json({error:'ผิด'});req.session.userId=u.id;res.json({user:pub(u)})});app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));app.get('/api/me',(req,res)=>res.json({user:pub(user(req.session.userId))}));
 app.get('/auth/google',(req,res)=>{
@@ -369,7 +394,7 @@ app.get('/auth/google/callback',async(req,res)=>{
   }catch(e){console.error('Google OAuth failed:',e);res.redirect('/?google_error='+encodeURIComponent(e.message));}
 });
 app.put('/api/me/profile',need,(req,res)=>{let u=user(req.session.userId);['display_name','email','bio','avatar_url'].forEach(k=>{if(req.body[k]!=null)u[k]=String(req.body[k])});save();res.json({user:pub(u)})});
-app.post('/api/me/change-username',need,(req,res)=>{try{let u=user(req.session.userId),username=String(req.body.username||'').trim();if(!username)return res.status(400).json({error:'กรุณากรอกชื่อผู้ใช้ใหม่'});if(!/^[a-zA-Z0-9_ก-๙.-]{3,32}$/.test(username))return res.status(400).json({error:'ชื่อผู้ใช้ต้องยาว 3-32 ตัวอักษร และใช้ตัวอักษร/ตัวเลข/_/./- เท่านั้น'});let existing=uname(username);if(existing&&existing.id!==u.id)return res.status(400).json({error:'ชื่อนี้ถูกใช้แล้ว'});const fee=Number(u.username_change_count||0)>0?50:0;if(fee>0){bal(u.id,'credit',-fee,'เปลี่ยนชื่อผู้ใช้',`เปลี่ยนเป็น ${username}`,{ref_type:'profile'});recordCompanyRevenue(fee,'credit','ค่าธรรมเนียมเปลี่ยนชื่อผู้ใช้',{ref_type:'user',ref_id:u.id})}u.username=username;u.display_name=req.body.display_name?String(req.body.display_name):u.display_name;u.username_change_count=Number(u.username_change_count||0)+1;save();res.json({fee,user:pub(u)})}catch(e){res.status(400).json({error:e.message})}});app.post('/api/upload',need,up.single('file'),(req,res)=>res.json({url:'/uploads/'+req.file.filename}));
+app.post('/api/me/change-username',need,(req,res)=>{try{let u=user(req.session.userId),username=String(req.body.username||'').trim();if(!username)return res.status(400).json({error:'กรุณากรอกชื่อผู้ใช้ใหม่'});if(!/^[a-zA-Z0-9_ก-๙.-]{3,32}$/.test(username))return res.status(400).json({error:'ชื่อผู้ใช้ต้องยาว 3-32 ตัวอักษร และใช้ตัวอักษร/ตัวเลข/_/./- เท่านั้น'});let existing=uname(username);if(existing&&existing.id!==u.id)return res.status(400).json({error:'ชื่อนี้ถูกใช้แล้ว'});const fee=Number(u.username_change_count||0)>0?50:0;if(fee>0){bal(u.id,'credit',-fee,'เปลี่ยนชื่อผู้ใช้',`เปลี่ยนเป็น ${username}`,{ref_type:'profile'});recordCompanyRevenue(fee,'credit','ค่าธรรมเนียมเปลี่ยนชื่อผู้ใช้',{ref_type:'user',ref_id:u.id})}u.username=username;u.display_name=req.body.display_name?String(req.body.display_name):u.display_name;u.username_change_count=Number(u.username_change_count||0)+1;save();res.json({fee,user:pub(u)})}catch(e){res.status(400).json({error:e.message})}});app.post('/api/upload',need,up.single('file'),async(req,res)=>{try{if(!req.file)return res.status(400).json({error:'กรุณาเลือกไฟล์'});const url=await saveUploadedFile(req.file,'general');res.json({url,storage:storageStatus().driver})}catch(e){res.status(500).json({error:e.message})}});
 app.post('/api/wallet/buy-coin',need,(req,res)=>{try{const credit=Math.floor(Number(req.body.credit||req.body.credit_amount||0));if(!Number.isFinite(credit)||credit<=0)return res.status(400).json({error:'กรุณากรอกจำนวน Credit ที่ต้องการแลก'});bal(req.session.userId,'credit',-credit,'แลก Coin',`แลก ${credit} Credit เป็น ${credit*COIN_PER_CREDIT} Coin`,{ref_type:'exchange'});bal(req.session.userId,'coin',credit*COIN_PER_CREDIT,'ได้รับ Coin จากการแลก',`1 Credit = ${COIN_PER_CREDIT} Coin`,{ref_type:'exchange'});save();res.json({credit_spent:credit,coin_received:credit*COIN_PER_CREDIT,user:pub(user(req.session.userId))})}catch(e){res.status(400).json({error:e.message})}});
 app.post('/api/payments/create-credit-topup',need,(req,res)=>{
   const credit_amount=Math.floor(Number(req.body.credit||req.body.credit_amount||0));
@@ -379,12 +404,12 @@ app.post('/api/payments/create-credit-topup',need,(req,res)=>{
   db.payments=(db.payments||[]);db.payments.unshift(p);save();
   res.json({payment:p, payment_id:p.id, baht_amount:baht, credit_amount, rate_baht_per_credit:CREDIT_THB_RATE});
 });
-app.post('/api/payments/upload-slip',need,up.single('slip'),(req,res)=>{
+app.post('/api/payments/upload-slip',need,up.single('slip'),async(req,res)=>{
   const p=(db.payments||[]).find(x=>x.id==req.body.payment_id&&x.user_id==req.session.userId);
   if(!p)return res.status(404).json({error:'ไม่พบรายการเติมเงิน'});
   if(p.status==='approved')return res.status(400).json({error:'รายการนี้อนุมัติแล้ว'});
   if(!req.file)return res.status(400).json({error:'กรุณาอัปโหลดสลิป'});
-  p.slip_url='/uploads/'+req.file.filename;p.status='waiting_admin';p.updated_at=now();notifyAdmin('มีสลิปเติมเงินใหม่',`ผู้ใช้ #${p.user_id} เติม ${p.credit_amount} Credit`,{type:'payment',payment_id:p.id});save();
+  p.slip_url=await saveUploadedFile(req.file,'payment-slips');p.status='waiting_admin';p.updated_at=now();notifyAdmin('มีสลิปเติมเงินใหม่',`ผู้ใช้ #${p.user_id} เติม ${p.credit_amount} Credit`,{type:'payment',payment_id:p.id});save();
   res.json({payment:p});
 });
 app.get('/api/payments/my',need,(req,res)=>res.json({payments:(db.payments||[]).filter(p=>p.user_id==req.session.userId)}));
@@ -622,19 +647,20 @@ app.post('/api/orders/:id/confirm',need,(req,res)=>{
     o.updated_at=now();save();emitOrderUpdate(o);res.json({order:o})
   }catch(e){res.status(400).json({error:e.message})}
 });
-app.post('/api/orders/:id/dispute',need,up.array('files',6),(req,res)=>{
+app.post('/api/orders/:id/dispute',need,up.array('files',6),async(req,res)=>{
   let o=db.orders.find(x=>x.id==req.params.id);if(!o)return res.status(404).json({error:'ไม่พบคำสั่งซื้อ'});
   if(![o.buyer_id,o.seller_id].includes(req.session.userId))return res.status(403).json({error:'ไม่มีสิทธิ์'});
   if(['COMPLETED','REFUNDED'].includes(o.status))return res.status(400).json({error:'รายการนี้จบแล้ว'});
-  let d={id:nid('dispute'),order_id:o.id,opened_by:req.session.userId,reason:req.body.reason||'',evidence:(req.files||[]).map(f=>'/uploads/'+f.filename),status:'OPEN',admin_note:'',created_at:now(),updated_at:now()};
+  let evidence=await saveUploadedFiles(req.files||[],'disputes');
+  let d={id:nid('dispute'),order_id:o.id,opened_by:req.session.userId,reason:req.body.reason||'',evidence,status:'OPEN',admin_note:'',created_at:now(),updated_at:now()};
   db.disputes.unshift(d);o.status='DISPUTE';o.dispute_id=d.id;o.updated_at=now();escrowEvent(o,'DISPUTE_OPENED',req.session.userId,d.reason,{evidence:d.evidence});audit(req.session.userId,'DISPUTE_OPENED','order',o.id,{reason:d.reason,evidence_count:d.evidence.length});notifyAdmin('มีข้อพิพาทใหม่',o.item_title,{type:'dispute',order_id:o.id,dispute_id:d.id});notifyUser(o.buyer_id,'มีข้อพิพาทในคำสั่งซื้อ',o.item_title,{type:'dispute',order_id:o.id});notifyUser(o.seller_id,'มีข้อพิพาทในคำสั่งซื้อ',o.item_title,{type:'dispute',order_id:o.id});save();emitOrderUpdate(o);res.json({dispute:d})
 });
 
-function fdata(file){let ext=path.extname(file.path).toLowerCase(),mime=ext=='.png'?'image/png':ext=='.webp'?'image/webp':'image/jpeg';return `data:${mime};base64,${fs.readFileSync(file.path).toString('base64')}`}
+function fdata(file){let ext=path.extname(file.originalname||file.path||'').toLowerCase(),mime=file.mimetype||(ext=='.png'?'image/png':ext=='.webp'?'image/webp':'image/jpeg');let buf=file.buffer||fs.readFileSync(file.path);return `data:${mime};base64,${Buffer.from(buf).toString('base64')}`}
 function parseVisionJSON(txt){try{return JSON.parse(txt)}catch(e){}let m=String(txt||'').match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(e){}}return null}
 async function gptVisionEstimate(req,photos){if(!process.env.OPENAI_API_KEY)return null;let files=req.files||[];let prompt=`คุณคือ AI วิเคราะห์รูปสินค้าสำหรับเว็บประมูล BidMarket วิเคราะห์รูปสินค้าและประเมินราคากลาง ตอบกลับเป็น JSON เท่านั้น {"product_name":"","category":"","condition_summary":"","visible_details":[""],"risk_notes":[""],"estimated_min":0,"estimated_mid":0,"estimated_max":0,"confidence":"ต่ำ/ปานกลาง/สูง","recommended_start_price":0,"pricing_reason":""} ข้อมูลผู้ใช้: ชื่อสินค้า ${req.body.title||''}, หมวดหมู่ ${req.body.category||''}, สภาพ ${req.body.condition||''}, หมายเหตุ ${req.body.notes||''}`;let body={model:process.env.OPENAI_VISION_MODEL||'gpt-4.1-mini',input:[{role:'user',content:[{type:'input_text',text:prompt},...files.slice(0,6).map(f=>({type:'input_image',image_url:fdata(f)}))]}],max_output_tokens:1200};let r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error((await r.text()).slice(0,300));let j=await r.json();let txt=j.output_text||(j.output||[]).flatMap(o=>o.content||[]).map(c=>c.text||'').join('\n');return parseVisionJSON(txt)}
 
-app.post('/api/ai/price-estimate',need,up.array('photos',6),async(req,res)=>{try{let photos=(req.files||[]).map(f=>'/uploads/'+f.filename);if(photos.length<1||photos.length>6)return res.status(400).json({error:'ใส่รูป 1-6 รูป'});let v=null;try{v=await gptVisionEstimate(req,photos)}catch(err){console.warn('GPT Vision fallback:',err.message)}let e;if(v){e={id:nid('estimate'),user_id:req.session.userId,title:req.body.title||v.product_name,category:req.body.category||v.category,photos,estimated_min:Number(v.estimated_min||0),estimated_max:Number(v.estimated_max||0),estimated_mid:Number(v.estimated_mid||0),confidence:v.confidence||'ปานกลาง',recommended_start_price:Number(v.recommended_start_price||v.estimated_min||0),source:'gpt_vision',analysis:[`ชื่อสินค้าที่ AI เห็น: ${v.product_name||'-'}`,`สภาพสินค้า: ${v.condition_summary||'-'}`,`เหตุผลราคา: ${v.pricing_reason||'-'}`,...(v.visible_details||[]).map(x=>'รายละเอียดที่เห็น: '+x),...(v.risk_notes||[]).map(x=>'จุดที่ควรตรวจสอบ: '+x)],raw_vision:v,created_at:now()}}else{let t=((req.body.title||'')+' '+(req.body.category||'')).toLowerCase(),base=t.includes('iphone')?20000:t.includes('rolex')?90000:t.includes('ps5')?12000:3000,min=Math.round(base*.75),max=Math.round(base*1.25);e={id:nid('estimate'),user_id:req.session.userId,title:req.body.title,category:req.body.category,photos,estimated_min:min,estimated_max:max,estimated_mid:Math.round((min+max)/2),confidence:photos.length>=4?'สูง':photos.length>=2?'ปานกลาง':'เบื้องต้น',recommended_start_price:min,source:'mock',analysis:['ยังไม่ได้ตั้งค่า OPENAI_API_KEY จึงใช้ Mock Estimate','เมื่อตั้งค่า OPENAI_API_KEY ใน Render ระบบจะใช้ GPT Vision วิเคราะห์รูปสินค้าจริง'],created_at:now()}}db.estimates.unshift(e);save();res.json({estimate:e})}catch(e){res.status(500).json({error:e.message})}});app.get('/api/ai/price-estimates',need,(req,res)=>res.json({estimates:db.estimates.filter(e=>e.user_id==req.session.userId)}));
+app.post('/api/ai/price-estimate',need,up.array('photos',6),async(req,res)=>{try{let photos=await saveUploadedFiles(req.files||[],'price-estimates');if(photos.length<1||photos.length>6)return res.status(400).json({error:'ใส่รูป 1-6 รูป'});let v=null;try{v=await gptVisionEstimate(req,photos)}catch(err){console.warn('GPT Vision fallback:',err.message)}let e;if(v){e={id:nid('estimate'),user_id:req.session.userId,title:req.body.title||v.product_name,category:req.body.category||v.category,photos,estimated_min:Number(v.estimated_min||0),estimated_max:Number(v.estimated_max||0),estimated_mid:Number(v.estimated_mid||0),confidence:v.confidence||'ปานกลาง',recommended_start_price:Number(v.recommended_start_price||v.estimated_min||0),source:'gpt_vision',analysis:[`ชื่อสินค้าที่ AI เห็น: ${v.product_name||'-'}`,`สภาพสินค้า: ${v.condition_summary||'-'}`,`เหตุผลราคา: ${v.pricing_reason||'-'}`,...(v.visible_details||[]).map(x=>'รายละเอียดที่เห็น: '+x),...(v.risk_notes||[]).map(x=>'จุดที่ควรตรวจสอบ: '+x)],raw_vision:v,created_at:now()}}else{let t=((req.body.title||'')+' '+(req.body.category||'')).toLowerCase(),base=t.includes('iphone')?20000:t.includes('rolex')?90000:t.includes('ps5')?12000:3000,min=Math.round(base*.75),max=Math.round(base*1.25);e={id:nid('estimate'),user_id:req.session.userId,title:req.body.title,category:req.body.category,photos,estimated_min:min,estimated_max:max,estimated_mid:Math.round((min+max)/2),confidence:photos.length>=4?'สูง':photos.length>=2?'ปานกลาง':'เบื้องต้น',recommended_start_price:min,source:'mock',analysis:['ยังไม่ได้ตั้งค่า OPENAI_API_KEY จึงใช้ Mock Estimate','เมื่อตั้งค่า OPENAI_API_KEY ใน Render ระบบจะใช้ GPT Vision วิเคราะห์รูปสินค้าจริง'],created_at:now()}}db.estimates.unshift(e);save();res.json({estimate:e})}catch(e){res.status(500).json({error:e.message})}});app.get('/api/ai/price-estimates',need,(req,res)=>res.json({estimates:db.estimates.filter(e=>e.user_id==req.session.userId)}));
 app.get('/api/favorites',need,(req,res)=>{let ids=db.favorites.filter(f=>f.user_id==req.session.userId).map(f=>f.auction_id);res.json({favorite_ids:ids,auctions:db.auctions.filter(a=>ids.includes(a.id)&&a.status=='active').map(a=>au(a,req.session.userId))})});app.post('/api/favorites/:id',need,(req,res)=>{let id=Number(req.params.id);if(!db.favorites.find(f=>f.user_id==req.session.userId&&f.auction_id==id))db.favorites.push({user_id:req.session.userId,auction_id:id});save();res.json({ok:true})});app.delete('/api/favorites/:id',need,(req,res)=>{db.favorites=db.favorites.filter(f=>!(f.user_id==req.session.userId&&f.auction_id==req.params.id));save();res.json({ok:true})});
 app.get('/api/admin/escrow',admin,(req,res)=>res.json({
   held:db.orders.filter(o=>!['COMPLETED','REFUNDED'].includes(o.status)).reduce((s,o)=>s+Number(o.amount||0),0),
@@ -721,7 +747,7 @@ app.get('/api/ads',(req,res)=>{
   res.json({ads:rows});
 });
 app.get('/api/ads/my',need,(req,res)=>res.json({ads:(db.ads||[]).filter(a=>a.owner_id==req.session.userId).sort((a,b)=>(b.created_at||0)-(a.created_at||0)).map(a=>publicAd(a,req.session.userId))}));
-app.post('/api/ads',need,up.fields([{name:'cover',maxCount:1},{name:'media',maxCount:1}]),(req,res)=>{try{
+app.post('/api/ads',need,up.fields([{name:'cover',maxCount:1},{name:'media',maxCount:1}]),async(req,res)=>{try{
   const b=req.body||{};
   const type=String(b.type||'video');
   if(!['video','question'].includes(type))return res.status(400).json({error:'ประเภทโฆษณาไม่ถูกต้อง'});
@@ -736,8 +762,8 @@ app.post('/api/ads',need,up.fields([{name:'cover',maxCount:1},{name:'media',maxC
   const reward_code=String(b.reward_code||'').trim(); if(reward_code&&!validRewardCode(reward_code))return res.status(400).json({error:'โค้ดของรางวัลต้องใช้ A-Z a-z 0-9 เท่านั้น'});
   const reward_code_trigger=String(b.reward_code_trigger||'none'); const activity_link=String(b.activity_link||'').trim();
   const coverFile=req.files?.cover?.[0], mediaFile=req.files?.media?.[0];
-  const cover_url=coverFile?'/uploads/'+coverFile.filename:String(b.cover_url||'').trim();
-  const media_url=mediaFile?'/uploads/'+mediaFile.filename:String(b.media_url||'').trim();
+  const cover_url=coverFile?await saveUploadedFile(coverFile,'ads/covers'):String(b.cover_url||'').trim();
+  const media_url=mediaFile?await saveUploadedFile(mediaFile,'ads/media'):String(b.media_url||'').trim();
   if(type==='video'&&!media_url)return res.status(400).json({error:'โฆษณาวิดีโอต้องมีไฟล์หรือ URL วิดีโอ'});
   const a={id:nid('ad'),owner_id:req.session.userId,title,description,cover_url:cover_url||'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1200&auto=format&fit=crop',media_url,type,reward_currency,reward_amount,view_seconds,question:type==='question'?question:'',answer:type==='question'?answer:'',reward_code,reward_code_trigger,activity_link,status:'active',created_at:now(),updated_at:now(),deleted_reason:''};
   db.ads.unshift(a);audit(req.session.userId,'ad:create','ad',a.id,{type,reward_currency,reward_amount});save();res.json({ad:publicAd(a,req.session.userId)});
@@ -770,5 +796,14 @@ app.post('/api/messages/:userId',need,(req,res)=>{
 
 app.get('/api/notifications',need,(req,res)=>res.json({notifications:(db.notifications||[]).filter(n=>n.user_id==req.session.userId).slice(0,50)}));
 app.post('/api/notifications/read',need,(req,res)=>{(db.notifications||[]).filter(n=>n.user_id==req.session.userId).forEach(n=>n.read=true);save();res.json({ok:true})});
-app.get('/api/transactions',need,(req,res)=>res.json({transactions:db.transactions.filter(t=>t.user_id==req.session.userId)}));app.get('*',(_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+app.get('/api/transactions',need,(req,res)=>res.json({transactions:db.transactions.filter(t=>t.user_id==req.session.userId)}));
+app.get('/api/system/storage',admin,(req,res)=>res.json(storageStatus()));
+app.get('/api/admin/db/health',admin,(req,res)=>res.json({
+  storage:storageStatus(),postgres:USE_POSTGRES,updated_at:now(),counts:{
+    users:(db.users||[]).length,auctions:(db.auctions||[]).length,orders:(db.orders||[]).length,escrow:(db.escrow||[]).length,transactions:(db.transactions||[]).length,messages:(db.messages||[]).length,ads:(db.ads||[]).length,activities:(db.activities||[]).length
+  }
+}));
+app.get('/api/admin/backup/export',admin,(req,res)=>{const stamp=new Date().toISOString().replace(/[:.]/g,'-');res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Content-Disposition',`attachment; filename=bidmarket-backup-${stamp}.json`);res.send(JSON.stringify({exported_at:now(),version:'production-storage-v1',state:db},null,2));});
+app.post('/api/admin/backup/r2',admin,async(req,res)=>{try{if(!mediaStorageEnabled())return res.status(400).json({error:'ยังไม่ได้ตั้งค่า Cloudflare R2 ครบ'});const stamp=new Date().toISOString().replace(/[:.]/g,'-');const file={originalname:`bidmarket-backup-${stamp}.json`,mimetype:'application/json',buffer:Buffer.from(JSON.stringify({exported_at:now(),version:'production-storage-v1',state:db},null,2))};const url=await saveUploadedFile(file,'backups');audit(req.session.userId,'backup:create','system','app_state',{url});save();res.json({ok:true,url})}catch(e){res.status(500).json({error:e.message})}});
+app.get('*',(_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 load().then(initialDb=>{db=initialDb;ensureSystemDefaults();save();serverHttp.listen(PORT,()=>console.log('BidMarket Persistent DB '+(USE_POSTGRES?'PostgreSQL':'JSON local')+' http://localhost:'+PORT));}).catch(err=>{console.error('Cannot start server:',err);process.exit(1);});

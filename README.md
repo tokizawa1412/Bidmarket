@@ -111,3 +111,13 @@ Event ที่เพิ่ม:
 - VIP เลื่อนระดับ: `public/assets/sounds/vip-levelup.wav`
 
 ผู้ใช้สามารถเปิด/ปิดเสียงแจ้งเตือนได้ในหน้า “บัญชีผู้ใช้” ระบบจะบันทึกค่าไว้ใน `localStorage` ของ Browser
+
+## Production Storage & Backup
+ดูรายละเอียดเพิ่มเติมใน `PRODUCTION_STORAGE_README.md`
+
+เพิ่มระบบแล้ว:
+- อัปโหลดรูป/วิดีโอไป Cloudflare R2 ได้ถาวร
+- fallback เป็น local uploads ถ้ายังไม่ตั้งค่า R2
+- Admin export backup JSON ได้
+- Admin backup ไป R2 ได้
+- API ตรวจสุขภาพฐานข้อมูลและ storage
