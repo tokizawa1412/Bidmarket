@@ -2,10 +2,20 @@
 
 เพิ่มระบบที่ควรมีสำหรับใช้งานจริง:
 
-## 1) เก็บรูป/วิดีโอถาวรด้วย Cloudflare R2
-ระบบอัปโหลดทั้งหมดจะใช้ R2 อัตโนมัติเมื่อใส่ Environment Variables ครบ ถ้ายังไม่ครบจะ fallback ไปเก็บใน `/public/uploads` แบบเดิม
+## 1) เก็บรูป/วิดีโอถาวรด้วย Cloudinary หรือ Cloudflare R2
+ระบบอัปโหลดทั้งหมดจะใช้ Cloudinary อัตโนมัติเมื่อใส่ Environment Variables ครบ ถ้าไม่มี Cloudinary จะลองใช้ R2 เมื่อกำหนด `STORAGE_DRIVER=r2` และตั้งค่า R2 ครบ ถ้ายังไม่ครบจะ fallback ไปเก็บใน `/public/uploads` แบบเดิม
 
-ตั้งค่าใน Render > Environment:
+ตั้งค่า Cloudinary ใน Render > Environment:
+
+```
+STORAGE_DRIVER=auto
+CLOUDINARY_CLOUD_NAME=xxxxxxxx
+CLOUDINARY_API_KEY=xxxxxxxx
+CLOUDINARY_API_SECRET=xxxxxxxx
+MAX_UPLOAD_MB=300
+```
+
+หรือใช้ Cloudflare R2:
 
 ```
 STORAGE_DRIVER=r2
@@ -32,7 +42,7 @@ Admin สามารถดาวน์โหลด backup ได้ที่:
 GET /api/admin/backup/export
 ```
 
-ถ้าตั้งค่า R2 แล้ว สามารถบันทึก backup เข้า R2 ได้ที่:
+ถ้าตั้งค่า Cloudinary หรือ R2 แล้ว สามารถบันทึก backup เข้า storage ได้ที่:
 
 ```
 POST /api/admin/backup/r2

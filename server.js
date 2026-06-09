@@ -1,8 +1,9 @@
 require('dotenv').config();
 const express=require('express'), session=require('express-session'), bcrypt=require('bcryptjs'), fs=require('fs'), path=require('path'), multer=require('multer'), {v4:uuid}=require('uuid');
 const {Pool}=require('pg');
-let S3Client, PutObjectCommand;
+let S3Client, PutObjectCommand, cloudinary;
 try{({S3Client,PutObjectCommand}=require('@aws-sdk/client-s3'))}catch(_){/* optional Cloudflare R2/S3 storage disabled until dependency is installed */}
+try{cloudinary=require('cloudinary').v2}catch(_){/* optional Cloudinary storage disabled until dependency is installed */}
 const PgSession=require('connect-pg-simple')(session);
 const app=express(), PORT=process.env.PORT||3000, dataDir=path.join(__dirname,'data'), dbFile=path.join(dataDir,'db.json'), uploadDir=path.join(__dirname,'public','uploads');
 const USE_POSTGRES=!!process.env.DATABASE_URL;
@@ -14,13 +15,28 @@ const io=new Server(serverHttp);
 const auctionApi=(a)=>au(a);
 fs.mkdirSync(dataDir,{recursive:true}); fs.mkdirSync(uploadDir,{recursive:true});
 
-const STORAGE_DRIVER=(process.env.STORAGE_DRIVER||'local').toLowerCase();
+const STORAGE_DRIVER=(process.env.STORAGE_DRIVER||'auto').toLowerCase();
+function cloudinaryEnabled(){return !!(cloudinary&&process.env.CLOUDINARY_CLOUD_NAME&&process.env.CLOUDINARY_API_KEY&&process.env.CLOUDINARY_API_SECRET)}
 function mediaStorageEnabled(){return STORAGE_DRIVER==='r2'&&S3Client&&process.env.R2_ACCOUNT_ID&&process.env.R2_ACCESS_KEY_ID&&process.env.R2_SECRET_ACCESS_KEY&&process.env.R2_BUCKET}
 function mediaPublicBase(){return String(process.env.R2_PUBLIC_URL||'').replace(/\/+$/,'')}
 function safeExt(name,mime){let ext=path.extname(name||'').toLowerCase();if(ext&&/^[.][a-z0-9]{1,8}$/.test(ext))return ext; if(String(mime||'').includes('png'))return '.png'; if(String(mime||'').includes('webp'))return '.webp'; if(String(mime||'').includes('gif'))return '.gif'; if(String(mime||'').includes('mp4'))return '.mp4'; if(String(mime||'').includes('webm'))return '.webm'; return '.jpg'}
 function mediaKey(folder,file){folder=String(folder||'uploads').replace(/[^a-zA-Z0-9_/-]/g,'').replace(/^\/+|\/+$/g,'')||'uploads';return `${folder}/${new Date().toISOString().slice(0,10)}/${Date.now()}-${uuid()}${safeExt(file?.originalname,file?.mimetype)}`}
+async function uploadToCloudinary(file,folder='uploads'){
+  if(!cloudinaryEnabled())return '';
+  cloudinary.config({cloud_name:process.env.CLOUDINARY_CLOUD_NAME,api_key:process.env.CLOUDINARY_API_KEY,api_secret:process.env.CLOUDINARY_API_SECRET,secure:true});
+  const cleanFolder=String(folder||'bidmarket').replace(/[^a-zA-Z0-9_/-]/g,'').replace(/^\/+|\/+$/g,'')||'bidmarket';
+  return await new Promise((resolve,reject)=>{
+    const stream=cloudinary.uploader.upload_stream({folder:`bidmarket/${cleanFolder}`,resource_type:'auto',use_filename:true,unique_filename:true,overwrite:false},(err,result)=>{
+      if(err)return reject(err);
+      resolve(result.secure_url);
+    });
+    stream.end(file.buffer||fs.readFileSync(file.path));
+  });
+}
 async function saveUploadedFile(file,folder='uploads'){
   if(!file)return '';
+  const useCloudinary=(STORAGE_DRIVER==='auto'||STORAGE_DRIVER==='cloudinary')&&cloudinaryEnabled();
+  if(useCloudinary)return await uploadToCloudinary(file,folder);
   const key=mediaKey(folder,file);
   const body=file.buffer||fs.readFileSync(file.path);
   if(mediaStorageEnabled()){
@@ -35,7 +51,10 @@ async function saveUploadedFile(file,folder='uploads'){
   return '/uploads/'+path.basename(out);
 }
 async function saveUploadedFiles(files,folder='uploads'){return await Promise.all((files||[]).map(f=>saveUploadedFile(f,folder)))}
-function storageStatus(){return {driver:mediaStorageEnabled()?'r2':'local',configured_driver:STORAGE_DRIVER,r2_ready:mediaStorageEnabled(),public_url:mediaPublicBase()||null,warning:mediaStorageEnabled()?null:'ยังไม่ได้ตั้งค่า Cloudflare R2 ครบ ระบบจะเก็บไฟล์ใน /public/uploads ซึ่งไม่ถาวรบน Render Free'}}
+function storageStatus(){
+  const driver=((STORAGE_DRIVER==='auto'||STORAGE_DRIVER==='cloudinary')&&cloudinaryEnabled())?'cloudinary':(mediaStorageEnabled()?'r2':'local');
+  return {driver,configured_driver:STORAGE_DRIVER,cloudinary_ready:cloudinaryEnabled(),r2_ready:mediaStorageEnabled(),public_url:driver==='r2'?(mediaPublicBase()||null):null,warning:driver==='local'?'ยังไม่ได้ตั้งค่า Cloudinary/R2 ครบ ระบบจะเก็บไฟล์ใน /public/uploads ซึ่งไม่ถาวรบน Render Free':null}
+}
 const now=()=>Date.now(), img='https://images.unsplash.com/photo-1560472354-b33ff0c44a43?q=80&w=1200&auto=format&fit=crop';
 function fresh(){const h=bcrypt.hashSync('1234',10);return {next:{user:3,auc:3,tx:1,order:1,escrow:1,dispute:1,estimate:1,ad:1,msg:1,payment:1},users:[{id:1,username:'demo',email:'demo@x.local',password_hash:h,role:'admin',status:'active',display_name:'Demo Admin',avatar_url:'',bio:'',coin:5e6,credit:50000,token:20,vip_until:now()+31536e6,trust_completed_sales:0,trust_total_orders:0},{id:2,username:'seller',email:'seller@x.local',password_hash:h,role:'user',status:'active',display_name:'VIP Seller',avatar_url:'',bio:'',coin:2e6,credit:30000,token:5,vip_until:now()+15552e6,trust_completed_sales:0,trust_total_orders:0}],auctions:[{id:1,seller_id:2,level:'vip',method:'forward',currency:'credit',title:'Rolex Submariner Vintage',description:'ตัวอย่าง VIP + Escrow',category:'ของสะสม',image_url:'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:10000,current_bid:10000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+7200e3,status:'active',vip_entry_min_credit:7000,vip_entry_fee_percent:5},{id:2,seller_id:1,level:'general',method:'forward',currency:'credit',title:'iPhone 15 Pro Max',description:'ตัวอย่างประมูลทั่วไป + Escrow',category:'มือถือ',image_url:'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:20000,current_bid:20000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+86400e3,status:'active',vip_entry_min_credit:0,vip_entry_fee_percent:0}],orders:[],escrow:[],disputes:[],transactions:[],favorites:[],messages:[],estimates:[],ads:[],company_revenue:[],winners:[]}}
 function normalizeDb(d){
@@ -804,6 +823,6 @@ app.get('/api/admin/db/health',admin,(req,res)=>res.json({
   }
 }));
 app.get('/api/admin/backup/export',admin,(req,res)=>{const stamp=new Date().toISOString().replace(/[:.]/g,'-');res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Content-Disposition',`attachment; filename=bidmarket-backup-${stamp}.json`);res.send(JSON.stringify({exported_at:now(),version:'production-storage-v1',state:db},null,2));});
-app.post('/api/admin/backup/r2',admin,async(req,res)=>{try{if(!mediaStorageEnabled())return res.status(400).json({error:'ยังไม่ได้ตั้งค่า Cloudflare R2 ครบ'});const stamp=new Date().toISOString().replace(/[:.]/g,'-');const file={originalname:`bidmarket-backup-${stamp}.json`,mimetype:'application/json',buffer:Buffer.from(JSON.stringify({exported_at:now(),version:'production-storage-v1',state:db},null,2))};const url=await saveUploadedFile(file,'backups');audit(req.session.userId,'backup:create','system','app_state',{url});save();res.json({ok:true,url})}catch(e){res.status(500).json({error:e.message})}});
+app.post('/api/admin/backup/r2',admin,async(req,res)=>{try{const st=storageStatus();if(st.driver==='local')return res.status(400).json({error:'ยังไม่ได้ตั้งค่า Cloudinary หรือ Cloudflare R2 ครบ'});const stamp=new Date().toISOString().replace(/[:.]/g,'-');const file={originalname:`bidmarket-backup-${stamp}.json`,mimetype:'application/json',buffer:Buffer.from(JSON.stringify({exported_at:now(),version:'production-storage-v1',state:db},null,2))};const url=await saveUploadedFile(file,'backups');audit(req.session.userId,'backup:create','system','app_state',{url,storage:st.driver});save();res.json({ok:true,url,storage:st.driver})}catch(e){res.status(500).json({error:e.message})}});
 app.get('*',(_,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 load().then(initialDb=>{db=initialDb;ensureSystemDefaults();save();serverHttp.listen(PORT,()=>console.log('BidMarket Persistent DB '+(USE_POSTGRES?'PostgreSQL':'JSON local')+' http://localhost:'+PORT));}).catch(err=>{console.error('Cannot start server:',err);process.exit(1);});
