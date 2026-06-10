@@ -57,11 +57,46 @@ function storageStatus(){
 }
 const now=()=>Date.now(), img='https://images.unsplash.com/photo-1560472354-b33ff0c44a43?q=80&w=1200&auto=format&fit=crop';
 function fresh(){const h=bcrypt.hashSync('1234',10);return {next:{user:3,auc:3,tx:1,order:1,escrow:1,dispute:1,estimate:1,ad:1,msg:1,payment:1},users:[{id:1,username:'demo',email:'demo@x.local',password_hash:h,role:'admin',status:'active',display_name:'Demo Admin',avatar_url:'',bio:'',coin:5e6,credit:50000,token:20,vip_until:now()+31536e6,trust_completed_sales:0,trust_total_orders:0},{id:2,username:'seller',email:'seller@x.local',password_hash:h,role:'user',status:'active',display_name:'VIP Seller',avatar_url:'',bio:'',coin:2e6,credit:30000,token:5,vip_until:now()+15552e6,trust_completed_sales:0,trust_total_orders:0}],auctions:[{id:1,seller_id:2,level:'vip',method:'forward',currency:'credit',title:'Rolex Submariner Vintage',description:'ตัวอย่าง VIP + Escrow',category:'ของสะสม',image_url:'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:10000,current_bid:10000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+7200e3,status:'active',vip_entry_min_credit:7000,vip_entry_fee_percent:5},{id:2,seller_id:1,level:'general',method:'forward',currency:'credit',title:'iPhone 15 Pro Max',description:'ตัวอย่างประมูลทั่วไป + Escrow',category:'มือถือ',image_url:'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1200&auto=format&fit=crop',media_type:'image',start_price:20000,current_bid:20000,winner_id:null,last_bidder_id:null,bids_count:0,participants:[],bidder_last_amounts:{},vip_entries:[],chats:[],start_at:now()-1e5,end_at:now()+86400e3,status:'active',vip_entry_min_credit:0,vip_entry_fee_percent:0}],orders:[],escrow:[],disputes:[],transactions:[],favorites:[],messages:[],estimates:[],ads:[],company_revenue:[],winners:[]}}
+
+function yyMmFromTs(ts){
+  const d=new Date(Number(ts||now()));
+  const yy=String(d.getFullYear()).slice(-2);
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  return yy+mm;
+}
+function randomSecurityCode(len=4){
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let out='';
+  for(let i=0;i<len;i++)out+=chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+function ensureBidMarketUserIds(d){
+  const counters={};
+  (d.users||[]).sort((a,b)=>Number(a.created_at||0)-Number(b.created_at||0)||Number(a.id||0)-Number(b.id||0)).forEach(u=>{
+    u.created_at??=now();
+    const ym=yyMmFromTs(u.created_at);
+    counters[ym]=(counters[ym]||0)+1;
+    if(!u.public_user_id||!/^[B][M][0-9]{4}[0-9]{6}[A-Z0-9]{4}$/.test(String(u.public_user_id))){
+      let candidate;
+      do{candidate='BM'+ym+String(counters[ym]).padStart(6,'0')+randomSecurityCode(4)}while((d.users||[]).some(x=>x!==u&&x.public_user_id===candidate));
+      u.public_user_id=candidate;
+    }
+  });
+}
+function newBidMarketUserId(createdAt){
+  const ym=yyMmFromTs(createdAt||now());
+  const seq=(db?.users||[]).filter(u=>yyMmFromTs(u.created_at||now())===ym).length+1;
+  let candidate;
+  do{candidate='BM'+ym+String(seq).padStart(6,'0')+randomSecurityCode(4)}while((db?.users||[]).some(u=>u.public_user_id===candidate));
+  return candidate;
+}
+
 function normalizeDb(d){
-  ['orders','escrow','disputes','transactions','favorites','messages','estimates','ads','ad_views','ad_checks','company_revenue','winners','payments','audit_logs','escrow_events','activities','activity_reports','activity_participants','reward_codes','reward_claims','topup_reward_claims','review_queue','fee_logs','pin_logs','notifications'].forEach(k=>d[k]||(d[k]=[]));
+  ['orders','escrow','disputes','transactions','favorites','messages','estimates','ads','ad_views','ad_checks','company_revenue','winners','payments','audit_logs','escrow_events','activities','activity_reports','activity_participants','reward_codes','reward_claims','topup_reward_claims','review_queue','fee_logs','pin_logs','notifications','friends','profile_posts','profile_showcase'].forEach(k=>d[k]||(d[k]=[]));
   d.next||(d.next={});
-  ['user','auc','tx','order','escrow','dispute','estimate','ad','ad_view','msg','payment','audit','escrow_event','activity','activity_report','activity_participant','reward_code','reward_claim','topup_reward_claim','review_queue','fee_log','pin_log','notification'].forEach(k=>d.next[k]||(d.next[k]=1));
-  (d.users||[]).forEach(u=>{u.trust_completed_sales??=0;u.trust_total_orders??=0;u.avatar_url??='';u.display_name??=u.username;u.role??='user';u.status??='active';u.google_id??='';u.auth_provider??=(u.google_id?'google':'local');u.credit??=0;u.coin??=0;u.token??=0;u.vip_until??=0;u.vip_level??=(u.vip_until>now()?'Member':'Member');u.vip_points??=0;u.vip_coin_spent_for_silver??=0;u.vip_credit_spent_for_silver??=0;u.username_change_count??=0;u.elite_free_pin_month??='';u.lifetime_credit_topup??=0});
+  ['user','auc','tx','order','escrow','dispute','estimate','ad','ad_view','msg','payment','audit','escrow_event','activity','activity_report','activity_participant','reward_code','reward_claim','topup_reward_claim','review_queue','fee_log','pin_log','notification','friend','profile_post','profile_showcase'].forEach(k=>d.next[k]||(d.next[k]=1));
+  (d.users||[]).forEach(u=>{u.trust_completed_sales??=0;u.trust_total_orders??=0;u.avatar_url??='';u.profile_image_url??=u.avatar_url||'';u.profile_banner_url??='';u.profile_image_changed_at??=0;u.profile_banner_changed_at??=0;u.display_name??=u.username;u.role??='user';u.status??='active';u.google_id??='';u.auth_provider??=(u.google_id?'google':'local');u.credit??=0;u.coin??=0;u.token??=0;u.vip_until??=0;u.vip_level??=(u.vip_until>now()?'Member':'Member');u.vip_points??=0;u.vip_coin_spent_for_silver??=0;u.vip_credit_spent_for_silver??=0;u.username_change_count??=0;u.elite_free_pin_month??='';u.lifetime_credit_topup??=0;u.verified??=!!u.google_id;u.created_at??=now()});
+  ensureBidMarketUserIds(d);
   (d.orders||[]).forEach(o=>{o.escrow_version??='v1';o.timeline??=[];o.audit_refs??=[];o.locked_amount??=Number(o.amount||0);o.service_fee??=Number(o.service_fee||0);o.escrow_status??=(['COMPLETED','REFUNDED'].includes(o.status)?o.status:'HELD')});
   (d.ads||[]).forEach(a=>{a.status??='active';a.reward_currency??='coin';a.reward_amount=Number(a.reward_amount||0);a.type??='video';a.view_seconds=Math.min(120,Math.max(10,Number(a.view_seconds||10)));a.cover_url??='';a.media_url??='';a.description??='';a.question??='';a.answer??='';a.created_at??=now();a.deleted_reason??='';a.reward_code??='';a.reward_code_trigger??='none';a.activity_link??=''});
   (d.ad_views||[]).forEach(v=>{v.rewarded??=false;v.completed??=false;v.answer_correct??=false;v.view_count=Number(v.view_count||1);v.started_at??=now()});
@@ -99,7 +134,7 @@ function save(){
   }
 }
 const nid=k=>(db.next[k]=db.next[k]||1,db.next[k]++);const user=id=>db.users.find(u=>u.id==id);const uname=n=>db.users.find(u=>u.username==n);const trust=u=>u&&u.trust_total_orders?Math.round(u.trust_completed_sales/u.trust_total_orders*100):0;
-function pub(u){if(!u)return null;const benefits=getVipBenefits(u);return {id:u.id,username:u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name,avatar_url:u.avatar_url,bio:u.bio||'',coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,vip_level:currentVipLevel(u),vip_points:Number(u.vip_points||0),vip_coin_spent_for_silver:Number(u.vip_coin_spent_for_silver||0),vip_credit_spent_for_silver:Number(u.vip_credit_spent_for_silver||0),vip_benefits:benefits,username_change_count:Number(u.username_change_count||0),lifetime_credit_topup:Number(u.lifetime_credit_topup||0),trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders,google_linked:!!u.google_id}}
+function pub(u){if(!u)return null;const benefits=getVipBenefits(u);return {id:u.id,public_user_id:u.public_user_id,user_id16:u.public_user_id,username:u.display_name||u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name||u.username,avatar_url:u.profile_image_url||u.avatar_url,bio:u.bio||'',profile_image_url:u.profile_image_url||u.avatar_url||'',profile_banner_url:u.profile_banner_url||'',profile_image_changed_at:Number(u.profile_image_changed_at||0),profile_banner_changed_at:Number(u.profile_banner_changed_at||0),coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,vip_level:currentVipLevel(u),vip_points:Number(u.vip_points||0),vip_coin_spent_for_silver:Number(u.vip_coin_spent_for_silver||0),vip_credit_spent_for_silver:Number(u.vip_credit_spent_for_silver||0),vip_benefits:benefits,username_change_count:Number(u.username_change_count||0),lifetime_credit_topup:Number(u.lifetime_credit_topup||0),trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders,verified:!!u.verified||!!u.google_id,google_linked:!!u.google_id}}
 function adminEmailSet(){return new Set(String(process.env.ADMIN_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean))}
 function isAdminEmail(email){return !!email&&adminEmailSet().has(String(email).toLowerCase())}
 function uniqueUsername(base){let clean=String(base||'user').toLowerCase().replace(/[^a-z0-9_ก-๙.-]+/g,'').replace(/^[.-]+|[.-]+$/g,'')||'user';let name=clean, i=1;while(uname(name))name=clean+i++;return name}
@@ -111,6 +146,7 @@ function upsertGoogleUser(profile){
   if(!u){
     const base=email.split('@')[0];
     u={id:nid('user'),username:uniqueUsername(base),email,password_hash:'',role:isAdminEmail(email)?'admin':'user',status:'active',display_name:profile.name||base,avatar_url:profile.picture||'',bio:'',coin:0,credit:0,token:0,vip_until:0,vip_level:'Member',vip_points:0,vip_coin_spent_for_silver:0,vip_credit_spent_for_silver:0,username_change_count:0,lifetime_credit_topup:0,trust_completed_sales:0,trust_total_orders:0,google_id:profile.sub,auth_provider:'google',created_at:now()};
+    u.public_user_id=newBidMarketUserId(u.created_at);u.verified=true;
     db.users.push(u);
   }else{
     u.google_id=profile.sub;u.auth_provider=u.auth_provider||'google';u.email=email;
@@ -387,7 +423,7 @@ app.use(express.json({limit:'25mb'}));app.use(express.urlencoded({extended:true}
 const sessionOptions={secret:process.env.SESSION_SECRET||'dev-change-me',resave:false,saveUninitialized:false,cookie:{maxAge:6048e5,secure:process.env.NODE_ENV==='production',sameSite:'lax'}};
 if(USE_POSTGRES){sessionOptions.store=new PgSession({pool:pgPool,tableName:'user_sessions',createTableIfMissing:true});}
 app.use(session(sessionOptions));app.use(express.static(path.join(__dirname,'public')));app.use('/uploads',express.static(uploadDir));const up=multer({storage:multer.memoryStorage(),limits:{fileSize:Number(process.env.MAX_UPLOAD_MB||300)*1024*1024}});
-app.post('/api/register',(req,res)=>{let {username,email,password}=req.body;if(!username||!email||!password)return res.status(400).json({error:'กรอกข้อมูลให้ครบ'});if(uname(username))return res.status(400).json({error:'ชื่อซ้ำ'});let u={id:nid('user'),username,email,password_hash:bcrypt.hashSync(password,10),role:'user',status:'active',display_name:username,avatar_url:'',bio:'',coin:0,credit:0,token:0,vip_until:0,vip_level:'Member',vip_points:0,vip_coin_spent_for_silver:0,vip_credit_spent_for_silver:0,username_change_count:0,lifetime_credit_topup:0,trust_completed_sales:0,trust_total_orders:0};db.users.push(u);req.session.userId=u.id;save();res.json({user:pub(u)})});
+app.post('/api/register',(req,res)=>{let {username,email,password}=req.body;if(!username||!email||!password)return res.status(400).json({error:'กรอกข้อมูลให้ครบ'});if(uname(username))return res.status(400).json({error:'ชื่อซ้ำ'});let u={id:nid('user'),username,email,password_hash:bcrypt.hashSync(password,10),role:'user',status:'active',display_name:username,avatar_url:'',bio:'',coin:0,credit:0,token:0,vip_until:0,vip_level:'Member',vip_points:0,vip_coin_spent_for_silver:0,vip_credit_spent_for_silver:0,username_change_count:0,lifetime_credit_topup:0,trust_completed_sales:0,trust_total_orders:0,created_at:now(),verified:false};u.public_user_id=newBidMarketUserId(u.created_at);db.users.push(u);req.session.userId=u.id;save();res.json({user:pub(u)})});
 app.post('/api/login',(req,res)=>{let u=uname(req.body.username);if(!u||!u.password_hash||!bcrypt.compareSync(req.body.password||'',u.password_hash))return res.status(401).json({error:'ผิด'});req.session.userId=u.id;res.json({user:pub(u)})});app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));app.get('/api/me',(req,res)=>res.json({user:pub(user(req.session.userId))}));
 app.get('/auth/google',(req,res)=>{
   if(!process.env.GOOGLE_CLIENT_ID)return res.status(500).send('Missing GOOGLE_CLIENT_ID in Render Environment');
@@ -811,6 +847,94 @@ app.post('/api/messages/:userId',need,(req,res)=>{
   if(!text)return res.status(400).json({error:'กรุณาพิมพ์ข้อความ'});
   const msg={id:nid('msg'),from_id:meId,to_id:otherId,text,created_at:now(),read:false};
   db.messages.push(msg);notifyUser(otherId,'ข้อความใหม่',text.slice(0,80),{type:'chat',from_id:meId});save();emitChatMessage(msg);res.json({message:msg});
+});
+
+
+function findProfileUser(v){
+  if(v==='me')return null;
+  const raw=String(v||'').trim();
+  return (db.users||[]).find(u=>String(u.id)===raw||String(u.public_user_id||'').toLowerCase()===raw.toLowerCase()||String(u.username||'').toLowerCase()===raw.toLowerCase());
+}
+function profileRecentActivities(uid){
+  const rows=[];
+  (db.auctions||[]).forEach(a=>{
+    if(a.seller_id==uid)rows.push({type:'ลงทะเบียนสินค้า',title:a.title,currency:a.currency,amount:a.current_bid||a.start_price,created_at:a.created_at||a.start_at||now(),auction_id:a.id});
+    if(a.winner_id==uid)rows.push({type:'ชนะการประมูล',title:a.title,currency:a.currency,amount:a.current_bid,created_at:a.ended_at||a.end_at||now(),auction_id:a.id});
+    (a.bid_history||[]).filter(b=>b.user_id==uid).slice(-3).forEach(b=>rows.push({type:'เข้าร่วมประมูล',title:a.title,currency:a.currency,amount:b.amount||b.current_bid,created_at:b.created_at||now(),auction_id:a.id}));
+    (a.sealed_bids||[]).filter(b=>b.user_id==uid).forEach(b=>rows.push({type:'ยื่นซองประมูล',title:a.title,currency:a.currency,amount:b.amount,created_at:b.created_at||now(),auction_id:a.id}));
+  });
+  return rows.sort((a,b)=>Number(b.created_at||0)-Number(a.created_at||0)).slice(0,12);
+}
+function friendList(uid){
+  return (db.friends||[]).filter(f=>f.user_id==uid).map(f=>user(f.friend_id)).filter(Boolean).map(pub);
+}
+function isFriend(userId,friendId){return (db.friends||[]).some(f=>f.user_id==userId&&f.friend_id==friendId)}
+app.get('/api/profiles/:id',need,(req,res)=>{
+  const meId=req.session.userId;
+  const target=req.params.id==='me'?user(meId):findProfileUser(req.params.id);
+  if(!target)return res.status(404).json({error:'ไม่พบโปรไฟล์'});
+  const posts=(db.profile_posts||[]).filter(p=>p.user_id==target.id).sort((a,b)=>Number(b.created_at||0)-Number(a.created_at||0)).slice(0,30).map(p=>({...p,user_name:target.display_name||target.username,user_avatar:target.profile_image_url||target.avatar_url||''}));
+  const showcase=(db.profile_showcase||[]).filter(x=>x.user_id==target.id).sort((a,b)=>Number(a.rank||0)-Number(b.rank||0)).slice(0,3);
+  res.json({user:pub(target),is_self:target.id==meId,is_friend:isFriend(meId,target.id),friends:friendList(target.id).slice(0,100),showcase,posts,recent_activities:profileRecentActivities(target.id)});
+});
+app.post('/api/profiles/:id/friend',need,(req,res)=>{
+  const meId=req.session.userId;
+  const target=findProfileUser(req.params.id);
+  if(!target)return res.status(404).json({error:'ไม่พบโปรไฟล์'});
+  if(target.id==meId)return res.status(400).json({error:'ไม่สามารถเพิ่มบัญชีตนเองเป็นเพื่อนได้'});
+  const count=(db.friends||[]).filter(f=>f.user_id==meId).length;
+  if(count>=100&&!isFriend(meId,target.id))return res.status(400).json({error:'เพิ่มเพื่อนได้สูงสุด 100 คน'});
+  if(!isFriend(meId,target.id))db.friends.push({id:nid('friend'),user_id:meId,friend_id:target.id,created_at:now()});
+  save();res.json({ok:true,friends:friendList(meId).slice(0,100)});
+});
+app.post('/api/profiles/:id/posts',need,(req,res)=>{
+  const meId=req.session.userId;
+  const target=req.params.id==='me'?user(meId):findProfileUser(req.params.id);
+  if(!target)return res.status(404).json({error:'ไม่พบโปรไฟล์'});
+  if(target.id!=meId)return res.status(403).json({error:'โพสต์ได้เฉพาะโปรไฟล์ของตนเอง'});
+  const content=String(req.body.content||'').trim();
+  const media_url=String(req.body.media_url||'').trim();
+  const media_type=['image','video'].includes(req.body.media_type)?req.body.media_type:'';
+  if(!content&&!media_url)return res.status(400).json({error:'กรุณาพิมพ์ข้อความหรือเพิ่มรูป/วิดีโอ'});
+  const post={id:nid('profile_post'),user_id:meId,content,media_url,media_type,created_at:now(),likes:0,comments:[]};
+  db.profile_posts.unshift(post);save();res.json({post});
+});
+app.post('/api/profiles/me/showcase',need,(req,res)=>{
+  const meId=req.session.userId;
+  const rank=Number(req.body.rank||0);
+  const title=String(req.body.title||'').trim().slice(0,80);
+  const image_url=String(req.body.image_url||req.body.url||'').trim();
+  if(![1,2,3].includes(rank))return res.status(400).json({error:'อันดับต้องเป็น 1, 2 หรือ 3 เท่านั้น'});
+  if(!image_url)return res.status(400).json({error:'กรุณาอัปโหลดรูปสินค้าก่อน'});
+  db.profile_showcase||(db.profile_showcase=[]);
+  const dup=db.profile_showcase.find(x=>x.user_id==meId&&x.image_url===image_url&&Number(x.rank)!==rank);
+  if(dup)return res.status(400).json({error:'ไม่สามารถลงรูปสินค้าซ้ำในตู้โชว์ได้'});
+  let item=db.profile_showcase.find(x=>x.user_id==meId&&Number(x.rank)===rank);
+  if(item){item.title=title;item.image_url=image_url;item.updated_at=now()}
+  else{item={id:nid('profile_showcase'),user_id:meId,rank,title,image_url,created_at:now(),updated_at:now()};db.profile_showcase.push(item)}
+  save();
+  res.json({showcase:db.profile_showcase.filter(x=>x.user_id==meId).sort((a,b)=>Number(a.rank)-Number(b.rank))});
+});
+app.delete('/api/profiles/me/showcase/:rank',need,(req,res)=>{
+  const rank=Number(req.params.rank||0);
+  db.profile_showcase=(db.profile_showcase||[]).filter(x=>!(x.user_id==req.session.userId&&Number(x.rank)===rank));
+  save();res.json({ok:true});
+});
+app.put('/api/me/profile-media',need,(req,res)=>{
+  const u=user(req.session.userId);
+  const type=String(req.body.type||'');
+  const url=String(req.body.url||'').trim();
+  if(!['avatar','banner'].includes(type))return res.status(400).json({error:'ชนิดรูปไม่ถูกต้อง'});
+  if(!url)return res.status(400).json({error:'กรุณาอัปโหลดรูปก่อน'});
+  const field=type==='avatar'?'profile_image_changed_at':'profile_banner_changed_at';
+  const wait=7*24*60*60*1000;
+  if(Number(u[field]||0)&&now()-Number(u[field])<wait){
+    const left=wait-(now()-Number(u[field]));
+    const days=Math.ceil(left/(24*60*60*1000));
+    return res.status(400).json({error:`ต้องรออีกประมาณ ${days} วัน จึงจะเปลี่ยนได้อีกครั้ง`});
+  }
+  if(type==='avatar'){u.profile_image_url=url;u.avatar_url=url}else u.profile_banner_url=url;
+  u[field]=now();save();res.json({user:pub(u)});
 });
 
 app.get('/api/notifications',need,(req,res)=>res.json({notifications:(db.notifications||[]).filter(n=>n.user_id==req.session.userId).slice(0,50)}));
