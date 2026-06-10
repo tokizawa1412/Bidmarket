@@ -652,3 +652,54 @@ function escapeHtml(t){return String(t).replace(/[&<>"']/g,m=>({'&':'&amp;','<':
 setInterval(()=>{if(selected&&!room.classList.contains('hidden')&&currentAuctionCache){const el=document.getElementById('roomTimer');if(el&&currentAuctionCache.end_at)el.textContent=tleft(Math.max(0,currentAuctionCache.end_at-Date.now()))}},1000);adTypeChanged();show('home');
 
 </script></body></html>
+<style id="bidmarket-global-fullwidth-fix">
+/* BidMarket global full-width fix v2: use full browser width on desktop */
+@media (min-width: 901px){
+  header{padding-left:28px!important;padding-right:28px!important;}
+  .top,
+  .tabs,
+  .container,
+  .topSearchPanel{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+  .top{justify-content:space-between!important;}
+  .tabs{padding-left:28px!important;padding-right:28px!important;}
+  main.container{padding:18px 28px 42px!important;}
+  .app{width:100%!important;max-width:none!important;grid-template-columns:280px minmax(0,1fr)!important;}
+  .app.noSidebar{grid-template-columns:minmax(0,1fr)!important;}
+  .app>div{min-width:0!important;width:100%!important;}
+  .panel,.hero,.card{width:100%;}
+  .grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+  .topUserSearch{max-width:520px!important;}
+
+  body.profileWide main.container,
+  body.profileWide .container{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    padding-left:28px!important;
+    padding-right:28px!important;
+  }
+  body.profileWide .profileLayout{
+    grid-template-columns:minmax(0,1fr) 340px!important;
+    width:100%!important;
+  }
+  body.profileWide .profileMain,
+  body.profileWide #publicProfile,
+  body.profileWide .profileHero,
+  body.profileWide .profileShowcase,
+  body.profileWide .profilePostBox,
+  body.profileWide .profileFeed,
+  body.profileWide .profileActivity{width:100%!important;max-width:none!important;}
+}
+@media (min-width: 1400px){
+  .grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;}
+  .card img,.card video{height:230px!important;}
+}
+@media (min-width: 1800px){
+  .grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;}
+}
+</style>
