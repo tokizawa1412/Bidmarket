@@ -1013,13 +1013,14 @@ app.post('/api/profiles/me/showcase',need,(req,res)=>{
   let item=db.profile_showcase.find(x=>x.user_id==meId&&Number(x.rank)===rank);
   if(item){item.title=title;item.image_url=image_url;item.r_value=item.r_value||defaultRValue(title);item.owner_id=item.owner_id||meId;item.updated_at=now()}
   else{item={id:nid('profile_showcase'),user_id:meId,owner_id:meId,rank,title,image_url,r_value:defaultRValue(title),created_at:now(),updated_at:now(),last_boost_week_key:bangkokWeekKey(),boost_count_week:0};db.profile_showcase.push(item)}
-  updateCollectionValue(meId);save();
-  res.json({showcase:userShowcase(meId).sort((a,b)=>Number(a.rank)-Number(b.rank)),collection_value:updateCollectionValue(meId)});
+  const collectionValue=updateCollectionValue(meId);save();
+  try{io.to(roomUser(meId)).emit('showcase:rvalue',{showcase_id:item.id,r_value:item.r_value,collection_value:collectionValue});}catch(e){}
+  res.json({showcase:userShowcase(meId).sort((a,b)=>Number(a.rank)-Number(b.rank)),collection_value:collectionValue});
 });
 app.delete('/api/profiles/me/showcase/:rank',need,(req,res)=>{
   const rank=Number(req.params.rank||0);
   db.profile_showcase=(db.profile_showcase||[]).filter(x=>!(x.user_id==req.session.userId&&Number(x.rank)===rank));
-  updateCollectionValue(req.session.userId);save();res.json({ok:true,collection_value:updateCollectionValue(req.session.userId)});
+  const cv=updateCollectionValue(req.session.userId);save();try{io.to(roomUser(req.session.userId)).emit('showcase:rvalue',{collection_value:cv});}catch(e){}res.json({ok:true,collection_value:cv});
 });
 
 app.post('/api/profiles/showcase/:id/boost-value',need,(req,res)=>{
@@ -1123,7 +1124,9 @@ app.put('/api/me/profile-media',need,(req,res)=>{
     return res.status(400).json({error:`ต้องรออีกประมาณ ${days} วัน จึงจะเปลี่ยนได้อีกครั้ง`});
   }
   if(type==='avatar'){u.profile_image_url=url;u.avatar_url=url}else u.profile_banner_url=url;
-  u[field]=now();save();res.json({user:pub(u)});
+  u[field]=now();save();
+  try{io.to(roomUser(u.id)).emit('profile:media',{user:pub(u),type,url});}catch(e){}
+  res.json({user:pub(u)});
 });
 
 app.get('/api/notifications',need,(req,res)=>res.json({notifications:(db.notifications||[]).filter(n=>n.user_id==req.session.userId).slice(0,50)}));
