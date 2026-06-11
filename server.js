@@ -92,10 +92,10 @@ function newBidMarketUserId(createdAt){
 }
 
 function normalizeDb(d){
-  ['orders','escrow','disputes','transactions','favorites','messages','estimates','ads','ad_views','ad_checks','company_revenue','winners','payments','audit_logs','escrow_events','activities','activity_reports','activity_participants','reward_codes','reward_claims','topup_reward_claims','review_queue','fee_logs','pin_logs','notifications','friends','profile_posts','profile_showcase'].forEach(k=>d[k]||(d[k]=[]));
+  ['orders','escrow','disputes','transactions','favorites','messages','estimates','ads','ad_views','ad_checks','company_revenue','winners','payments','audit_logs','escrow_events','activities','activity_reports','activity_participants','reward_codes','reward_claims','topup_reward_claims','review_queue','fee_logs','pin_logs','notifications','friends','profile_posts','profile_showcase','collection_items','collection_auctions','r_value_clicks','r_weekly_checks','r_coin_ledger'].forEach(k=>d[k]||(d[k]=[]));
   d.next||(d.next={});
-  ['user','auc','tx','order','escrow','dispute','estimate','ad','ad_view','msg','payment','audit','escrow_event','activity','activity_report','activity_participant','reward_code','reward_claim','topup_reward_claim','review_queue','fee_log','pin_log','notification','friend','profile_post','profile_showcase'].forEach(k=>d.next[k]||(d.next[k]=1));
-  (d.users||[]).forEach(u=>{u.trust_completed_sales??=0;u.trust_total_orders??=0;u.avatar_url??='';u.profile_image_url??=u.avatar_url||'';u.profile_banner_url??='';u.profile_image_changed_at??=0;u.profile_banner_changed_at??=0;u.display_name??=u.username;u.role??='user';u.status??='active';u.google_id??='';u.auth_provider??=(u.google_id?'google':'local');u.credit??=0;u.coin??=0;u.token??=0;u.vip_until??=0;u.vip_level??=(u.vip_until>now()?'Member':'Member');u.vip_points??=0;u.vip_coin_spent_for_silver??=0;u.vip_credit_spent_for_silver??=0;u.username_change_count??=0;u.elite_free_pin_month??='';u.lifetime_credit_topup??=0;u.verified??=!!u.google_id;u.created_at??=now()});
+  ['user','auc','tx','order','escrow','dispute','estimate','ad','ad_view','msg','payment','audit','escrow_event','activity','activity_report','activity_participant','reward_code','reward_claim','topup_reward_claim','review_queue','fee_log','pin_log','notification','friend','profile_post','profile_showcase','collection_item','collection_auction','r_value_click','r_weekly_check','r_coin_ledger'].forEach(k=>d.next[k]||(d.next[k]=1));
+  (d.users||[]).forEach(u=>{u.trust_completed_sales??=0;u.trust_total_orders??=0;u.avatar_url??='';u.profile_image_url??=u.avatar_url||'';u.profile_banner_url??='';u.profile_image_changed_at??=0;u.profile_banner_changed_at??=0;u.display_name??=u.username;u.role??='user';u.status??='active';u.google_id??='';u.auth_provider??=(u.google_id?'google':'local');u.credit??=0;u.coin??=0;u.token??=0;u.vip_until??=0;u.vip_level??=(u.vip_until>now()?'Member':'Member');u.vip_points??=0;u.vip_coin_spent_for_silver??=0;u.vip_credit_spent_for_silver??=0;u.username_change_count??=0;u.elite_free_pin_month??='';u.lifetime_credit_topup??=0;u.r_coin??=0;u.collection_value??=0;u.value_boost_daily_used??=0;u.value_boost_daily_key??='';u.verified??=!!u.google_id;u.created_at??=now();if(u.vip_level==='Emerald')u.vip_level='Ruby'});
   ensureBidMarketUserIds(d);
   (d.orders||[]).forEach(o=>{o.escrow_version??='v1';o.timeline??=[];o.audit_refs??=[];o.locked_amount??=Number(o.amount||0);o.service_fee??=Number(o.service_fee||0);o.escrow_status??=(['COMPLETED','REFUNDED'].includes(o.status)?o.status:'HELD')});
   (d.ads||[]).forEach(a=>{a.status??='active';a.reward_currency??='coin';a.reward_amount=Number(a.reward_amount||0);a.type??='video';a.view_seconds=Math.min(120,Math.max(10,Number(a.view_seconds||10)));a.cover_url??='';a.media_url??='';a.description??='';a.question??='';a.answer??='';a.created_at??=now();a.deleted_reason??='';a.reward_code??='';a.reward_code_trigger??='none';a.activity_link??=''});
@@ -165,11 +165,25 @@ function escrowEvent(order,type,actor_id,note='',details={}){const ev={id:nid('e
 const CREDIT_THB_RATE=6;
 const CREDIT_TOPUP_MIN=10;
 const COIN_PER_CREDIT=100;
-const VIP_LEVEL_ORDER=['Member','Silver','Gold','Sapphire','Platinum','Diamond','Emerald','Elite'];
-const VIP_NEXT_REQUIREMENT={Silver:2000,Gold:15000,Sapphire:50000,Platinum:200000,Diamond:500000,Emerald:1000000};
-const VIP_SALE_FEE_RATE={Member:0.06,Silver:0.059,Gold:0.058,Sapphire:0.057,Platinum:0.055,Diamond:0.05,Emerald:0.045,Elite:0.04};
-const VIP_ESCROW_CASHBACK={Member:0.05,Silver:0.07,Gold:0.10,Sapphire:0.15,Platinum:0.20,Diamond:0.25,Emerald:0.30,Elite:0.40};
-const VIP_ACTIVITY_DISCOUNT={Member:0,Silver:0,Gold:0,Sapphire:0.10,Platinum:0.15,Diamond:0.15,Emerald:0.20,Elite:0.20};
+const VIP_LEVEL_ORDER=['Member','Silver','Gold','Sapphire','Platinum','Diamond','Ruby','Elite'];
+const VIP_NEXT_REQUIREMENT={Silver:2000,Gold:15000,Sapphire:50000,Platinum:300000,Diamond:600000,Ruby:1000000};
+const VIP_SALE_FEE_RATE={Member:0.06,Silver:0.059,Gold:0.058,Sapphire:0.056,Platinum:0.054,Diamond:0.05,Ruby:0.045,Elite:0.04};
+const VIP_ESCROW_CASHBACK={Member:0.05,Silver:0.10,Gold:0.15,Sapphire:0.20,Platinum:0.25,Diamond:0.30,Ruby:0.35,Elite:0.40};
+const VIP_ACTIVITY_DISCOUNT={Member:0,Silver:0,Gold:0.10,Sapphire:0.20,Platinum:0.25,Diamond:0.30,Ruby:0.35,Elite:0.40};
+const VIP_COLLECTION_CAPACITY={Member:0,Silver:5,Gold:10,Sapphire:15,Platinum:20,Diamond:30,Ruby:35,Elite:50};
+const VIP_VALUE_BOOST_DAILY_LIMIT={Member:0,Silver:0,Gold:0,Sapphire:2,Platinum:3,Diamond:5,Ruby:7,Elite:10};
+const VIP_RENAME_FREE_MONTHLY={Member:0,Silver:0,Gold:0,Sapphire:1,Platinum:1,Diamond:2,Ruby:3,Elite:9999};
+const VIP_PIN_FREE_MONTHLY={Member:0,Silver:0,Gold:0,Sapphire:1,Platinum:1,Diamond:2,Ruby:3,Elite:3};
+const VIP_BENEFIT_TEXT={
+  Member:['เข้า Vip Zone ได้','ใช้การประมูลแบบ ปิดซองได้','เงินคืน Escrow Fee 5%'],
+  Silver:['คิดค่าธรรมเนียมสิ้นสุดการประมูลที่ 5.9%','เงินคืน Escrow Fee 10%','คลังสินค้าคอลเลคชั่น 5 รูป'],
+  Gold:['คิดค่าธรรมเนียมสิ้นสุดการประมูลที่ 5.8%','เงินคืน Escrow Fee 15%','ส่วนลดค่าธรรมเนียมสร้างกิจกรรม 10%','ส่วนลดการเปลี่ยนชื่อ 40% (1 ครั้งต่อเดือน)','คลังสินค้าคอลเลคชั่น 10 รูป'],
+  Sapphire:['คิดค่าธรรมเนียมสิ้นสุดการประมูลที่ 5.6%','เงินคืน Escrow Fee 20%','ส่วนลดค่าธรรมเนียมสร้างกิจกรรม 20%','เปลี่ยนชื่อฟรี 1 ครั้งต่อเดือน','ปักหมุดประมูลฟรี 1 ครั้งต่อเดือน','คลังสินค้าคอลเลคชั่น 15 รูป','กด เพิ่มมูลค่า สินค้าหน้าตู้โชว์ได้ 2 ครั้งต่อวัน'],
+  Platinum:['คิดค่าธรรมเนียมสิ้นสุดการประมูลที่ 5.4%','เงินคืน Escrow Fee 25%','ส่วนลดค่าธรรมเนียมสร้างกิจกรรม 25%','เปลี่ยนชื่อฟรี 1 ครั้งต่อเดือน','ปักหมุดประมูลฟรี 1 ครั้งต่อเดือน','คลังสินค้าคอลเลคชั่น 20 รูป','กด เพิ่มมูลค่า สินค้าหน้าตู้โชว์ได้ 3 ครั้งต่อวัน'],
+  Diamond:['คิดค่าธรรมเนียมสิ้นสุดการประมูลที่ 5%','เงินคืน Escrow Fee 30%','ส่วนลดค่าธรรมเนียมสร้างกิจกรรม 30%','เปลี่ยนชื่อฟรี 2 ครั้งต่อเดือน','ปักหมุดประมูลฟรี 2 ครั้งต่อเดือน','คลังสินค้าคอลเลคชั่น 30 รูป','กด เพิ่มมูลค่า สินค้าหน้าตู้โชว์ได้ 5 ครั้งต่อวัน'],
+  Ruby:['คิดค่าธรรมเนียมสิ้นสุดการประมูลที่ 4.5%','เงินคืน Escrow Fee 35%','ส่วนลดค่าธรรมเนียมสร้างกิจกรรม 35%','เปลี่ยนชื่อฟรี 3 ครั้งต่อเดือน','ปักหมุดประมูลฟรี 3 ครั้งต่อเดือน','คลังสินค้าคอลเลคชั่น 35 รูป','กด เพิ่มมูลค่า สินค้าหน้าตู้โชว์ได้ 7 ครั้งต่อวัน'],
+  Elite:['คิดค่าธรรมเนียมสิ้นสุดการประมูลที่ 4%','เงินคืน Escrow Fee 40%','ส่วนลดค่าธรรมเนียมสร้างกิจกรรม 40%','เปลี่ยนชื่อฟรีไม่จำกัด','ปักหมุดประมูลฟรี 3 ครั้งต่อเดือน','คลังสินค้าคอลเลคชั่น 50 รูป','สิทธิ์การกด เพิ่มมูลค่า สินค้าหน้าตู้โชว์ได้ 10 ครั้งต่อวัน']
+};
 const VIP_PLANS={monthly:{label:'30 วัน / 1 เดือน',days:30,price:75},quarterly:{label:'90 วัน / 3 เดือน',days:90,price:215},halfyear:{label:'180 วัน / 6 เดือน',days:180,price:420},yearly:{label:'365 วัน / 1 ปี',days:365,price:790}};
 const REWARD_CODE_RE=/^[A-Za-z0-9]{1,64}$/;
 function validRewardCode(code){return REWARD_CODE_RE.test(String(code||''));}
@@ -211,21 +225,35 @@ function claimTopupTier(u,activity,tier){
   return {already:false};
 }
 
-function ceilFee(n){return Math.ceil(Math.max(0,Number(n)||0));}
-function currentVipLevel(u){return VIP_LEVEL_ORDER.includes(u?.vip_level)?u.vip_level:'Member'}
+function roundFee(n){n=Math.max(0,Number(n)||0);const whole=Math.floor(n), frac=n-whole;return frac>=0.5?whole+1:whole}
+function roundCoinHundred(n){n=Math.max(0,Number(n)||0);return Math.floor(n/100)*100}
+function ceilFee(n){return roundFee(n);}
+function currentVipLevel(u){const lv=(u?.vip_level==='Emerald'?'Ruby':u?.vip_level);return VIP_LEVEL_ORDER.includes(lv)?lv:'Member'}
 function isVipActive(u){return !!u && (currentVipLevel(u)==='Elite' || Number(u.vip_until||0)>now())}
 function vip(u){return isVipActive(u)}
-function getVipBenefits(u){const level=currentVipLevel(u);return {level,is_vip:isVipActive(u),sale_fee_rate:VIP_SALE_FEE_RATE[level]??0.06,escrow_cashback_rate:VIP_ESCROW_CASHBACK[level]??0,activity_discount_rate:VIP_ACTIVITY_DISCOUNT[level]??0,elite_permanent:level==='Elite'}}
-function calculateSaleFee(amount,u){const rate=getVipBenefits(u).sale_fee_rate;return {amount:ceilFee(Number(amount||0)*rate),rate}}
-function calculateEscrowFee(amount){amount=Number(amount||0);let rate=0.01;if(amount>=500000)rate=0.07;else if(amount>=100000)rate=0.05;else if(amount>=50001)rate=0.04;else if(amount>=10001)rate=0.03;else if(amount>=1001)rate=0.02;return {amount:ceilFee(amount*rate),rate}}
-function calculateEscrowCashback(fee,u){const rate=getVipBenefits(u).escrow_cashback_rate;return {amount:ceilFee(Number(fee||0)*rate),rate}}
-function calculateActivityFee(days,currency,u){days=Math.max(1,Math.ceil(Number(days||1)));const base=currency==='coin'?5000:20;const discount=getVipBenefits(u).activity_discount_rate;return {base_per_day:base,days,currency,discount_rate:discount,amount:ceilFee(base*days*(1-discount))}}
+function getVipBenefits(u){const level=currentVipLevel(u);return {level,is_vip:isVipActive(u),sale_fee_rate:VIP_SALE_FEE_RATE[level]??0.06,escrow_cashback_rate:VIP_ESCROW_CASHBACK[level]??0,activity_discount_rate:VIP_ACTIVITY_DISCOUNT[level]??0,collection_capacity:VIP_COLLECTION_CAPACITY[level]??0,value_boost_daily_limit:VIP_VALUE_BOOST_DAILY_LIMIT[level]??0,rename_free_monthly:VIP_RENAME_FREE_MONTHLY[level]??0,pin_free_monthly:VIP_PIN_FREE_MONTHLY[level]??0,benefit_text:VIP_BENEFIT_TEXT[level]||[],show_vip_card:VIP_LEVEL_ORDER.indexOf(level)>=1,elite_permanent:level==='Elite'}}
+function calculateSaleFee(amount,u,currency='credit'){const rate=getVipBenefits(u).sale_fee_rate;let raw=Number(amount||0)*rate;return {amount:currency==='coin'?roundCoinHundred(raw):roundFee(raw),rate}}
+function calculateEscrowFee(amount,currency='credit'){amount=Number(amount||0);let rate=0.01;if(amount>=500000)rate=0.07;else if(amount>=100000)rate=0.05;else if(amount>=50001)rate=0.04;else if(amount>=10001)rate=0.03;else if(amount>=1001)rate=0.02;return {amount:currency==='coin'?roundCoinHundred(amount*rate):roundFee(amount*rate),rate}}
+function calculateEscrowCashback(fee,u,currency='credit'){const rate=getVipBenefits(u).escrow_cashback_rate;if(currency!=='credit')return {amount:0,rate};return {amount:roundFee(Number(fee||0)*rate),rate}}
+function calculateActivityFee(days,currency,u){days=Math.max(1,Math.ceil(Number(days||1)));const base=currency==='coin'?5000:20;const discount=getVipBenefits(u).activity_discount_rate;let raw=base*days*(1-discount);return {base_per_day:base,days,currency,discount_rate:discount,amount:currency==='coin'?roundCoinHundred(raw):roundFee(raw)}}
 function monthKeyBangkok(){return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Bangkok'})).toISOString().slice(0,7)}
-function spendCreditForVipPoints(u,amount,note='ใช้จ่าย Credit'){amount=Math.floor(Number(amount||0));if(!u||amount<=0||!isVipActive(u))return;u.vip_points=Number(u.vip_points||0)+amount;if(currentVipLevel(u)==='Member'){u.vip_credit_spent_for_silver=Number(u.vip_credit_spent_for_silver||0)+amount}
-  while(true){let lv=currentVipLevel(u);if(lv==='Member'){if(Number(u.vip_coin_spent_for_silver||0)>=100000&&Number(u.vip_credit_spent_for_silver||0)>=100){u.vip_level='Silver';u.vip_points=0;continue}break}
-    if(lv==='Elite')break;let req=VIP_NEXT_REQUIREMENT[lv];if(!req||Number(u.vip_points||0)<req)break;u.vip_points=Number(u.vip_points||0)-req;u.vip_level=VIP_LEVEL_ORDER[VIP_LEVEL_ORDER.indexOf(lv)+1]||lv;
-  }}
-function spendCoinForVipSilver(u,amount){amount=Math.floor(Number(amount||0));if(!u||amount<=0||!isVipActive(u))return;if(currentVipLevel(u)==='Member'){u.vip_coin_spent_for_silver=Number(u.vip_coin_spent_for_silver||0)+amount;spendCreditForVipPoints(u,0)}}
+function runVipLevelUp(u){
+  while(u){
+    let lv=currentVipLevel(u); if(lv==='Elite')break;
+    if(lv==='Member'){
+      if(Number(u.vip_coin_spent_for_silver||0)>=100000 && Number(u.vip_points||0)>=100){u.vip_points=Number(u.vip_points||0)-100;u.vip_level='Silver';notifyUser(u.id,'VIP Level Up','เลื่อนระดับเป็น Silver แล้ว',{type:'vip_levelup',level:'Silver'});continue}
+      break;
+    }
+    const req=VIP_NEXT_REQUIREMENT[lv];
+    if(!req||Number(u.vip_points||0)<req)break;
+    u.vip_points=Number(u.vip_points||0)-req;
+    const next=VIP_LEVEL_ORDER[VIP_LEVEL_ORDER.indexOf(lv)+1]||lv;
+    u.vip_level=next;notifyUser(u.id,'VIP Level Up',`เลื่อนระดับเป็น ${next} แล้ว`,{type:'vip_levelup',level:next});
+  }
+}
+function spendCreditForVipPoints(u,amount,note='ใช้จ่าย Credit'){amount=Math.floor(Number(amount||0));if(!u||amount<=0||!isVipActive(u))return;const pts=Math.floor(amount/3);if(pts<=0)return;u.vip_points=Number(u.vip_points||0)+pts;runVipLevelUp(u)}
+function addVipPointsByCreditPurchase(u,creditAmount){creditAmount=Math.floor(Number(creditAmount||0));if(!u||creditAmount<=0)throw Error('จำนวน Credit ไม่ถูกต้อง');bal(u.id,'credit',-creditAmount,'ซื้อ VIP Point','1 Credit = 1 VIP Point');u.vip_points=Number(u.vip_points||0)+creditAmount;runVipLevelUp(u);return creditAmount}
+function spendCoinForVipSilver(u,amount){amount=Math.floor(Number(amount||0));if(!u||amount<=0||!isVipActive(u))return;if(currentVipLevel(u)==='Member'){u.vip_coin_spent_for_silver=Number(u.vip_coin_spent_for_silver||0)+amount;runVipLevelUp(u)}}
 function recordCompanyRevenue(amount,currency,type,ref={}){amount=ceilFee(amount);if(amount>0)db.company_revenue.unshift({amount,currency,type,ref_type:ref.ref_type||'',ref_id:ref.ref_id||'',created_at:now()})}
 function bal(uid,c,delta,type,note='',meta={}){let u=user(uid);if(!u)throw Error('ไม่พบผู้ใช้');delta=Number(delta||0);const before=Number(u[c]||0), after=before+delta;if(after<0)throw Error('ยอด '+c+' ไม่พอ');u[c]=after;tx(uid,type,delta,c,note,{...meta,before_balance:before,after_balance:after});if(delta<0&&c==='credit')spendCreditForVipPoints(u,Math.abs(delta),type);if(delta<0&&c==='coin')spendCoinForVipSilver(u,Math.abs(delta));emitWalletUpdate(uid,type);}
 
@@ -476,10 +504,11 @@ app.post('/api/admin/payments/:id/approve',admin,(req,res)=>{
 });
 app.post('/api/admin/payments/:id/reject',admin,(req,res)=>{const p=(db.payments||[]).find(x=>x.id==req.params.id);if(!p)return res.status(404).json({error:'ไม่พบรายการ'});p.status='rejected';p.admin_note=req.body.note||'';p.updated_at=now();save();res.json({payment:p})});
 app.post('/api/payments/mock-confirm',need,(req,res)=>res.status(403).json({error:'ปิดระบบ Mock แล้ว กรุณาอัปโหลดสลิปให้ Admin ตรวจสอบ'}));
-app.get('/api/vip/config',(req,res)=>res.json({levels:VIP_LEVEL_ORDER,plans:VIP_PLANS,benefits:{sale_fee_rate:VIP_SALE_FEE_RATE,escrow_cashback:VIP_ESCROW_CASHBACK,activity_discount:VIP_ACTIVITY_DISCOUNT},credit_rate:{baht_per_credit:CREDIT_THB_RATE,min_credit:CREDIT_TOPUP_MIN},coin_rate:{coin_per_credit:COIN_PER_CREDIT}}));
-app.post('/api/vip/subscribe',need,(req,res)=>{try{let u=user(req.session.userId),planKey=req.body.plan||'monthly',plan=VIP_PLANS[planKey];if(!plan)return res.status(400).json({error:'แพ็กเกจ VIP ไม่ถูกต้อง'});bal(u.id,'credit',-plan.price,'ซื้อ VIP',plan.label,{ref_type:'vip',ref_id:planKey});recordCompanyRevenue(plan.price,'credit','ขายสมาชิก VIP',{ref_type:'vip',ref_id:planKey});if(currentVipLevel(u)==='Member'&&Number(u.vip_until||0)<=now())u.vip_level='Member';let bonus=0;if(currentVipLevel(u)==='Diamond')bonus=30;else if(currentVipLevel(u)==='Emerald')bonus=90;if(currentVipLevel(u)==='Elite'){u.vip_until=4102444800000}else{u.vip_until=Math.max(Number(u.vip_until||0),now())+(plan.days+bonus)*86400e3}save();res.json({plan:planKey,price:plan.price,days_added:currentVipLevel(u)==='Elite'?'permanent':plan.days+bonus,user:pub(u)})}catch(e){res.status(400).json({error:e.message})}});
+app.get('/api/vip/config',(req,res)=>res.json({levels:VIP_LEVEL_ORDER,plans:VIP_PLANS,benefits:{sale_fee_rate:VIP_SALE_FEE_RATE,escrow_cashback:VIP_ESCROW_CASHBACK,activity_discount:VIP_ACTIVITY_DISCOUNT,collection_capacity:VIP_COLLECTION_CAPACITY,value_boost_daily_limit:VIP_VALUE_BOOST_DAILY_LIMIT,rename_free_monthly:VIP_RENAME_FREE_MONTHLY,pin_free_monthly:VIP_PIN_FREE_MONTHLY,benefit_text:VIP_BENEFIT_TEXT},rules:{vip_points_from_spending:'ใช้จ่าย 3 Credit = 1 VIP Point เฉพาะสถานะ VIP',buy_vip_points:'ซื้อ VIP Point ได้ 1 Credit = 1 คะแนน',free_pin_duration_hours:24,rounding:'เศษ >= 0.5 ปัดขึ้น, เศษ <= 0.4 ปัดลง',coin_fee_rounding:'ค่าธรรมเนียม Coin ปัดลงเป็นจำนวนเต็ม 100 และไม่มี Cashback'},credit_rate:{baht_per_credit:CREDIT_THB_RATE,min_credit:CREDIT_TOPUP_MIN},coin_rate:{coin_per_credit:COIN_PER_CREDIT}}));
+app.post('/api/vip/subscribe',need,(req,res)=>{try{let u=user(req.session.userId),planKey=req.body.plan||'monthly',plan=VIP_PLANS[planKey];if(!plan)return res.status(400).json({error:'แพ็กเกจ VIP ไม่ถูกต้อง'});bal(u.id,'credit',-plan.price,'ซื้อ VIP',plan.label,{ref_type:'vip',ref_id:planKey});recordCompanyRevenue(plan.price,'credit','ขายสมาชิก VIP',{ref_type:'vip',ref_id:planKey});if(currentVipLevel(u)==='Member'&&Number(u.vip_until||0)<=now())u.vip_level='Member';let bonus=0;if(currentVipLevel(u)==='Diamond')bonus=30;else if(currentVipLevel(u)==='Ruby')bonus=0;if(currentVipLevel(u)==='Elite'){u.vip_until=4102444800000}else{u.vip_until=Math.max(Number(u.vip_until||0),now())+(plan.days+bonus)*86400e3}save();res.json({plan:planKey,price:plan.price,days_added:currentVipLevel(u)==='Elite'?'permanent':plan.days+bonus,user:pub(u)})}catch(e){res.status(400).json({error:e.message})}});
 
 app.get('/api/fees/config',(req,res)=>res.json({credit_topup:{baht_per_credit:CREDIT_THB_RATE,min_credit:CREDIT_TOPUP_MIN},coin_exchange:{coin_per_credit:COIN_PER_CREDIT,reverse_exchange:false},vip_plans:VIP_PLANS,sale_fee_rate:VIP_SALE_FEE_RATE,escrow_fee_tiers:[{min:1,max:1000,rate:0.01},{min:1001,max:10000,rate:0.02},{min:10001,max:50000,rate:0.03},{min:50001,max:99999,rate:0.04},{min:100000,max:499999,rate:0.05},{min:500000,max:null,rate:0.07}],escrow_cashback:VIP_ESCROW_CASHBACK,activity_fee:{credit_per_day:20,coin_per_day:5000,discount:VIP_ACTIVITY_DISCOUNT},pin_fee:{credit_per_hour:3,credit_per_day:50,max_days:7,cooldown_hours:72,elite_free_monthly:{max_days:3,limit:1}}}));
+app.post('/api/vip/buy-points',need,(req,res)=>{try{const u=user(req.session.userId);const credit=Number(req.body.credit||req.body.amount||0);const points=addVipPointsByCreditPurchase(u,credit);save();res.json({points,user:pub(u)})}catch(e){res.status(400).json({error:e.message})}});
 app.post('/api/fees/preview',need,(req,res)=>{const u=user(req.session.userId),amount=Number(req.body.amount||0),days=Number(req.body.days||1),currency=req.body.currency||'credit';res.json({user:pub(u),sale_fee:calculateSaleFee(amount,u),escrow_fee:calculateEscrowFee(amount),escrow_cashback:calculateEscrowCashback(calculateEscrowFee(amount).amount,u),activity_fee_credit:calculateActivityFee(days,'credit',u),activity_fee_coin:calculateActivityFee(days,'coin',u)})});
 app.post('/api/auctions/:id/pin',need,(req,res)=>{try{let a=db.auctions.find(x=>x.id==req.params.id),u=user(req.session.userId);if(!a)return res.status(404).json({error:'ไม่พบสินค้า'});if(a.seller_id!==u.id&&u.role!=='admin')return res.status(403).json({error:'เฉพาะเจ้าของสินค้า'});let hours=Math.ceil(Number(req.body.hours||0));if(req.body.days)hours=Math.ceil(Number(req.body.days)*24);if(hours<=0)return res.status(400).json({error:'กรุณาระบุเวลาปักหมุด'});if(hours>24*7)return res.status(400).json({error:'ปักหมุดได้สูงสุด 7 วันต่อครั้ง'});const t=now();if(Number(a.last_pin_ended_at||0)&&t<Number(a.last_pin_ended_at)+72*3600e3)return res.status(400).json({error:'ต้องรอ 72 ชั่วโมงหลังหมุดเดิมสิ้นสุดก่อนปักซ้ำ'});let fee=hours>=24?Math.ceil(hours/24)*50:hours*3;let eliteFree=false;if(currentVipLevel(u)==='Elite'&&hours<=72&&u.elite_free_pin_month!==monthKeyBangkok()){fee=0;eliteFree=true;u.elite_free_pin_month=monthKeyBangkok()}if(fee>0){bal(u.id,'credit',-fee,'ปักหมุดประมูล',a.title,{ref_type:'auction',ref_id:a.id});recordCompanyRevenue(fee,'credit','ค่าปักหมุดประมูล',{ref_type:'auction',ref_id:a.id})}a.pinned_until=t+hours*3600e3;a.last_pin_ended_at=a.pinned_until;db.pin_logs.unshift({id:nid('pin_log'),auction_id:a.id,user_id:u.id,hours,fee,elite_free:eliteFree,created_at:t,ends_at:a.pinned_until});save();res.json({auction:au(a,u.id),fee,elite_free:eliteFree,user:pub(u)})}catch(e){res.status(400).json({error:e.message})}});
 app.post('/api/activities',need,(req,res)=>{try{let u=user(req.session.userId),b=req.body;const title=String(b.title||'').trim(),description=String(b.description||'').trim();if(!title||!description)return res.status(400).json({error:'ต้องมีชื่อกิจกรรมและรายละเอียด'});let days=Math.ceil(Number(b.days||1));if(u.role!=='admin'){if(!vip(u)&&days>3)return res.status(400).json({error:'ผู้ใช้ทั่วไปจัดกิจกรรมได้ไม่เกิน 3 วัน'});if(vip(u)&&days>30)return res.status(400).json({error:'VIP จัดกิจกรรมได้สูงสุด 30 วัน'})}const currency=b.fee_currency==='coin'?'coin':'credit';const fee=u.role==='admin'?{amount:0,currency,days,discount_rate:1}:calculateActivityFee(days,currency,u);if(fee.amount>0){bal(u.id,currency,-fee.amount,'สร้างกิจกรรม',title,{ref_type:'activity'});recordCompanyRevenue(fee.amount,currency,'ค่าธรรมเนียมสร้างกิจกรรม',{ref_type:'activity'})}let reward_code=String(b.reward_code||'').trim();if(reward_code&&!validRewardCode(reward_code))return res.status(400).json({error:'โค้ดรางวัลต้องใช้ A-Z a-z 0-9 เท่านั้น'});const a={id:nid('activity'),creator_id:u.id,creator_name:u.display_name||u.username,title,description,condition:String(b.condition||''),category:normalizeActivityCategory(b.category),days,starts_at:now(),ends_at:now()+days*86400e3,participants_limit:b.participants_limit||'unlimited',reward_enabled:!!b.reward_enabled,reward_code,reward_code_limit:Math.max(1,Math.floor(Number(b.reward_code_limit||1))),activity_link:String(b.activity_link||''),reward_trigger:b.reward_trigger||'manual',auction_id:b.auction_id?Number(b.auction_id):null,fee,status:'active',created_at:now()};db.activities.unshift(a);const randomCount=Math.max(0,Math.min(1000,Math.floor(Number(b.random_code_count||0))));for(let i=0;i<randomCount;i++)db.reward_codes.push({id:nid('reward_code'),activity_id:a.id,code:makeUniqueRewardCode(),use_limit:1,used_count:0,created_by:u.id,created_at:now(),source:'random'});audit(u.id,'activity:create','activity',a.id,{fee,randomCount});save();res.json({activity:publicActivity(a,u.id),codes:(db.reward_codes||[]).filter(c=>c.activity_id==a.id).map(c=>c.code),user:pub(u)})}catch(e){res.status(400).json({error:e.message})}});
@@ -611,15 +640,15 @@ function closeAuction(a){
   if(w&&price>0){
     refundNonWinningHolds(a,wid);
     a.bidder_last_amounts[wid]=price;
-    const escrowCalc=calculateEscrowFee(price);fee=escrowCalc.amount;
-    const saleCalc=calculateSaleFee(price,s);saleFee=saleCalc.amount;
-    cashback=calculateEscrowCashback(fee,s).amount;
+    const escrowCalc=calculateEscrowFee(price,a.currency);fee=escrowCalc.amount;
+    const saleCalc=calculateSaleFee(price,s,a.currency);saleFee=saleCalc.amount;
+    cashback=calculateEscrowCashback(fee,s,a.currency).amount;
     recordCompanyRevenue(fee,a.currency,'ค่าธรรมเนียม Escrow',{ref_type:'auction',ref_id:a.id});
     recordCompanyRevenue(saleFee,a.currency,'ค่าธรรมเนียมประมูลสำเร็จ',{ref_type:'auction',ref_id:a.id});
     if(a.level==='vip'&&normalizeAuctionMethod(a.method)==='english'){
       const second=secondHighestBidder(a,wid);
       if(second){
-        pc=ceilFee(second.amount*0.07);ps=ceilFee(second.amount*0.03);
+        pc=a.currency==='coin'?roundCoinHundred(second.amount*0.07):roundFee(second.amount*0.07);ps=a.currency==='coin'?roundCoinHundred(second.amount*0.03):roundFee(second.amount*0.03);
         if(pc)bal(second.user_id,a.currency,-pc,'ค่าธรรมเนียมอันดับ 2 ประมูล VIP 7%',a.title,{ref_type:'auction',ref_id:a.id});
         if(ps)bal(second.user_id,a.currency,-ps,'ชำระให้ผู้ลงสินค้าอันดับ 2 ประมูล VIP 3%',a.title,{ref_type:'auction',ref_id:a.id});
         if(pc)recordCompanyRevenue(pc,a.currency,'ค่าธรรมเนียมอันดับ 2 ประมูล VIP',{ref_type:'auction',ref_id:a.id});
@@ -855,6 +884,76 @@ function findProfileUser(v){
   const raw=String(v||'').trim();
   return (db.users||[]).find(u=>String(u.id)===raw||String(u.public_user_id||'').toLowerCase()===raw.toLowerCase()||String(u.username||'').toLowerCase()===raw.toLowerCase());
 }
+
+function bangkokDateParts(ts=now()){
+  const d=new Date(new Date(ts).toLocaleString('en-US',{timeZone:'Asia/Bangkok'}));
+  return {y:d.getFullYear(),m:d.getMonth()+1,date:d.getDate(),day:d.getDay(),h:d.getHours(),min:d.getMinutes()};
+}
+function bangkokDayKey(ts=now()){
+  const p=bangkokDateParts(ts);
+  return `${p.y}-${String(p.m).padStart(2,'0')}-${String(p.date).padStart(2,'0')}`;
+}
+function bangkokWeekKey(ts=now()){
+  const d=new Date(new Date(ts).toLocaleString('en-US',{timeZone:'Asia/Bangkok'}));
+  const day=d.getDay();
+  const sunday=new Date(d);sunday.setDate(d.getDate()-day);sunday.setHours(0,0,0,0);
+  return `${sunday.getFullYear()}-${String(sunday.getMonth()+1).padStart(2,'0')}-${String(sunday.getDate()).padStart(2,'0')}`;
+}
+function highestClosedPriceForTitle(title){
+  title=String(title||'').trim().toLowerCase();
+  let max=0;
+  (db.winners||[]).forEach(w=>{if(String(w.item_title||'').trim().toLowerCase()===title)max=Math.max(max,Number(w.price||0))});
+  return max;
+}
+function defaultRValue(title){return Math.max(100, roundCoinHundred(highestClosedPriceForTitle(title)||100))}
+function normalizeShowcaseItem(x){
+  x.r_value=roundCoinHundred(Number(x.r_value||0)||defaultRValue(x.title));
+  if(x.r_value<100)x.r_value=100;
+  x.last_boost_week_key??=bangkokWeekKey(Number(x.created_at||now()));
+  x.boost_count_week=Number(x.boost_count_week||0);
+  x.owner_id??=x.user_id;
+  x.collection_item_id??=null;
+  return x;
+}
+function userShowcase(uid){return (db.profile_showcase||[]).filter(x=>x.user_id==uid).map(normalizeShowcaseItem)}
+function userCollectionItems(uid){return (db.collection_items||[]).filter(x=>x.user_id==uid)}
+function collectionValueForUser(uid){
+  const seen=new Set();let total=0;
+  [...userShowcase(uid),...userCollectionItems(uid)].forEach(x=>{
+    const key=x.collection_item_id?`ci:${x.collection_item_id}`:`img:${x.image_url}`;
+    if(seen.has(key))return;seen.add(key);total+=Number(x.r_value||0);
+  });
+  return roundCoinHundred(total);
+}
+function updateCollectionValue(uid){const u=user(uid);if(u)u.collection_value=collectionValueForUser(uid);return u?.collection_value||0}
+function canUseCollectionFeatures(u){return VIP_LEVEL_ORDER.indexOf(currentVipLevel(u))>=1 && isVipActive(u)}
+function resetDailyValueBoostIfNeeded(u){const key=bangkokDayKey();if(u.value_boost_daily_key!==key){u.value_boost_daily_key=key;u.value_boost_daily_used=0}}
+function assertCollectionCapacity(u){
+  const cap=getVipBenefits(u).collection_capacity;
+  if(cap<=0)throw Error('ต้องเป็น VIP ระดับ Silver ขึ้นไป');
+  if(userCollectionItems(u.id).length>=cap)throw Error(`คลังคอลเลคชั่นเต็ม (${cap} รูป)`);
+}
+function weeklyRDecay(force=false){
+  const p=bangkokDateParts();
+  if(!force && !(p.day===6 && (p.h>23 || (p.h===23&&p.min>=30))))return {ran:false,reason:'not_time'};
+  const week=bangkokWeekKey();
+  if(!force && (db.r_weekly_checks||[]).some(x=>x.week_key===week))return {ran:false,reason:'already_ran'};
+  const affected=[];
+  db.profile_showcase=(db.profile_showcase||[]).filter(x=>{
+    normalizeShowcaseItem(x);
+    if(x.last_boost_week_key!==week && Number(x.boost_count_week||0)===0){
+      x.r_value=Math.max(0,Number(x.r_value||0)-100);
+      affected.push({showcase_id:x.id,user_id:x.user_id,r_value:x.r_value});
+    }
+    x.last_boost_week_key=week;x.boost_count_week=0;
+    return x.r_value>0;
+  });
+  (db.users||[]).forEach(u=>updateCollectionValue(u.id));
+  db.r_weekly_checks.unshift({id:nid('r_weekly_check'),week_key:week,created_at:now(),affected});
+  save();return {ran:true,week_key:week,affected};
+}
+setInterval(()=>{try{weeklyRDecay(false)}catch(e){console.error('R weekly decay failed:',e.message)}},60*1000);
+
 function profileRecentActivities(uid){
   const rows=[];
   (db.auctions||[]).forEach(a=>{
@@ -874,8 +973,10 @@ app.get('/api/profiles/:id',need,(req,res)=>{
   const target=req.params.id==='me'?user(meId):findProfileUser(req.params.id);
   if(!target)return res.status(404).json({error:'ไม่พบโปรไฟล์'});
   const posts=(db.profile_posts||[]).filter(p=>p.user_id==target.id).sort((a,b)=>Number(b.created_at||0)-Number(a.created_at||0)).slice(0,30).map(p=>({...p,user_name:target.display_name||target.username,user_avatar:target.profile_image_url||target.avatar_url||''}));
-  const showcase=(db.profile_showcase||[]).filter(x=>x.user_id==target.id).sort((a,b)=>Number(a.rank||0)-Number(b.rank||0)).slice(0,3);
-  res.json({user:pub(target),is_self:target.id==meId,is_friend:isFriend(meId,target.id),friends:friendList(target.id).slice(0,100),showcase,posts,recent_activities:profileRecentActivities(target.id)});
+  const showcase=userShowcase(target.id).sort((a,b)=>Number(a.rank||0)-Number(b.rank||0)).slice(0,3);
+  const collection_items=userCollectionItems(target.id).slice(0,100);
+  updateCollectionValue(target.id);
+  res.json({user:pub(target),is_self:target.id==meId,is_friend:isFriend(meId,target.id),friends:friendList(target.id).slice(0,100),showcase,collection_items,can_open_collection:canUseCollectionFeatures(target),posts,recent_activities:profileRecentActivities(target.id)});
 });
 app.post('/api/profiles/:id/friend',need,(req,res)=>{
   const meId=req.session.userId;
@@ -910,15 +1011,103 @@ app.post('/api/profiles/me/showcase',need,(req,res)=>{
   const dup=db.profile_showcase.find(x=>x.user_id==meId&&x.image_url===image_url&&Number(x.rank)!==rank);
   if(dup)return res.status(400).json({error:'ไม่สามารถลงรูปสินค้าซ้ำในตู้โชว์ได้'});
   let item=db.profile_showcase.find(x=>x.user_id==meId&&Number(x.rank)===rank);
-  if(item){item.title=title;item.image_url=image_url;item.updated_at=now()}
-  else{item={id:nid('profile_showcase'),user_id:meId,rank,title,image_url,created_at:now(),updated_at:now()};db.profile_showcase.push(item)}
-  save();
-  res.json({showcase:db.profile_showcase.filter(x=>x.user_id==meId).sort((a,b)=>Number(a.rank)-Number(b.rank))});
+  if(item){item.title=title;item.image_url=image_url;item.r_value=item.r_value||defaultRValue(title);item.owner_id=item.owner_id||meId;item.updated_at=now()}
+  else{item={id:nid('profile_showcase'),user_id:meId,owner_id:meId,rank,title,image_url,r_value:defaultRValue(title),created_at:now(),updated_at:now(),last_boost_week_key:bangkokWeekKey(),boost_count_week:0};db.profile_showcase.push(item)}
+  updateCollectionValue(meId);save();
+  res.json({showcase:userShowcase(meId).sort((a,b)=>Number(a.rank)-Number(b.rank)),collection_value:updateCollectionValue(meId)});
 });
 app.delete('/api/profiles/me/showcase/:rank',need,(req,res)=>{
   const rank=Number(req.params.rank||0);
   db.profile_showcase=(db.profile_showcase||[]).filter(x=>!(x.user_id==req.session.userId&&Number(x.rank)===rank));
-  save();res.json({ok:true});
+  updateCollectionValue(req.session.userId);save();res.json({ok:true,collection_value:updateCollectionValue(req.session.userId)});
+});
+
+app.post('/api/profiles/showcase/:id/boost-value',need,(req,res)=>{
+  try{
+    const u=user(req.session.userId);
+    const item=(db.profile_showcase||[]).find(x=>x.id==req.params.id);
+    if(!item)throw Error('ไม่พบสินค้าในตู้โชว์');
+    if(Number(item.user_id)===Number(u.id))throw Error('ไม่สามารถเพิ่มมูลค่าสินค้าของตนเองได้');
+    resetDailyValueBoostIfNeeded(u);
+    const limit=getVipBenefits(u).value_boost_daily_limit||1;
+    if(Number(u.value_boost_daily_used||0)>=limit)throw Error('ใช้สิทธิ์เพิ่มมูลค่าครบแล้วสำหรับวันนี้');
+    const key=bangkokDayKey();
+    if((db.r_value_clicks||[]).some(c=>c.user_id==u.id&&c.showcase_id==item.id&&c.day_key===key))throw Error('วันนี้คุณเพิ่มมูลค่าสินค้านี้แล้ว');
+    normalizeShowcaseItem(item);item.r_value=roundCoinHundred(Number(item.r_value||0)+100);item.boost_count_week=Number(item.boost_count_week||0)+1;item.last_boost_week_key=bangkokWeekKey();
+    u.value_boost_daily_used=Number(u.value_boost_daily_used||0)+1;
+    db.r_value_clicks.unshift({id:nid('r_value_click'),user_id:u.id,showcase_id:item.id,owner_id:item.user_id,day_key:key,amount:100,created_at:now()});
+    updateCollectionValue(item.user_id);save();
+    io.to(roomUser(item.user_id)).emit('showcase:rvalue',{showcase_id:item.id,r_value:item.r_value,collection_value:updateCollectionValue(item.user_id)});
+    res.json({item,collection_value:updateCollectionValue(item.user_id),user:pub(u)});
+  }catch(e){res.status(400).json({error:e.message})}
+});
+app.post('/api/me/rcoin/exchange',need,(req,res)=>{
+  try{
+    const u=user(req.session.userId);resetDailyValueBoostIfNeeded(u);
+    const limit=getVipBenefits(u).value_boost_daily_limit||1;
+    if(Number(u.value_boost_daily_used||0)>=limit)throw Error('ใช้สิทธิ์ประจำวันครบแล้ว');
+    u.value_boost_daily_used=Number(u.value_boost_daily_used||0)+1;u.r_coin=Number(u.r_coin||0)+100;
+    db.r_coin_ledger.unshift({id:nid('r_coin_ledger'),user_id:u.id,amount:100,type:'exchange_boost_right',day_key:bangkokDayKey(),created_at:now()});
+    save();emitWalletUpdate(u.id,'rcoin:exchange');res.json({user:pub(u),r_coin:u.r_coin});
+  }catch(e){res.status(400).json({error:e.message})}
+});
+app.get('/api/me/collection',need,(req,res)=>{
+  const u=user(req.session.userId);
+  if(!canUseCollectionFeatures(u))return res.status(403).json({error:'ต้องเป็น VIP ระดับ Silver ขึ้นไป'});
+  res.json({items:userCollectionItems(u.id),capacity:getVipBenefits(u).collection_capacity,collection_value:updateCollectionValue(u.id),r_coin:Number(u.r_coin||0)});
+});
+app.post('/api/me/collection/:id/showcase',need,(req,res)=>{
+  try{
+    const u=user(req.session.userId);
+    if(!canUseCollectionFeatures(u))throw Error('ต้องเป็น VIP ระดับ Silver ขึ้นไป');
+    const ci=(db.collection_items||[]).find(x=>x.id==req.params.id&&x.user_id==u.id);
+    if(!ci)throw Error('ไม่พบรูปในคลังคอลเลคชั่น');
+    const rank=Number(req.body.rank||1);if(![1,2,3].includes(rank))throw Error('อันดับต้องเป็น 1-3');
+    let item=(db.profile_showcase||[]).find(x=>x.user_id==u.id&&Number(x.rank)===rank);
+    if(item){item.title=ci.title;item.image_url=ci.image_url;item.r_value=Number(ci.r_value||100);item.collection_item_id=ci.id;item.updated_at=now()}
+    else db.profile_showcase.push({id:nid('profile_showcase'),user_id:u.id,owner_id:u.id,rank,title:ci.title,image_url:ci.image_url,r_value:Number(ci.r_value||100),collection_item_id:ci.id,created_at:now(),updated_at:now(),last_boost_week_key:bangkokWeekKey(),boost_count_week:0});
+    updateCollectionValue(u.id);save();res.json({showcase:userShowcase(u.id),collection_value:updateCollectionValue(u.id)});
+  }catch(e){res.status(400).json({error:e.message})}
+});
+app.get('/api/collection-auctions',need,(req,res)=>res.json({auctions:(db.collection_auctions||[]).filter(a=>a.status==='active').map(a=>({...a,seller_name:user(a.seller_id)?.display_name||user(a.seller_id)?.username||''}))}));
+app.post('/api/collection-auctions',need,(req,res)=>{
+  try{
+    const u=user(req.session.userId);
+    if(!canUseCollectionFeatures(u))throw Error('ต้องเป็น VIP ระดับ Silver ขึ้นไป');
+    const showcase=(db.profile_showcase||[]).find(x=>x.id==req.body.showcase_id&&x.user_id==u.id);
+    if(!showcase)throw Error('เลือกสินค้าจากตู้โชว์ของคุณ');
+    normalizeShowcaseItem(showcase);
+    if(Number(showcase.r_value||0)<=10000)throw Error('ต้องมีค่า R มากกว่า 10,000');
+    if(Number(showcase.r_value||0)%100!==0)throw Error('ค่า R ต้องเป็นจำนวนเต็ม 100');
+    const a={id:nid('collection_auction'),seller_id:u.id,showcase_id:showcase.id,title:showcase.title||'Collection Item',image_url:showcase.image_url,start_price:showcase.r_value,current_bid:showcase.r_value,winner_id:null,bids:[],status:'active',start_at:now(),end_at:now()+24*3600e3,created_at:now()};
+    db.collection_auctions.unshift(a);save();res.json({auction:a});
+  }catch(e){res.status(400).json({error:e.message})}
+});
+app.post('/api/collection-auctions/:id/bid',need,(req,res)=>{
+  try{
+    const u=user(req.session.userId),a=(db.collection_auctions||[]).find(x=>x.id==req.params.id);
+    if(!a||a.status!=='active')throw Error('ไม่พบประมูลคอลเลคชั่น');
+    if(!canUseCollectionFeatures(u))throw Error('ต้องเป็น VIP ระดับ Silver ขึ้นไป');
+    if(a.seller_id==u.id)throw Error('ประมูลของตัวเองไม่ได้');
+    const amount=roundCoinHundred(Number(req.body.amount||0));
+    if(amount<=Number(a.current_bid||0))throw Error('ต้องเสนอ R-Coin สูงกว่าราคาปัจจุบัน');
+    if(Number(u.r_coin||0)<amount)throw Error('R-Coin ไม่พอ');
+    const old=user(a.winner_id);if(old)old.r_coin=Number(old.r_coin||0)+Number(a.current_bid||0);
+    u.r_coin=Number(u.r_coin||0)-amount;a.current_bid=amount;a.winner_id=u.id;a.bids.push({user_id:u.id,amount,created_at:now()});save();io.emit('collection-auction:update',a);res.json({auction:a,user:pub(u)});
+  }catch(e){res.status(400).json({error:e.message})}
+});
+app.post('/api/collection-auctions/:id/close',need,(req,res)=>{
+  try{
+    const a=(db.collection_auctions||[]).find(x=>x.id==req.params.id);if(!a||a.status!=='active')throw Error('ไม่พบประมูลคอลเลคชั่น');
+    const u=user(req.session.userId);if(a.seller_id!==u.id&&u.role!=='admin')throw Error('เฉพาะเจ้าของหรือ Admin');
+    const seller=user(a.seller_id),winner=user(a.winner_id),showcase=(db.profile_showcase||[]).find(x=>x.id==a.showcase_id);
+    if(!winner)throw Error('ยังไม่มีผู้ชนะ');
+    assertCollectionCapacity(winner);
+    const ci={id:nid('collection_item'),user_id:winner.id,source:'collection_auction_win',source_auction_id:a.id,title:a.title,image_url:a.image_url,r_value:roundCoinHundred(a.current_bid),created_at:now()};db.collection_items.unshift(ci);
+    if(showcase){showcase.r_value=roundCoinHundred(Number(a.start_price||showcase.r_value||0)*1.10);showcase.collection_item_available=true}
+    if(seller){assertCollectionCapacity(seller);if(showcase&&!db.collection_items.some(x=>x.user_id==seller.id&&x.image_url===showcase.image_url))db.collection_items.unshift({id:nid('collection_item'),user_id:seller.id,source:'collection_auction_seller_return',source_auction_id:a.id,title:showcase.title,image_url:showcase.image_url,r_value:Number(showcase.r_value||100),created_at:now()});}
+    a.status='closed';a.closed_at=now();updateCollectionValue(winner.id);updateCollectionValue(seller?.id);save();res.json({auction:a,winner:pub(winner)});
+  }catch(e){res.status(400).json({error:e.message})}
 });
 app.put('/api/me/profile-media',need,(req,res)=>{
   const u=user(req.session.userId);

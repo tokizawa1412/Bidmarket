@@ -9,7 +9,7 @@ function mobileVip(){closeMobileMenu();showVip()}
 function mobileAdmin(){closeMobileMenu();showAdmin()}
 
 const socket = io();
-const VIP_LEVEL_ORDER=['Member','Silver','Gold','Sapphire','Platinum','Diamond','Emerald','Elite'];
+const VIP_LEVEL_ORDER=['Member','Silver','Gold','Sapphire','Platinum','Diamond','Ruby','Elite'];
 const soundFiles={outbid:'/assets/sounds/outbid.wav',timer:'/assets/sounds/timer-warning.mp3',win:'/assets/sounds/auction-win.mp3',chat:'/assets/sounds/chat-new.wav',escrow:'/assets/sounds/escrow-update.wav',vip:'/assets/sounds/vip-levelup.wav'};
 const audioPool={};
 let soundEnabled=localStorage.getItem('bidmarket_sound_enabled')!=='0';
@@ -63,10 +63,10 @@ function showToast(text){
   if(!box){box=document.createElement('div');box.id='rtToast';box.style.cssText='position:fixed;right:18px;bottom:92px;z-index:9999;background:#111827;color:#fff;border:1px solid rgba(255,255,255,.18);padding:12px 14px;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.35);max-width:320px;font-size:14px';document.body.appendChild(box)}
   box.textContent=text;box.style.display='block';clearTimeout(box._t);box._t=setTimeout(()=>box.style.display='none',2600);
 }
-const pages={home:'หน้าหลัก',vipzone:'VIP Zone',sell:'ลงสินค้า',estimate:'ประเมิณราคา',wallet:'กระเป๋าเงิน',orders:'คำสั่งซื้อ / Escrow',favorites:'รายการที่สนใจ',publicProfile:'โปรไฟล์',profile:'บัญชีผู้ใช้',vip:'สมัคร VIP',ads:'ดูโฆษณา',createAd:'ลงโฆษณา',activities:'กิจกรรม',createActivity:'สร้างกิจกรรม',chat:'สนทนา',reviews:'รีวิว',admin:'Admin',room:'หน้าประมูล',login:'เข้าสู่ระบบ',register:'สมัครสมาชิก',rules:'กฏ/เงื่อนไข'};function $(id){return document.getElementById(id)}function money(n,c){return Number(n||0).toLocaleString('th-TH')+' '+c}async function api(u,o={}){let r=await fetch(u,{headers:{'Content-Type':'application/json'},...o}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||'ผิดพลาด');return j}function av(u){let n=u?(u.display_name||u.username):'Guest';return u&&u.avatar_url?u.avatar_url:`https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=111827&color=fff`}
-async function loadMe(){me=(await api('/api/me')).user;joinRealtimeRooms()}function header(){document.body.classList.toggle('admin',!!(me&&me.role==='admin'));auth.innerHTML=me?`<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">Admin</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'Admin':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.querySelector('.app')?.classList.toggle('noSidebar',id!=='profile');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
+const pages={home:'หน้าหลัก',vipzone:'VIP Zone',sell:'ลงสินค้า',estimate:'ประเมิณราคา',wallet:'กระเป๋าเงิน',orders:'คำสั่งซื้อ / Escrow',favorites:'รายการที่สนใจ',publicProfile:'โปรไฟล์',collection:'คอลเลคชั่น',profile:'บัญชีผู้ใช้',vip:'สมัคร VIP',ads:'ดูโฆษณา',createAd:'ลงโฆษณา',activities:'กิจกรรม',createActivity:'สร้างกิจกรรม',chat:'สนทนา',reviews:'รีวิว',admin:'Admin',room:'หน้าประมูล',login:'เข้าสู่ระบบ',register:'สมัครสมาชิก',rules:'กฏ/เงื่อนไข'};function $(id){return document.getElementById(id)}function money(n,c){return Number(n||0).toLocaleString('th-TH')+' '+c}async function api(u,o={}){let r=await fetch(u,{headers:{'Content-Type':'application/json'},...o}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||'ผิดพลาด');return j}function av(u){let n=u?(u.display_name||u.username):'Guest';return u&&u.avatar_url?u.avatar_url:`https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=111827&color=fff`}
+async function loadMe(){me=(await api('/api/me')).user;joinRealtimeRooms()}function header(){document.body.classList.toggle('admin',!!(me&&me.role==='admin'));auth.innerHTML=me?`<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">Admin</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'Admin':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.querySelector('.app')?.classList.toggle('noSidebar',id!=='profile');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
 async function upload(f){let fd=new FormData();fd.append('file',f);let r=await fetch('/api/upload',{method:'POST',body:fd}),j=await r.json();if(!r.ok)throw Error(j.error||'อัปโหลดไม่สำเร็จ');return j.url}
-function showHelp(title,text){helpTitle.textContent=title;helpBody.textContent=text;helpModal.classList.add('show')}
+function showHelp(title,text){helpTitle.textContent=title;helpBody.innerHTML=String(text||'');helpModal.classList.add('show')}
 function trustDetailHtml(u){
   u=u||{};
   const rate=Number(u.trust_rate||0);
@@ -150,6 +150,24 @@ async function uploadSlip(id){let inp=document.getElementById('slip_'+id);if(!in
 async function mockPay(id){alert('ระบบ Mock ถูกปิดแล้ว ใช้การอัปโหลดสลิปและรอ Admin อนุมัติแทน')}
 async function subVip(p){await api('/api/vip/subscribe',{method:'POST',body:JSON.stringify({plan:p})});refresh()}
 
+async function showVipBenefits(){
+  try{
+    const cfg=await api('/api/vip/config');
+    const levels=cfg.levels||[];
+    const bt=cfg.benefits?.benefit_text||{};
+    const html=`<div class="vipHelpText"><p>ผู้ที่เป็นสมาชิก Vip จะสามารถเข้าร่วมการประมูลแบบ <b>ปิดซอง</b> ที่ห้อง Vip Zone ได้ และหากระดับ Vip สูงขึ้นก็จะได้รับสิทธิประโยชน์มากขึ้นตามระดับ</p>`+
+      levels.map(l=>`<h3>${l}</h3><ul>${(bt[l]||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul>`).join('')+
+      `<div class="notice">การปักหมุดประมูลฟรีจากสิทธิ VIP ใช้ได้ 24 ชั่วโมงต่อ 1 ครั้งเท่านั้น</div></div>`;
+    showHelp('สิทธิประโยชน์ VIP แต่ละระดับ',html);
+  }catch(e){alert(e.message)}
+}
+async function buyVipPoints(){
+  const credit=Number(prompt('ต้องการใช้กี่ Credit เพื่อซื้อ VIP Point?\\n1 Credit = 1 คะแนน')||0);
+  if(!credit)return;
+  try{me=(await api('/api/vip/buy-points',{method:'POST',body:JSON.stringify({credit})})).user;refresh();showToast('ซื้อ VIP Point สำเร็จ')}catch(e){alert(e.message)}
+}
+
+
 async function loadOrders(type='all'){
   if(!need())return;
   let j=await api('/api/orders?type='+type);
@@ -218,11 +236,31 @@ function mobileOpenProfile(){closeMobileMenu();openProfilePage()}
 function profileBannerStyle(u){return u.profile_banner_url?`background-image:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.12)),url('${escapeHtml(u.profile_banner_url)}')`:''}
 function canChangeText(ts){if(!ts)return 'เปลี่ยนได้ทันที';const left=7*24*60*60*1000-(Date.now()-Number(ts));return left<=0?'เปลี่ยนได้ทันที':'เปลี่ยนได้อีกใน '+Math.ceil(left/(24*60*60*1000))+' วัน'}
 
-function renderProfileShowcase(items,owner){
+
+function renderProfileShowcase(items,owner,profileData){
   const arr=[1,2,3].map(rank=>(items||[]).find(x=>Number(x.rank)===rank)||{rank});
-  const cards=arr.map(x=>x.image_url?`<div class="showcaseItem rank${x.rank}"><img src="${escapeHtml(x.image_url)}"><div class="showcaseBadge">อันดับ ${x.rank}</div>${owner?`<button class="showcaseRemove" onclick="removeProfileShowcase(${x.rank})">ลบ</button>`:''}<div class="showcaseTitle">${escapeHtml(x.title||('สินค้าแนะนำอันดับ '+x.rank))}</div></div>`:`<div class="showcaseItem rank${x.rank}"><div class="showcaseBadge">อันดับ ${x.rank}</div><div class="profileEmpty" style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center">ยังไม่ได้เพิ่มสินค้า</div></div>`).join('');
+  const cards=arr.map(x=>x.image_url?`<div class="showcaseItem rank${x.rank}"><img src="${escapeHtml(x.image_url)}"><div class="showcaseBadge">อันดับ ${x.rank}</div>${owner?`<button class="showcaseRemove" onclick="removeProfileShowcase(${x.rank})">ลบ</button>`:''}<div class="showcaseTitle">${escapeHtml(x.title||('สินค้าแนะนำอันดับ '+x.rank))}</div><div class="rValue">มูลค่า ${Number(x.r_value||100).toLocaleString('th-TH')} R</div>${!owner?`<button class="green boostBtn" onclick="boostShowcaseValue(${x.id})">เพิ่มมูลค่า +100 R</button>`:''}</div>`:`<div class="showcaseItem rank${x.rank}"><div class="showcaseBadge">อันดับ ${x.rank}</div><div class="profileEmpty" style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center">ยังไม่ได้เพิ่มสินค้า</div></div>`).join('');
+  const u=profileData?.user||{};
+  const canCollection=!!profileData?.can_open_collection;
   const tools=owner?`<div class="showcaseTools"><select id="showcaseRank"><option value="1">อันดับ 1</option><option value="2">อันดับ 2</option><option value="3">อันดับ 3</option></select><input id="showcaseTitle" placeholder="ชื่อสินค้าแนะนำ"><input id="showcaseFile" type="file" accept="image/*"><button class="green" onclick="saveProfileShowcase()">เพิ่ม/เปลี่ยน</button></div><div class="muted" style="margin-top:8px">ตู้โชว์ใส่ได้ 3 อันดับเท่านั้น และไม่สามารถใช้รูปสินค้าซ้ำกันได้</div>`:'';
-  return `<h3>ตู้โชว์สินค้าถาวร</h3><div class="showcaseGrid">${cards}</div>${tools}`;
+  return `<div class="showcaseHeader"><div><h3>ตู้โชว์สินค้าถาวร</h3><div class="muted">สินค้าในตู้โชว์มีมูลค่า R แบบ Realtime</div></div><div class="collectionStats"><b>มูลค่าคอลเลคชั่น</b><span>${Number(u.collection_value||0).toLocaleString('th-TH')} R ${canCollection?`<button class="miniBtn" onclick="openCollectionVault()">∆</button>`:''}</span><b>R-Coin</b><span>${Number(u.r_coin||0).toLocaleString('th-TH')}</span>${owner?`<button class="gold" onclick="exchangeRCoin()">แลก R-Coin</button>`:''}</div></div><div class="showcaseGrid">${cards}</div>${tools}`;
+}
+async function boostShowcaseValue(id){
+  try{await api('/api/profiles/showcase/'+id+'/boost-value',{method:'POST',body:JSON.stringify({})});await renderPublicProfile();showToast('เพิ่มมูลค่า +100 R แล้ว')}catch(e){alert(e.message)}
+}
+async function exchangeRCoin(){
+  try{me=(await api('/api/me/rcoin/exchange',{method:'POST',body:JSON.stringify({})})).user;await renderPublicProfile();showToast('แลก R-Coin +100 สำเร็จ')}catch(e){alert(e.message)}
+}
+async function openCollectionVault(){
+  try{
+    const j=await api('/api/me/collection');
+    showHelp('คลังสินค้าคอลเลคชั่น',`<div class="notice">ความจุ ${j.items.length}/${j.capacity} รูป • มูลค่า ${Number(j.collection_value||0).toLocaleString('th-TH')} R</div><div class="collectionVaultGrid">${(j.items||[]).map(x=>`<div class="vaultItem"><img src="${escapeHtml(x.image_url)}"><b>${escapeHtml(x.title||'Collection')}</b><span>${Number(x.r_value||0).toLocaleString('th-TH')} R</span><button onclick="putCollectionToShowcase(${x.id})">โชว์ในตู้โชว์</button></div>`).join('')||'<div class="profileEmpty">ยังไม่มีรูปในคลังคอลเลคชั่น</div>'}</div>`);
+  }catch(e){alert(e.message)}
+}
+async function putCollectionToShowcase(id){
+  const rank=Number(prompt('ใส่อันดับตู้โชว์ 1, 2 หรือ 3')||0);
+  if(!rank)return;
+  try{await api('/api/me/collection/'+id+'/showcase',{method:'POST',body:JSON.stringify({rank})});helpModal.classList.remove('show');await renderPublicProfile();}catch(e){alert(e.message)}
 }
 async function saveProfileShowcase(){
   try{
@@ -249,7 +287,7 @@ async function renderPublicProfile(){
   window.trustDetailProfile=u;
   publicProfileBox.innerHTML=`<div class="profileHero"><div class="profileBanner" style="${profileBannerStyle(u)}"></div><div class="profileInfo"><img class="profilePic" src="${av(u)}"><div><div class="profileName">${escapeHtml(u.display_name||u.username)}</div><div class="profileId">ID : ${escapeHtml(u.public_user_id||u.id)}</div><button class="profileTrustBtn" onclick="showTrustDetails(window.trustDetailProfile)">Trust Score : <b>${Number(u.trust_rate??50)}</b></button>${owner?`<div class="profileMediaTools"><label class="light" style="padding:8px 12px;border-radius:999px;border:1px solid #ddd;cursor:pointer">เปลี่ยนรูปโปรไฟล์<input id="profileAvatarFile" type="file" accept="image/*" style="display:none" onchange="changeProfileMedia('avatar',this)"></label><label class="light" style="padding:8px 12px;border-radius:999px;border:1px solid #ddd;cursor:pointer">เปลี่ยนพื้นหลัง<input id="profileBannerFile" type="file" accept="image/*" style="display:none" onchange="changeProfileMedia('banner',this)"></label><span class="profileSmall">รูป: ${canChangeText(u.profile_image_changed_at)} • พื้นหลัง: ${canChangeText(u.profile_banner_changed_at)}</span></div>`:''}</div><div class="profileActions">${!owner?`<button class="green" onclick="addFriend(${u.id})">${j.is_friend?'เป็นเพื่อนแล้ว':'เพิ่มเพื่อน'}</button><button onclick="openChatWithUser(${u.id})">ส่งข้อความ</button>`:''}</div></div></div>`;
   profileFriendsBox.innerHTML=`<h3>เพื่อน (${(j.friends||[]).length}/100)</h3>${(j.friends||[]).length?(j.friends||[]).map(f=>`<div class="friendRow" onclick="openChatWithUser(${f.id})"><img src="${av(f)}"><div><b>${escapeHtml(f.display_name||f.username)}</b><br><span class="muted">${escapeHtml(f.public_user_id||('#'+f.id))}</span></div></div>`).join(''):'<div class="profileEmpty">ยังไม่มีรายชื่อเพื่อน</div>'}`;
-  profileShowcaseBox.innerHTML=renderProfileShowcase(j.showcase||[],owner);
+  profileShowcaseBox.innerHTML=renderProfileShowcase(j.showcase||[],owner,j);
   profilePostBox.innerHTML=owner?`<h3>โพสต์</h3><div class="postComposer"><textarea id="profilePostText" placeholder="พิมพ์ข้อความเพื่อแสดงให้คนอื่นเห็น..."></textarea><input id="profilePostMedia" type="file" accept="image/*,video/*"><button class="green" onclick="createProfilePost()">โพสต์</button></div>`:`<h3>โพสต์</h3>`;
   profileFeedBox.innerHTML=(j.posts||[]).length?`<h3>โพสต์ล่าสุด</h3>`+(j.posts||[]).map(p=>`<div class="postCard"><div class="postHead"><img src="${av({display_name:p.user_name,avatar_url:p.user_avatar})}"><div><b>${escapeHtml(p.user_name||'ผู้ใช้')}</b><br><span class="muted">${new Date(p.created_at).toLocaleString('th-TH')}</span></div></div>${p.content?`<div>${escapeHtml(p.content)}</div>`:''}${p.media_url?(p.media_type==='video'?`<video class="postMedia" src="${escapeHtml(p.media_url)}" controls></video>`:`<img class="postMedia" src="${escapeHtml(p.media_url)}">`):''}</div>`).join(''):'<h3>โพสต์ล่าสุด</h3><div class="profileEmpty">ยังไม่มีโพสต์</div>';
   profileActivityBox.innerHTML=`<h3>กิจกรรมล่าสุด</h3>${(j.recent_activities||[]).length?(j.recent_activities||[]).map(a=>`<div class="activityItem"><b>${escapeHtml(a.type)}</b> — ${escapeHtml(a.title||'-')}<br><span class="muted">${a.amount?money(a.amount,a.currency||''):''} ${a.created_at?new Date(a.created_at).toLocaleString('th-TH'):''}</span></div>`).join(''):'<div class="profileEmpty">ยังไม่มีกิจกรรมล่าสุด</div>'}`;
@@ -375,3 +413,15 @@ async function sendFloatingChat(){
 function escapeHtml(t){return String(t).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 setInterval(()=>{if(selected&&!room.classList.contains('hidden')&&currentAuctionCache){const el=document.getElementById('roomTimer');if(el&&currentAuctionCache.end_at)el.textContent=tleft(Math.max(0,currentAuctionCache.end_at-Date.now()))}},1000);adTypeChanged();show('home');
+
+
+async function renderCollectionPage(){
+  if(!need())return;
+  try{
+    const j=await api('/api/collection-auctions');
+    collectionBox.innerHTML=`<div class="notice">ประมูลคอลเลคชั่นใช้ R-Coin เท่านั้น เข้าร่วมได้เฉพาะ VIP ระดับ Silver ขึ้นไป และไม่มีค่าธรรมเนียม</div><div class="grid">${(j.auctions||[]).map(a=>`<div class="card content"><img src="${escapeHtml(a.image_url)}" style="width:100%;height:180px;object-fit:cover;border-radius:16px"><h3>${escapeHtml(a.title)}</h3><div>ราคาปัจจุบัน: <b>${Number(a.current_bid||0).toLocaleString('th-TH')} R-Coin</b></div><div class="muted">ผู้ลง: ${escapeHtml(a.seller_name||'-')}</div><input id="caBid${a.id}" type="number" step="100" placeholder="เสนอ R-Coin"><button class="green" onclick="bidCollectionAuction(${a.id})">เสนอราคา</button></div>`).join('')||'<div class="notice">ยังไม่มีประมูลคอลเลคชั่น</div>'}</div>`;
+  }catch(e){collectionBox.innerHTML='<div class="notice error">'+escapeHtml(e.message)+'</div>'}
+}
+async function bidCollectionAuction(id){
+  try{const amount=Number(document.getElementById('caBid'+id).value||0);await api('/api/collection-auctions/'+id+'/bid',{method:'POST',body:JSON.stringify({amount})});renderCollectionPage();refresh();}catch(e){alert(e.message)}
+}
