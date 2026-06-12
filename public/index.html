@@ -252,6 +252,29 @@ body.theme-light .panel,body.theme-light .card,body.theme-light .hero,body.theme
 body.theme-dark{background:linear-gradient(135deg,#07111fee,#263143cc),url('https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?q=80&w=1800&auto=format&fit=crop') center/cover fixed;color:#111827}
 @media(max-width:768px){.topActionBtn{width:34px;height:34px;font-size:16px}.notificationBadge{right:-5px;top:-6px}}
 
+
+
+/* BidMarket Account/Profile layout alignment update */
+.nav{min-height:34px!important;padding:4px 14px!important;}
+.tabs{padding:6px 10px!important;gap:6px!important;align-items:center!important;max-width:none!important;width:100%!important;}
+.tabs button{padding:7px 13px!important;font-size:12px!important;min-height:30px!important;line-height:1!important;}
+.topUserSearch input{padding:7px 12px!important;font-size:12px!important;min-height:30px!important;}
+.topUserSearch button{padding:7px 13px!important;font-size:12px!important;min-height:30px!important;}
+.container{max-width:none!important;width:100%!important;padding:14px 18px 34px!important;}
+.app{grid-template-columns:300px minmax(0,1fr)!important;gap:16px!important;width:100%!important;}
+.side{top:120px!important;border-radius:22px!important}.sideTop{padding:18px 16px!important}.sideMenu{padding:12px!important}.side button{padding:10px 14px!important;font-size:13px!important;border-radius:18px!important}
+body.accountWide .panel.content:has(.accountLayoutV2){background:transparent!important;box-shadow:none!important;padding:0!important;border-radius:0!important;overflow:visible!important;}
+body.accountWide #profile> .panel.content>h2,body.accountWide #profile> .panel.content>button.green{display:none!important;}
+.accountLayoutV2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;width:100%;align-items:start;}
+.accountMainV2{display:grid;gap:16px;min-width:0}.accountRightV2{display:grid;gap:16px;position:sticky;top:104px;align-self:start}.accountRightV2 .profileFriends,.accountRightV2 .profileActivity{position:static!important;margin:0!important;max-height:none!important;background:rgba(255,255,255,.96)!important;border-radius:24px!important;box-shadow:0 16px 44px rgba(15,23,42,.14)!important;padding:18px!important;}
+.accountHeroBannerV2{min-height:355px;background:linear-gradient(135deg,#07111f,#111827 58%,#cc9b31);border-radius:26px;box-shadow:0 18px 60px rgba(15,23,42,.18);padding:24px;display:grid;grid-template-columns:minmax(380px,560px) minmax(260px,380px);gap:24px;align-items:center;justify-content:center;overflow:hidden;}
+.accountIdentityCardV2{background:rgba(7,17,31,.78);border:1px solid rgba(243,210,139,.16);border-radius:24px;padding:24px;text-align:center;color:#fff;max-width:560px;width:100%;justify-self:center;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+.accountHeroAvatar{width:118px!important;height:118px!important;border-radius:50%!important;object-fit:cover;border:4px solid #f3d28b!important;background:#111827}.accountHeroName{font-size:30px;font-weight:1000;margin-top:12px;color:#fff}.accountHeroId{font-size:13px;color:#dbeafe;margin-top:5px}.accountHeroStatus{margin-top:10px;font-weight:900;display:flex;justify-content:center;align-items:center;gap:8px;color:#fde68a}.accountHeroVerified.ok{color:#86efac;font-weight:1000}.accountHeroVerified.no{color:#fca5a5;font-weight:900}.accountHeroStats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.accountHeroStats>div,.accountHeroStats>button{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:16px!important;color:#fff!important;padding:12px!important;margin:0!important;display:grid;gap:5px;text-align:center}.accountHeroStats b{font-size:12px;color:#cbd5e1}.accountHeroStats span{font-size:22px;font-weight:1000;color:#fff}.trustStatBtn{cursor:pointer}.trustStatBtn:hover{transform:translateY(-1px);background:rgba(243,210,139,.16)!important}
+.accountVipCardWrapV2{align-self:stretch;display:flex;align-items:center;justify-content:center}.accountVipCard{width:100%;min-height:240px;border-radius:28px;padding:24px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 24px 70px rgba(0,0,0,.30);background:linear-gradient(135deg,#334155,#0f172a);border:1px solid rgba(255,255,255,.18);position:relative;overflow:hidden}.accountVipCard:before{content:"";position:absolute;inset:-60px -80px auto auto;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.14)}.vipCardTop{font-size:13px;letter-spacing:2px;opacity:.78}.vipCardLevel{font-size:34px;font-weight:1000;line-height:1}.vipCardName{font-weight:900}.vipCardNote{font-size:13px;opacity:.82}.accountVipCard.vipCard_silver{background:linear-gradient(135deg,#94a3b8,#334155)}.accountVipCard.vipCard_gold{background:linear-gradient(135deg,#f59e0b,#78350f)}.accountVipCard.vipCard_sapphire{background:linear-gradient(135deg,#2563eb,#0f172a)}.accountVipCard.vipCard_platinum{background:linear-gradient(135deg,#e5e7eb,#64748b);color:#0f172a}.accountVipCard.vipCard_diamond{background:linear-gradient(135deg,#67e8f9,#2563eb)}.accountVipCard.vipCard_ruby{background:linear-gradient(135deg,#ef4444,#7f1d1d)}.accountVipCard.vipCard_elite{background:linear-gradient(135deg,#111827,#000,#d97706)}
+.accountSoundBox{border-radius:20px!important;margin:0!important}.accountCardsGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.accountCardsGrid .card{border-radius:22px!important;box-shadow:0 14px 38px rgba(15,23,42,.10)!important}.accountRightV2 .friendRow{display:grid!important;grid-template-columns:44px 1fr 36px!important;gap:10px!important;align-items:center!important;padding:10px 0!important}.accountRightV2 .friendRow img{width:44px!important;height:44px!important;border-radius:50%;object-fit:cover}.accountRightV2 .activityItem{border-bottom:1px solid #e5e7eb!important;padding:12px 0!important}.accountRightV2 .activityItem:last-child{border-bottom:0!important}
+@media(max-width:1180px){.app{grid-template-columns:1fr!important}.side{position:static!important}.accountLayoutV2{grid-template-columns:1fr}.accountRightV2{position:static;grid-template-columns:1fr 1fr}.accountHeroBannerV2{grid-template-columns:1fr}.accountVipCard{max-width:520px}}
+@media(max-width:768px){.nav{top:66px!important}.tabs{overflow:auto;flex-wrap:nowrap!important}.tabs button{white-space:nowrap}.accountRightV2{grid-template-columns:1fr}.accountCardsGrid{grid-template-columns:1fr}.accountHeroBannerV2{min-height:auto;padding:16px;border-radius:22px}.accountIdentityCardV2{padding:18px}.accountHeroName{font-size:24px}.accountHeroStats{grid-template-columns:1fr}.accountVipCard{min-height:180px}.app{gap:12px}.container{padding:10px 10px 80px!important}}
+
 </style></head><body><header><div class="top"><a href="#home" class="brandLink" onclick="show('home');return false"><div class="logo">🔨 BidMarket</div><div class="small">เว็บประมูลสินค้า</div></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
 <div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
   <div class="mobileMenuPanel" onclick="event.stopPropagation()">
@@ -446,7 +469,7 @@ async function loadMe(){me=(await api('/api/me')).user;joinRealtimeRooms()}funct
   auth.innerHTML=me?`${themeBtn}${bellBtn}<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}${vipRank(me.vip_level)>0?` <span class="vipMiniBadge">${escapeHtml(me.vip_level)}</span>`:''}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">Admin</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`${themeBtn}<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;
   applyTheme();
   refreshNotificationBadge();
-  sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'Admin':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.querySelector('.app')?.classList.toggle('noSidebar',id!=='profile');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
+  sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'Admin':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.body.classList.toggle('accountWide',id==='profile');document.querySelector('.app')?.classList.toggle('noSidebar',id!=='profile');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
 async function upload(f){let fd=new FormData();fd.append('file',f);let r=await fetch('/api/upload',{method:'POST',body:fd}),j=await r.json();if(!r.ok)throw Error(j.error||'อัปโหลดไม่สำเร็จ');return j.url}
 function showHelp(title,text){helpTitle.textContent=title;helpBody.innerHTML=String(text||'');helpModal.classList.add('show')}
 function trustDetailHtml(u){
@@ -584,6 +607,27 @@ function vipPremiumCard(level){
   const cls='vipCard_'+String(lv).toLowerCase();
   return `<span class="vipMiniCard ${cls}">${escapeHtml(lv)}</span>`;
 }
+function accountVipCardHtml(u){
+  const level=vipLevelName(u);
+  const active=!!u.is_vip;
+  const colorClass='vipCard_'+String(level||'member').toLowerCase();
+  return `<div class="accountVipCard ${colorClass}"><div class="vipCardTop">VIP CARD</div><div class="vipCardLevel">${active?escapeHtml(level):'GENERAL'}</div><div class="vipCardName">${escapeHtml(u.display_name||u.username||'BidMarket')}</div><div class="vipCardNote">${active?'ระดับสมาชิกของคุณ':'สมัคร VIP เพื่อปลดล็อกสิทธิพิเศษ'}</div></div>`;
+}
+function renderAccountSidePanels(){
+  const fBox=document.getElementById('accountFriendsBox');
+  const aBox=document.getElementById('accountActivityBox');
+  if(!fBox||!aBox||!me)return;
+  fBox.innerHTML='<div class="friendsPanel"><div class="panelHead"><h3>เพื่อน (0/100)</h3><a href="#" onclick="return false">ทั้งหมด ›</a></div><input class="friendSearch" placeholder="ค้นหาเพื่อน"><div class="profileEmpty">กำลังโหลด...</div></div>';
+  aBox.innerHTML='<div class="activityPanel"><h3>กิจกรรมล่าสุด</h3><div class="profileEmpty">กำลังโหลด...</div></div>';
+  api('/api/profiles/'+me.id).then(j=>{
+    const friends=(j.friends||[]).slice(0,8);
+    fBox.innerHTML=`<div class="friendsPanel"><div class="panelHead"><h3>เพื่อน (${(j.friends||[]).length}/100)</h3><a href="#" onclick="return false">ทั้งหมด ›</a></div><input class="friendSearch" placeholder="ค้นหาเพื่อน">${friends.length?friends.map(f=>`<div class="friendRow" onclick="openChatWithUser(${f.id})"><img src="${av(f)}"><div><b>${escapeHtml(f.display_name||f.username)}</b><br><span class="muted">ออนไลน์</span></div><button class="chatTiny">💬</button></div>`).join(''):'<div class="profileEmpty">ยังไม่มีรายชื่อเพื่อน</div>'}</div>`;
+    aBox.innerHTML=`<div class="activityPanel"><h3>กิจกรรมล่าสุด</h3>${(j.recent_activities||[]).length?(j.recent_activities||[]).slice(0,8).map(a=>`<div class="activityItem"><b>${escapeHtml(a.type)}</b><br>${escapeHtml(a.title||'-')}<br><span class="muted">${a.amount?money(a.amount,a.currency||''):''} ${a.created_at?new Date(a.created_at).toLocaleString('th-TH'):''}</span></div>`).join(''):'<div class="profileEmpty">ยังไม่มีกิจกรรมล่าสุด</div>'}</div>`;
+  }).catch(()=>{
+    fBox.innerHTML='<div class="friendsPanel"><h3>เพื่อน (0/100)</h3><div class="profileEmpty">ยังไม่มีรายชื่อเพื่อน</div></div>';
+    aBox.innerHTML='<div class="activityPanel"><h3>กิจกรรมล่าสุด</h3><div class="profileEmpty">ยังไม่มีกิจกรรมล่าสุด</div></div>';
+  });
+}
 function renderProfile(){
   if(!me)return;
   const display=escapeHtml(me.display_name||me.username||'ผู้ใช้');
@@ -592,23 +636,34 @@ function renderProfile(){
   const statusText=isVip?'VIP MEMBER':'สมาชิกทั่วไป';
   const verified=me.verified||me.google_linked;
   window.trustDetailMe=me;
-  profileBox.innerHTML=`<div class="accountHero">
-    <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
-    <div class="accountHeroName">${display}</div>
-    <div class="accountHeroId">ID : <span>${uid}</span></div>
-    <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(me.vip_level):''}</div>
-    <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
-    <div class="accountHeroStats">
-      <button class="trustStatBtn" onclick="showTrustDetails(window.trustDetailMe)"><b>Trust Score</b><span>${Number(me.trust_rate??50)}</span></button>
-      <div><b>Coin</b><span>${Number(me.coin||0).toLocaleString('th-TH')}</span></div>
-      <div><b>Credit</b><span>${Number(me.credit||0).toLocaleString('th-TH')}</span></div>
-    </div>
-  </div><div class="notice"><b>เสียงแจ้งเตือน</b><br><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" ${soundEnabled?'checked':''} onchange="setSoundEnabled(this.checked)" style="width:auto;margin:0"> เปิดเสียงแจ้งเตือน Realtime</label><div class="small">ใช้กับ: ถูกเสนอราคาสูงกว่า, เหลือเวลา 10 วินาที, ชนะประมูล, แชท, Escrow และ VIP Level Up</div></div>`;
+  profileBox.innerHTML=`<div class="accountLayoutV2">
+    <main class="accountMainV2">
+      <section class="accountHeroBannerV2">
+        <div class="accountIdentityCardV2">
+          <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
+          <div class="accountHeroName">${display}</div>
+          <div class="accountHeroId">ID : <span>${uid}</span></div>
+          <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(me.vip_level):''}</div>
+          <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
+          <div class="accountHeroStats">
+            <button class="trustStatBtn" onclick="showTrustDetails(window.trustDetailMe)"><b>Trust Score</b><span>${Number(me.trust_rate??50)}</span></button>
+            <div><b>Coin</b><span>${Number(me.coin||0).toLocaleString('th-TH')}</span></div>
+            <div><b>Credit</b><span>${Number(me.credit||0).toLocaleString('th-TH')}</span></div>
+          </div>
+        </div>
+        <aside class="accountVipCardWrapV2">${accountVipCardHtml(me)}</aside>
+      </section>
+      <section class="notice accountSoundBox"><b>เสียงแจ้งเตือน</b><br><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" ${soundEnabled?'checked':''} onchange="setSoundEnabled(this.checked)" style="width:auto;margin:0"> เปิดเสียงแจ้งเตือน Realtime</label><div class="small">ใช้กับ: ถูกเสนอราคาสูงกว่า, เหลือเวลา 10 วินาที, ชนะประมูล, แชท, Escrow และ VIP Level Up</div></section>
+      <section class="accountCardsGrid"><div class="card content"><h3>ข้อมูลบัญชี</h3><input id="pName"><input id="pEmail"><textarea id="pBio"></textarea><input id="pAvatar" placeholder="URL รูปโปรไฟล์"><button onclick="saveProfile()">บันทึก</button></div><div class="card content"><h3>ความน่าเชื่อถือผู้ขาย</h3><div id="trustBox"></div></div></section>
+    </main>
+    <aside class="accountRightV2"><div id="accountFriendsBox" class="profileFriends"></div><div id="accountActivityBox" class="profileActivity"></div></aside>
+  </div>`;
   pName.value=me.display_name||me.username||'';
   pEmail.value=me.email||'';
   pBio.value=me.bio||'';
   pAvatar.value=me.avatar_url||'';
   trustBox.innerHTML=`<button class="trustSummaryBtn" onclick="showTrustDetails(window.trustDetailMe)"><div class="price">${Number(me.trust_rate??50)}%</div><div>สำเร็จ ${me.trust_completed_sales||0}/${me.trust_total_orders||0} รายการ</div><span class="muted">กดเพื่อดูรายละเอียด</span></button>`;
+  renderAccountSidePanels();
 }
 async function saveProfile(){me=(await api('/api/me/profile',{method:'PUT',body:JSON.stringify({display_name:pName.value,email:pEmail.value,bio:pBio.value,avatar_url:pAvatar.value})})).user;refresh()}
 
@@ -946,5 +1001,28 @@ body.profileWide .profileLeft,body.profileWide .profileRight{top:104px!important
 .imageViewer img{width:100%;max-height:78vh;object-fit:contain;border-radius:18px;background:#050505;}
 @media(max-width:1180px){.showcaseV3{grid-template-columns:1fr!important}.collectionSide{grid-template-columns:1fr 1fr;grid-template-rows:auto}}
 @media(max-width:768px){body.profileWide .nav{position:sticky!important;top:0!important}.collectionSide{grid-template-columns:1fr}.showcaseItem{height:160px!important;min-height:160px!important;max-height:160px!important}.showcaseItem.rank1{height:220px!important;min-height:220px!important;max-height:220px!important}}
+
+
+
+/* BidMarket Account/Profile layout alignment update */
+.nav{min-height:34px!important;padding:4px 14px!important;}
+.tabs{padding:6px 10px!important;gap:6px!important;align-items:center!important;max-width:none!important;width:100%!important;}
+.tabs button{padding:7px 13px!important;font-size:12px!important;min-height:30px!important;line-height:1!important;}
+.topUserSearch input{padding:7px 12px!important;font-size:12px!important;min-height:30px!important;}
+.topUserSearch button{padding:7px 13px!important;font-size:12px!important;min-height:30px!important;}
+.container{max-width:none!important;width:100%!important;padding:14px 18px 34px!important;}
+.app{grid-template-columns:300px minmax(0,1fr)!important;gap:16px!important;width:100%!important;}
+.side{top:120px!important;border-radius:22px!important}.sideTop{padding:18px 16px!important}.sideMenu{padding:12px!important}.side button{padding:10px 14px!important;font-size:13px!important;border-radius:18px!important}
+body.accountWide .panel.content:has(.accountLayoutV2){background:transparent!important;box-shadow:none!important;padding:0!important;border-radius:0!important;overflow:visible!important;}
+body.accountWide #profile> .panel.content>h2,body.accountWide #profile> .panel.content>button.green{display:none!important;}
+.accountLayoutV2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;width:100%;align-items:start;}
+.accountMainV2{display:grid;gap:16px;min-width:0}.accountRightV2{display:grid;gap:16px;position:sticky;top:104px;align-self:start}.accountRightV2 .profileFriends,.accountRightV2 .profileActivity{position:static!important;margin:0!important;max-height:none!important;background:rgba(255,255,255,.96)!important;border-radius:24px!important;box-shadow:0 16px 44px rgba(15,23,42,.14)!important;padding:18px!important;}
+.accountHeroBannerV2{min-height:355px;background:linear-gradient(135deg,#07111f,#111827 58%,#cc9b31);border-radius:26px;box-shadow:0 18px 60px rgba(15,23,42,.18);padding:24px;display:grid;grid-template-columns:minmax(380px,560px) minmax(260px,380px);gap:24px;align-items:center;justify-content:center;overflow:hidden;}
+.accountIdentityCardV2{background:rgba(7,17,31,.78);border:1px solid rgba(243,210,139,.16);border-radius:24px;padding:24px;text-align:center;color:#fff;max-width:560px;width:100%;justify-self:center;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+.accountHeroAvatar{width:118px!important;height:118px!important;border-radius:50%!important;object-fit:cover;border:4px solid #f3d28b!important;background:#111827}.accountHeroName{font-size:30px;font-weight:1000;margin-top:12px;color:#fff}.accountHeroId{font-size:13px;color:#dbeafe;margin-top:5px}.accountHeroStatus{margin-top:10px;font-weight:900;display:flex;justify-content:center;align-items:center;gap:8px;color:#fde68a}.accountHeroVerified.ok{color:#86efac;font-weight:1000}.accountHeroVerified.no{color:#fca5a5;font-weight:900}.accountHeroStats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.accountHeroStats>div,.accountHeroStats>button{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:16px!important;color:#fff!important;padding:12px!important;margin:0!important;display:grid;gap:5px;text-align:center}.accountHeroStats b{font-size:12px;color:#cbd5e1}.accountHeroStats span{font-size:22px;font-weight:1000;color:#fff}.trustStatBtn{cursor:pointer}.trustStatBtn:hover{transform:translateY(-1px);background:rgba(243,210,139,.16)!important}
+.accountVipCardWrapV2{align-self:stretch;display:flex;align-items:center;justify-content:center}.accountVipCard{width:100%;min-height:240px;border-radius:28px;padding:24px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 24px 70px rgba(0,0,0,.30);background:linear-gradient(135deg,#334155,#0f172a);border:1px solid rgba(255,255,255,.18);position:relative;overflow:hidden}.accountVipCard:before{content:"";position:absolute;inset:-60px -80px auto auto;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.14)}.vipCardTop{font-size:13px;letter-spacing:2px;opacity:.78}.vipCardLevel{font-size:34px;font-weight:1000;line-height:1}.vipCardName{font-weight:900}.vipCardNote{font-size:13px;opacity:.82}.accountVipCard.vipCard_silver{background:linear-gradient(135deg,#94a3b8,#334155)}.accountVipCard.vipCard_gold{background:linear-gradient(135deg,#f59e0b,#78350f)}.accountVipCard.vipCard_sapphire{background:linear-gradient(135deg,#2563eb,#0f172a)}.accountVipCard.vipCard_platinum{background:linear-gradient(135deg,#e5e7eb,#64748b);color:#0f172a}.accountVipCard.vipCard_diamond{background:linear-gradient(135deg,#67e8f9,#2563eb)}.accountVipCard.vipCard_ruby{background:linear-gradient(135deg,#ef4444,#7f1d1d)}.accountVipCard.vipCard_elite{background:linear-gradient(135deg,#111827,#000,#d97706)}
+.accountSoundBox{border-radius:20px!important;margin:0!important}.accountCardsGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.accountCardsGrid .card{border-radius:22px!important;box-shadow:0 14px 38px rgba(15,23,42,.10)!important}.accountRightV2 .friendRow{display:grid!important;grid-template-columns:44px 1fr 36px!important;gap:10px!important;align-items:center!important;padding:10px 0!important}.accountRightV2 .friendRow img{width:44px!important;height:44px!important;border-radius:50%;object-fit:cover}.accountRightV2 .activityItem{border-bottom:1px solid #e5e7eb!important;padding:12px 0!important}.accountRightV2 .activityItem:last-child{border-bottom:0!important}
+@media(max-width:1180px){.app{grid-template-columns:1fr!important}.side{position:static!important}.accountLayoutV2{grid-template-columns:1fr}.accountRightV2{position:static;grid-template-columns:1fr 1fr}.accountHeroBannerV2{grid-template-columns:1fr}.accountVipCard{max-width:520px}}
+@media(max-width:768px){.nav{top:66px!important}.tabs{overflow:auto;flex-wrap:nowrap!important}.tabs button{white-space:nowrap}.accountRightV2{grid-template-columns:1fr}.accountCardsGrid{grid-template-columns:1fr}.accountHeroBannerV2{min-height:auto;padding:16px;border-radius:22px}.accountIdentityCardV2{padding:18px}.accountHeroName{font-size:24px}.accountHeroStats{grid-template-columns:1fr}.accountVipCard{min-height:180px}.app{gap:12px}.container{padding:10px 10px 80px!important}}
 
 </style>

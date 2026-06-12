@@ -99,7 +99,7 @@ async function loadMe(){me=(await api('/api/me')).user;joinRealtimeRooms()}funct
   auth.innerHTML=me?`${themeBtn}${bellBtn}<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}${vipRank(me.vip_level)>0?` <span class="vipMiniBadge">${escapeHtml(me.vip_level)}</span>`:''}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">Admin</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`${themeBtn}<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;
   applyTheme();
   refreshNotificationBadge();
-  sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'Admin':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.querySelector('.app')?.classList.toggle('noSidebar',id!=='profile');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
+  sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'Admin':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.body.classList.toggle('accountWide',id==='profile');document.querySelector('.app')?.classList.toggle('noSidebar',id!=='profile');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
 async function upload(f){let fd=new FormData();fd.append('file',f);let r=await fetch('/api/upload',{method:'POST',body:fd}),j=await r.json();if(!r.ok)throw Error(j.error||'อัปโหลดไม่สำเร็จ');return j.url}
 function showHelp(title,text){helpTitle.textContent=title;helpBody.innerHTML=String(text||'');helpModal.classList.add('show')}
 function trustDetailHtml(u){
@@ -237,6 +237,27 @@ function vipPremiumCard(level){
   const cls='vipCard_'+String(lv).toLowerCase();
   return `<span class="vipMiniCard ${cls}">${escapeHtml(lv)}</span>`;
 }
+function accountVipCardHtml(u){
+  const level=vipLevelName(u);
+  const active=!!u.is_vip;
+  const colorClass='vipCard_'+String(level||'member').toLowerCase();
+  return `<div class="accountVipCard ${colorClass}"><div class="vipCardTop">VIP CARD</div><div class="vipCardLevel">${active?escapeHtml(level):'GENERAL'}</div><div class="vipCardName">${escapeHtml(u.display_name||u.username||'BidMarket')}</div><div class="vipCardNote">${active?'ระดับสมาชิกของคุณ':'สมัคร VIP เพื่อปลดล็อกสิทธิพิเศษ'}</div></div>`;
+}
+function renderAccountSidePanels(){
+  const fBox=document.getElementById('accountFriendsBox');
+  const aBox=document.getElementById('accountActivityBox');
+  if(!fBox||!aBox||!me)return;
+  fBox.innerHTML='<div class="friendsPanel"><div class="panelHead"><h3>เพื่อน (0/100)</h3><a href="#" onclick="return false">ทั้งหมด ›</a></div><input class="friendSearch" placeholder="ค้นหาเพื่อน"><div class="profileEmpty">กำลังโหลด...</div></div>';
+  aBox.innerHTML='<div class="activityPanel"><h3>กิจกรรมล่าสุด</h3><div class="profileEmpty">กำลังโหลด...</div></div>';
+  api('/api/profiles/'+me.id).then(j=>{
+    const friends=(j.friends||[]).slice(0,8);
+    fBox.innerHTML=`<div class="friendsPanel"><div class="panelHead"><h3>เพื่อน (${(j.friends||[]).length}/100)</h3><a href="#" onclick="return false">ทั้งหมด ›</a></div><input class="friendSearch" placeholder="ค้นหาเพื่อน">${friends.length?friends.map(f=>`<div class="friendRow" onclick="openChatWithUser(${f.id})"><img src="${av(f)}"><div><b>${escapeHtml(f.display_name||f.username)}</b><br><span class="muted">ออนไลน์</span></div><button class="chatTiny">💬</button></div>`).join(''):'<div class="profileEmpty">ยังไม่มีรายชื่อเพื่อน</div>'}</div>`;
+    aBox.innerHTML=`<div class="activityPanel"><h3>กิจกรรมล่าสุด</h3>${(j.recent_activities||[]).length?(j.recent_activities||[]).slice(0,8).map(a=>`<div class="activityItem"><b>${escapeHtml(a.type)}</b><br>${escapeHtml(a.title||'-')}<br><span class="muted">${a.amount?money(a.amount,a.currency||''):''} ${a.created_at?new Date(a.created_at).toLocaleString('th-TH'):''}</span></div>`).join(''):'<div class="profileEmpty">ยังไม่มีกิจกรรมล่าสุด</div>'}</div>`;
+  }).catch(()=>{
+    fBox.innerHTML='<div class="friendsPanel"><h3>เพื่อน (0/100)</h3><div class="profileEmpty">ยังไม่มีรายชื่อเพื่อน</div></div>';
+    aBox.innerHTML='<div class="activityPanel"><h3>กิจกรรมล่าสุด</h3><div class="profileEmpty">ยังไม่มีกิจกรรมล่าสุด</div></div>';
+  });
+}
 function renderProfile(){
   if(!me)return;
   const display=escapeHtml(me.display_name||me.username||'ผู้ใช้');
@@ -245,23 +266,34 @@ function renderProfile(){
   const statusText=isVip?'VIP MEMBER':'สมาชิกทั่วไป';
   const verified=me.verified||me.google_linked;
   window.trustDetailMe=me;
-  profileBox.innerHTML=`<div class="accountHero">
-    <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
-    <div class="accountHeroName">${display}</div>
-    <div class="accountHeroId">ID : <span>${uid}</span></div>
-    <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(me.vip_level):''}</div>
-    <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
-    <div class="accountHeroStats">
-      <button class="trustStatBtn" onclick="showTrustDetails(window.trustDetailMe)"><b>Trust Score</b><span>${Number(me.trust_rate??50)}</span></button>
-      <div><b>Coin</b><span>${Number(me.coin||0).toLocaleString('th-TH')}</span></div>
-      <div><b>Credit</b><span>${Number(me.credit||0).toLocaleString('th-TH')}</span></div>
-    </div>
-  </div><div class="notice"><b>เสียงแจ้งเตือน</b><br><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" ${soundEnabled?'checked':''} onchange="setSoundEnabled(this.checked)" style="width:auto;margin:0"> เปิดเสียงแจ้งเตือน Realtime</label><div class="small">ใช้กับ: ถูกเสนอราคาสูงกว่า, เหลือเวลา 10 วินาที, ชนะประมูล, แชท, Escrow และ VIP Level Up</div></div>`;
+  profileBox.innerHTML=`<div class="accountLayoutV2">
+    <main class="accountMainV2">
+      <section class="accountHeroBannerV2">
+        <div class="accountIdentityCardV2">
+          <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
+          <div class="accountHeroName">${display}</div>
+          <div class="accountHeroId">ID : <span>${uid}</span></div>
+          <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(me.vip_level):''}</div>
+          <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
+          <div class="accountHeroStats">
+            <button class="trustStatBtn" onclick="showTrustDetails(window.trustDetailMe)"><b>Trust Score</b><span>${Number(me.trust_rate??50)}</span></button>
+            <div><b>Coin</b><span>${Number(me.coin||0).toLocaleString('th-TH')}</span></div>
+            <div><b>Credit</b><span>${Number(me.credit||0).toLocaleString('th-TH')}</span></div>
+          </div>
+        </div>
+        <aside class="accountVipCardWrapV2">${accountVipCardHtml(me)}</aside>
+      </section>
+      <section class="notice accountSoundBox"><b>เสียงแจ้งเตือน</b><br><label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" ${soundEnabled?'checked':''} onchange="setSoundEnabled(this.checked)" style="width:auto;margin:0"> เปิดเสียงแจ้งเตือน Realtime</label><div class="small">ใช้กับ: ถูกเสนอราคาสูงกว่า, เหลือเวลา 10 วินาที, ชนะประมูล, แชท, Escrow และ VIP Level Up</div></section>
+      <section class="accountCardsGrid"><div class="card content"><h3>ข้อมูลบัญชี</h3><input id="pName"><input id="pEmail"><textarea id="pBio"></textarea><input id="pAvatar" placeholder="URL รูปโปรไฟล์"><button onclick="saveProfile()">บันทึก</button></div><div class="card content"><h3>ความน่าเชื่อถือผู้ขาย</h3><div id="trustBox"></div></div></section>
+    </main>
+    <aside class="accountRightV2"><div id="accountFriendsBox" class="profileFriends"></div><div id="accountActivityBox" class="profileActivity"></div></aside>
+  </div>`;
   pName.value=me.display_name||me.username||'';
   pEmail.value=me.email||'';
   pBio.value=me.bio||'';
   pAvatar.value=me.avatar_url||'';
   trustBox.innerHTML=`<button class="trustSummaryBtn" onclick="showTrustDetails(window.trustDetailMe)"><div class="price">${Number(me.trust_rate??50)}%</div><div>สำเร็จ ${me.trust_completed_sales||0}/${me.trust_total_orders||0} รายการ</div><span class="muted">กดเพื่อดูรายละเอียด</span></button>`;
+  renderAccountSidePanels();
 }
 async function saveProfile(){me=(await api('/api/me/profile',{method:'PUT',body:JSON.stringify({display_name:pName.value,email:pEmail.value,bio:pBio.value,avatar_url:pAvatar.value})})).user;refresh()}
 
