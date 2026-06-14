@@ -134,7 +134,7 @@ function save(){
   }
 }
 const nid=k=>(db.next[k]=db.next[k]||1,db.next[k]++);const user=id=>db.users.find(u=>u.id==id);const uname=n=>db.users.find(u=>u.username==n);const trust=u=>u&&u.trust_total_orders?Math.round(u.trust_completed_sales/u.trust_total_orders*100):50;
-function pub(u){if(!u)return null;const benefits=getVipBenefits(u);return {id:u.id,public_user_id:u.public_user_id,user_id16:u.public_user_id,username:u.display_name||u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name||u.username,avatar_url:u.profile_image_url||u.avatar_url,bio:u.bio||'',profile_image_url:u.profile_image_url||u.avatar_url||'',profile_banner_url:u.profile_banner_url||'',profile_image_changed_at:Number(u.profile_image_changed_at||0),profile_banner_changed_at:Number(u.profile_banner_changed_at||0),coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,vip_level:currentVipLevel(u),vip_points:Number(u.vip_points||0),vip_coin_spent_for_silver:Number(u.vip_coin_spent_for_silver||0),vip_credit_spent_for_silver:Number(u.vip_credit_spent_for_silver||0),vip_benefits:benefits,username_change_count:Number(u.username_change_count||0),lifetime_credit_topup:Number(u.lifetime_credit_topup||0),trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders,verified:!!u.verified||!!u.google_id,google_linked:!!u.google_id,collection_value:Number(u.collection_value||0),r_coin:Number(u.r_coin||0)}}
+function pub(u){if(!u)return null;const beforeLevel=currentVipLevel(u);const changed=runVipLevelUp(u);if(changed&&currentVipLevel(u)!==beforeLevel)save();const benefits=getVipBenefits(u);return {id:u.id,public_user_id:u.public_user_id,user_id16:u.public_user_id,username:u.display_name||u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name||u.username,avatar_url:u.profile_image_url||u.avatar_url,bio:u.bio||'',profile_image_url:u.profile_image_url||u.avatar_url||'',profile_banner_url:u.profile_banner_url||'',profile_image_changed_at:Number(u.profile_image_changed_at||0),profile_banner_changed_at:Number(u.profile_banner_changed_at||0),coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,vip_level:currentVipLevel(u),vip_points:Number(u.vip_points||0),vip_coin_spent_for_silver:Number(u.vip_coin_spent_for_silver||0),vip_credit_spent_for_silver:Number(u.vip_credit_spent_for_silver||0),vip_benefits:benefits,username_change_count:Number(u.username_change_count||0),lifetime_credit_topup:Number(u.lifetime_credit_topup||0),trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders,verified:!!u.verified||!!u.google_id,google_linked:!!u.google_id,collection_value:Number(u.collection_value||0),r_coin:Number(u.r_coin||0)}}
 function adminEmailSet(){return new Set(String(process.env.ADMIN_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean))}
 function isAdminEmail(email){return !!email&&adminEmailSet().has(String(email).toLowerCase())}
 function uniqueUsername(base){let clean=String(base||'user').toLowerCase().replace(/[^a-z0-9_ก-๙.-]+/g,'').replace(/^[.-]+|[.-]+$/g,'')||'user';let name=clean, i=1;while(uname(name))name=clean+i++;return name}
@@ -166,7 +166,8 @@ const CREDIT_THB_RATE=6;
 const CREDIT_TOPUP_MIN=10;
 const COIN_PER_CREDIT=100;
 const VIP_LEVEL_ORDER=['Member','Silver','Gold','Sapphire','Platinum','Diamond','Ruby','Elite'];
-const VIP_NEXT_REQUIREMENT={Silver:2000,Gold:15000,Sapphire:50000,Platinum:300000,Diamond:600000,Ruby:1000000};
+const VIP_LEVEL_THRESHOLDS={Member:0,Silver:100,Gold:2000,Sapphire:15000,Platinum:50000,Diamond:300000,Ruby:600000,Elite:1000000};
+const VIP_NEXT_REQUIREMENT={Member:100,Silver:2000,Gold:15000,Sapphire:50000,Platinum:300000,Diamond:600000,Ruby:1000000,Elite:1000000};
 const VIP_SALE_FEE_RATE={Member:0.06,Silver:0.059,Gold:0.058,Sapphire:0.056,Platinum:0.054,Diamond:0.05,Ruby:0.045,Elite:0.04};
 const VIP_ESCROW_CASHBACK={Member:0.05,Silver:0.10,Gold:0.15,Sapphire:0.20,Platinum:0.25,Diamond:0.30,Ruby:0.35,Elite:0.40};
 const VIP_ACTIVITY_DISCOUNT={Member:0,Silver:0,Gold:0.10,Sapphire:0.20,Platinum:0.25,Diamond:0.30,Ruby:0.35,Elite:0.40};
@@ -237,19 +238,25 @@ function calculateEscrowFee(amount,currency='credit'){amount=Number(amount||0);l
 function calculateEscrowCashback(fee,u,currency='credit'){const rate=getVipBenefits(u).escrow_cashback_rate;if(currency!=='credit')return {amount:0,rate};return {amount:roundFee(Number(fee||0)*rate),rate}}
 function calculateActivityFee(days,currency,u){days=Math.max(1,Math.ceil(Number(days||1)));const base=currency==='coin'?5000:20;const discount=getVipBenefits(u).activity_discount_rate;let raw=base*days*(1-discount);return {base_per_day:base,days,currency,discount_rate:discount,amount:currency==='coin'?roundCoinHundred(raw):roundFee(raw)}}
 function monthKeyBangkok(){return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Bangkok'})).toISOString().slice(0,7)}
-function runVipLevelUp(u){
-  while(u){
-    let lv=currentVipLevel(u); if(lv==='Elite')break;
-    if(lv==='Member'){
-      if(Number(u.vip_coin_spent_for_silver||0)>=100000 && Number(u.vip_points||0)>=100){u.vip_points=Number(u.vip_points||0)-100;u.vip_level='Silver';notifyUser(u.id,'VIP Level Up','เลื่อนระดับเป็น Silver แล้ว',{type:'vip_levelup',level:'Silver'});continue}
-      break;
-    }
-    const req=VIP_NEXT_REQUIREMENT[lv];
-    if(!req||Number(u.vip_points||0)<req)break;
-    u.vip_points=Number(u.vip_points||0)-req;
-    const next=VIP_LEVEL_ORDER[VIP_LEVEL_ORDER.indexOf(lv)+1]||lv;
-    u.vip_level=next;notifyUser(u.id,'VIP Level Up',`เลื่อนระดับเป็น ${next} แล้ว`,{type:'vip_levelup',level:next});
+function levelByVipPoints(points){
+  points=Number(points||0);
+  let level='Member';
+  for(const lv of VIP_LEVEL_ORDER){
+    if(points>=Number(VIP_LEVEL_THRESHOLDS[lv]||0))level=lv;
   }
+  return level;
+}
+function runVipLevelUp(u){
+  if(!u)return false;
+  const before=currentVipLevel(u);
+  const target=levelByVipPoints(Number(u.vip_points||0));
+  // ไม่หักคะแนน VIP เมื่อเลื่อนระดับ เพราะคะแนนนี้เป็นคะแนนสะสมถาวร
+  if(VIP_LEVEL_ORDER.indexOf(target)>VIP_LEVEL_ORDER.indexOf(before)){
+    u.vip_level=target;
+    notifyUser(u.id,'VIP Level Up',`เลื่อนระดับเป็น ${target} แล้ว`,{type:'vip_levelup',level:target});
+    return true;
+  }
+  return false;
 }
 function spendCreditForVipPoints(u,amount,note='ใช้จ่าย Credit'){amount=Math.floor(Number(amount||0));if(!u||amount<=0||!isVipActive(u))return;const pts=Math.floor(amount/3);if(pts<=0)return;u.vip_points=Number(u.vip_points||0)+pts;runVipLevelUp(u)}
 function addVipPointsByCreditPurchase(u,creditAmount){creditAmount=Math.floor(Number(creditAmount||0));if(!u||creditAmount<=0)throw Error('จำนวน Credit ไม่ถูกต้อง');bal(u.id,'credit',-creditAmount,'ซื้อ VIP Point','1 Credit = 1 VIP Point');u.vip_points=Number(u.vip_points||0)+creditAmount;runVipLevelUp(u);return creditAmount}

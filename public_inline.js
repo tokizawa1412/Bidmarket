@@ -258,7 +258,14 @@ const VIP_BADGE_ASSETS={Member:'/assets/vip/badge-member.png',Silver:'/assets/vi
 const VIP_NEXT_TARGET={Member:100,Silver:2000,Gold:15000,Sapphire:50000,Platinum:300000,Diamond:600000,Ruby:1000000,Elite:1000000};
 function normalizedVipLevel(level){level=String(level||'Member');if(level==='Emerald')level='Ruby';return VIP_LEVEL_ORDER.includes(level)?level:'Member'}
 function nextVipLevel(level){level=normalizedVipLevel(level);const i=VIP_LEVEL_ORDER.indexOf(level);return VIP_LEVEL_ORDER[Math.min(i+1,VIP_LEVEL_ORDER.length-1)]||level}
-function vipLevelName(u){return normalizedVipLevel((u&&(u.vip_level||u.vipLevel||u.level))||'Member')}
+function vipLevelName(u){
+  const points=Number(u?.vip_points||0);
+  const levelFromServer=normalizedVipLevel((u&&(u.vip_level||u.vipLevel||u.level))||'Member');
+  const thresholds={Member:0,Silver:100,Gold:2000,Sapphire:15000,Platinum:50000,Diamond:300000,Ruby:600000,Elite:1000000};
+  let levelFromPoints='Member';
+  for(const lv of VIP_LEVEL_ORDER){ if(points>=thresholds[lv]) levelFromPoints=lv; }
+  return VIP_LEVEL_ORDER.indexOf(levelFromPoints)>VIP_LEVEL_ORDER.indexOf(levelFromServer)?levelFromPoints:levelFromServer;
+}
 function vipTargetForLevel(level){level=normalizedVipLevel(level);return VIP_NEXT_TARGET[level]||0}
 function vipProgressForUser(u){const level=vipLevelName(u);const points=Number(u?.vip_points||0);const target=vipTargetForLevel(level);const pct=level==='Elite'?100:(target?Math.max(0,Math.min(100,(points/target)*100)):0);return {level,points,target,pct,next:nextVipLevel(level)}}
 function vipBadgeImageHtml(level,extraClass=''){level=normalizedVipLevel(level);const src=VIP_BADGE_ASSETS[level]||VIP_BADGE_ASSETS.Member;return `<img class="vipBadgeImg ${extraClass}" src="${src}" alt="${escapeHtml(level)} badge">`}

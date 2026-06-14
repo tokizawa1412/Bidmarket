@@ -448,6 +448,17 @@ body.profileWide .profileRight .activityItem:last-child{border-bottom:0!importan
 .accountVipCardImage{width:100%!important;height:auto!important}
 .bigVipBadge{height:54px!important;vertical-align:middle!important}
 .topNameVipBadge,.sidebarVipBadge{display:none!important}
+
+
+/* VIP level/progress fix: keep numbers inside card lower-left panel */
+.accountVipCardImageBox{max-width:620px!important;width:100%!important;}
+.accountVipCardWrapV2{display:flex!important;align-items:center!important;justify-content:center!important;min-width:520px!important;}
+.vipCardOverlayText{left:12.6%!important;bottom:22.2%!important;width:36%!important;height:9%!important;gap:8px!important;font-size:clamp(13px,1.35vw,19px)!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;}
+.vipCardProgress{left:12.9%!important;bottom:13.9%!important;width:31.5%!important;height:4.3%!important;}
+.vipCardPercent{left:45.5%!important;bottom:11.5%!important;width:11%!important;height:7%!important;font-size:clamp(11px,1.2vw,17px)!important;white-space:nowrap!important;}
+.vipCard_member .vipCardOverlayText,.vipCard_silver .vipCardOverlayText,.vipCard_gold .vipCardOverlayText,.vipCard_platinum .vipCardOverlayText,.vipCard_sapphire .vipCardOverlayText{color:#111827!important;text-shadow:0 1px 2px rgba(255,255,255,.7)!important;}
+@media(max-width:1180px){.accountVipCardWrapV2{min-width:0!important}.accountVipCardImageBox{max-width:560px!important}}
+
 </style></head><body><header><div class="top"><a href="#home" class="brandLink brandImageLink" onclick="show('home');return false" aria-label="BidMarket"><img src="/assets/bidmarket-brand-gold.png" alt="BidMarket Global Auction Platform"></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
 <div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
   <div class="mobileMenuPanel" onclick="event.stopPropagation()">
