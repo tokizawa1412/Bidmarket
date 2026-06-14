@@ -459,7 +459,105 @@ body.profileWide .profileRight .activityItem:last-child{border-bottom:0!importan
 .vipCard_member .vipCardOverlayText,.vipCard_silver .vipCardOverlayText,.vipCard_gold .vipCardOverlayText,.vipCard_platinum .vipCardOverlayText,.vipCard_sapphire .vipCardOverlayText{color:#111827!important;text-shadow:0 1px 2px rgba(255,255,255,.7)!important;}
 @media(max-width:1180px){.accountVipCardWrapV2{min-width:0!important}.accountVipCardImageBox{max-width:560px!important}}
 
-</style></head><body><header><div class="top"><a href="#home" class="brandLink brandImageLink" onclick="show('home');return false" aria-label="BidMarket"><img src="/assets/bidmarket-brand-gold.png" alt="BidMarket Global Auction Platform"></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
+</style>
+<style id="vip-card-overlay-final-fix-20260614b">
+/* FINAL: exact VIP card overlay size/position fix requested by user. */
+.accountVipCardImageBox{
+  position:relative!important;
+  width:min(100%,680px)!important;
+  max-width:680px!important;
+  aspect-ratio:1050/600!important;
+  overflow:visible!important;
+}
+.accountVipCardImageBox .vipCardOverlayText{
+  position:absolute!important;
+  left:11.8%!important;
+  bottom:29.0%!important;
+  width:30.0%!important;
+  height:6.8%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  box-sizing:border-box!important;
+  padding:0 4px!important;
+  font-size:clamp(9px,.88vw,13px)!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:-.45px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  z-index:5!important;
+}
+.accountVipCardImageBox .vipCardOverlayText span{
+  display:inline-block!important;
+  min-width:0!important;
+  max-width:46%!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+}
+.accountVipCardImageBox .vipCardOverlayText em{
+  flex:0 0 auto!important;
+  font-size:.86em!important;
+  opacity:.85!important;
+}
+.accountVipCardImageBox .vipCardProgress{
+  position:absolute!important;
+  left:12.7%!important;
+  bottom:15.1%!important;
+  width:29.2%!important;
+  height:4.7%!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:999px!important;
+  overflow:hidden!important;
+  background:transparent!important;
+  z-index:5!important;
+}
+.accountVipCardImageBox .vipCardProgress>div{
+  display:block!important;
+  height:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  border-radius:999px!important;
+  transform:none!important;
+}
+.accountVipCardImageBox .vipCardPercent{
+  position:absolute!important;
+  left:43.4%!important;
+  bottom:16.0%!important;
+  width:8.4%!important;
+  height:5.8%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  font-size:clamp(8px,.78vw,12px)!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:-.35px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  z-index:5!important;
+}
+.vipCard_member .vipCardOverlayText,.vipCard_silver .vipCardOverlayText,.vipCard_gold .vipCardOverlayText,.vipCard_platinum .vipCardOverlayText,.vipCard_sapphire .vipCardOverlayText,
+.vipCard_member .vipCardPercent,.vipCard_silver .vipCardPercent,.vipCard_gold .vipCardPercent,.vipCard_platinum .vipCardPercent,.vipCard_sapphire .vipCardPercent{
+  color:#0f172a!important;
+  text-shadow:0 1px 1px rgba(255,255,255,.85)!important;
+}
+.vipCard_diamond .vipCardOverlayText,.vipCard_ruby .vipCardOverlayText,.vipCard_elite .vipCardOverlayText,
+.vipCard_diamond .vipCardPercent,.vipCard_ruby .vipCardPercent,.vipCard_elite .vipCardPercent{
+  color:#f8fafc!important;
+  text-shadow:0 1px 3px rgba(0,0,0,.9)!important;
+}
+@media(max-width:1180px){
+  .accountVipCardImageBox .vipCardOverlayText{font-size:clamp(8px,1.8vw,12px)!important;}
+  .accountVipCardImageBox .vipCardPercent{font-size:clamp(8px,1.45vw,11px)!important;}
+}
+</style>
+</head><body><header><div class="top"><a href="#home" class="brandLink brandImageLink" onclick="show('home');return false" aria-label="BidMarket"><img src="/assets/bidmarket-brand-gold.png" alt="BidMarket Global Auction Platform"></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
 <div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
   <div class="mobileMenuPanel" onclick="event.stopPropagation()">
     <button class="mobileMenuClose" onclick="closeMobileMenu()" aria-label="ปิดเมนู">×</button>
