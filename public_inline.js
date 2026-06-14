@@ -116,7 +116,7 @@ async function loadMe(){me=(await api('/api/me')).user;joinRealtimeRooms()}funct
   document.body.classList.toggle('admin',!!(me&&me.role==='admin'));
   const themeBtn=`<button id="topThemeBtn" class="topActionBtn" onclick="toggleTheme()" title="เปลี่ยนธีม"><span class="themeToggleIcon">🌙</span></button>`;
   const bellBtn=me?`<button id="topNotificationBtn" class="topActionBtn" onclick="openNotifications()" title="การแจ้งเตือน">🔔<span id="notificationBadge" class="notificationBadge">0</span></button>`:'';
-  auth.innerHTML=me?`${themeBtn}${bellBtn}<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}${vipRank(me.vip_level)>0?` <span class="vipMiniBadge">${escapeHtml(me.vip_level)}</span>`:''}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">Admin</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`${themeBtn}<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;
+  auth.innerHTML=me?`${themeBtn}${bellBtn}<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}${me?vipBadgeImageHtml(me.vip_level,'topNameVipBadge'):''}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">Admin</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`${themeBtn}<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;
   applyTheme();
   refreshNotificationBadge();
   sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'Admin':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.body.classList.toggle('accountWide',id==='profile');document.querySelector('.app')?.classList.toggle('noSidebar',id!=='profile');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
@@ -252,17 +252,45 @@ async function dispute(id){
   try{let fd=new FormData();fd.append('reason',$('dp'+id).value||'');let inp=$('ev'+id);if(inp&&inp.files){[...inp.files].forEach(f=>fd.append('files',f))}let r=await fetch('/api/orders/'+id+'/dispute',{method:'POST',body:fd});let j=await r.json();if(!r.ok)throw Error(j.error||'เปิดข้อพิพาทไม่สำเร็จ');alert('เปิดข้อพิพาทแล้ว กรุณารอ Admin ตัดสิน');loadOrders()}catch(e){alert(e.message)}
 }
 async function estimatePrice(){if(!need())return;let fs=[...estPhotos.files];if(fs.length<1||fs.length>6)return alert('ใส่รูป 1-6 รูป');let fd=new FormData();fd.append('title',estTitle.value);fd.append('category',estCat.value);fd.append('condition',estCond.value);fd.append('notes',estNotes.value);fs.forEach(f=>fd.append('photos',f));let r=await fetch('/api/ai/price-estimate',{method:'POST',body:fd}),j=await r.json();let e=j.estimate;estResult.innerHTML=`<div class="notice success"><h3>${e.estimated_min.toLocaleString()} - ${e.estimated_max.toLocaleString()} บาท</h3><p>ค่ากลาง ${e.estimated_mid.toLocaleString()} | ความมั่นใจ ${e.confidence}</p><div class="thumbs">${e.photos.map(p=>`<img src="${p}">`).join('')}</div></div>`;loadEstHistory()}async function loadEstHistory(){if(!me)return;let j=await api('/api/ai/price-estimates');estHistory.innerHTML=j.estimates.map(e=>`<div class="notice">${e.title}: ${e.estimated_min.toLocaleString()} - ${e.estimated_max.toLocaleString()} บาท</div>`).join('')||'<div class="notice">ยังไม่มีประวัติ</div>'}
-function vipPremiumCard(level){
-  const lv=level||'Member';
-  const cls='vipCard_'+String(lv).toLowerCase();
-  return `<span class="vipMiniCard ${cls}">${escapeHtml(lv)}</span>`;
-}
+
+const VIP_CARD_ASSETS={Member:'/assets/vip/card-member.png',Silver:'/assets/vip/card-silver.png',Gold:'/assets/vip/card-gold.png',Sapphire:'/assets/vip/card-sapphire.png',Platinum:'/assets/vip/card-platinum.png',Diamond:'/assets/vip/card-diamond.png',Ruby:'/assets/vip/card-ruby.png',Elite:'/assets/vip/card-elite.png'};
+const VIP_BADGE_ASSETS={Member:'/assets/vip/badge-member.png',Silver:'/assets/vip/badge-silver.png',Gold:'/assets/vip/badge-gold.png',Sapphire:'/assets/vip/badge-sapphire.png',Platinum:'/assets/vip/badge-platinum.png',Diamond:'/assets/vip/badge-diamond.png',Ruby:'/assets/vip/badge-ruby.png',Elite:'/assets/vip/badge-elite.png'};
+const VIP_NEXT_TARGET={Member:100,Silver:2000,Gold:15000,Sapphire:50000,Platinum:300000,Diamond:600000,Ruby:1000000,Elite:1000000};
+function normalizedVipLevel(level){level=String(level||'Member');if(level==='Emerald')level='Ruby';return VIP_LEVEL_ORDER.includes(level)?level:'Member'}
+function nextVipLevel(level){level=normalizedVipLevel(level);const i=VIP_LEVEL_ORDER.indexOf(level);return VIP_LEVEL_ORDER[Math.min(i+1,VIP_LEVEL_ORDER.length-1)]||level}
+function vipLevelName(u){return normalizedVipLevel((u&&(u.vip_level||u.vipLevel||u.level))||(u&&u.is_vip?'Member':'Member'))}
+function vipTargetForLevel(level){level=normalizedVipLevel(level);return VIP_NEXT_TARGET[level]||0}
+function vipProgressForUser(u){const level=vipLevelName(u);const points=Number(u?.vip_points||0);const target=vipTargetForLevel(level);const pct=level==='Elite'?100:(target?Math.max(0,Math.min(100,(points/target)*100)):0);return {level,points,target,pct,next:nextVipLevel(level)}}
+function vipBadgeImageHtml(level,extraClass=''){level=normalizedVipLevel(level);const src=VIP_BADGE_ASSETS[level]||VIP_BADGE_ASSETS.Member;return `<img class="vipBadgeImg ${extraClass}" src="${src}" alt="${escapeHtml(level)} badge">`}
+function vipMiniBadge(u){return vipBadgeImageHtml(vipLevelName(u),'inlineVipBadge')}
+function vipPremiumCard(level){return vipBadgeImageHtml(level,'heroVipBadge')}
 function accountVipCardHtml(u){
-  const level=vipLevelName(u);
-  const active=!!u.is_vip;
-  const colorClass='vipCard_'+String(level||'member').toLowerCase();
-  return `<div class="accountVipCard ${colorClass}"><div class="vipCardTop">VIP CARD</div><div class="vipCardLevel">${active?escapeHtml(level):'GENERAL'}</div><div class="vipCardName">${escapeHtml(u.display_name||u.username||'BidMarket')}</div><div class="vipCardNote">${active?'ระดับสมาชิกของคุณ':'สมัคร VIP เพื่อปลดล็อกสิทธิพิเศษ'}</div></div>`;
+  const p=vipProgressForUser(u);
+  const src=VIP_CARD_ASSETS[p.level]||VIP_CARD_ASSETS.Member;
+  const points=Number(p.points||0).toLocaleString('th-TH');
+  const target=Number(p.target||0).toLocaleString('th-TH');
+  const pct=(Math.round(p.pct*10)/10).toLocaleString('th-TH',{maximumFractionDigits:1});
+  return `<div class="accountVipCardImageBox vipCard_${p.level.toLowerCase()}">
+    <img class="accountVipCardImage" src="${src}" alt="VIP ${escapeHtml(p.level)} card">
+    <button class="vipHelpBtn" onclick="showVipLevelPopup('${escapeHtml(p.level)}')" title="ดูเงื่อนไขเลื่อนระดับ">?</button>
+    <div class="vipCardOverlayText"><span>${points}</span><em>┃</em><span>${target}</span></div>
+    <div class="vipCardProgress"><div style="width:${p.pct}%"></div></div>
+    <div class="vipCardPercent">${pct}%</div>
+  </div>`;
 }
+function showVipLevelPopup(level){
+  const p=vipProgressForUser(me||{}); level=normalizedVipLevel(level||p.level); const next=nextVipLevel(level);
+  const currentSrc=VIP_CARD_ASSETS[level]||VIP_CARD_ASSETS.Member; const nextSrc=VIP_CARD_ASSETS[next]||currentSrc;
+  const isTop=level==='Elite';
+  const target=vipTargetForLevel(level);
+  const points=Number(me?.vip_points||0);
+  const need=Math.max(0,target-points);
+  const condition=isTop?'คุณอยู่ระดับสูงสุดแล้ว':`ต้องมีคะแนน VIP ถึง ${Number(target).toLocaleString('th-TH')} คะแนน เพื่อเลื่อนเป็น ${escapeHtml(next)}${need>0?` (ขาดอีก ${Number(need).toLocaleString('th-TH')} คะแนน)`:''}`;
+  helpTitle.textContent='เงื่อนไขเลื่อนระดับ VIP';
+  helpBody.innerHTML=`<div class="vipLevelPopupBody"><div class="vipCompare"><img src="${currentSrc}" alt="${escapeHtml(level)}"><div class="vipArrow">➜</div><img src="${nextSrc}" alt="${escapeHtml(next)}"></div><div class="vipRequirement"><b>เงื่อนไข:</b> ${condition}</div></div>`;
+  helpModal.classList.add('show');
+}
+
 function renderAccountSidePanels(){
   const fBox=document.getElementById('accountFriendsBox');
   const aBox=document.getElementById('accountActivityBox');
@@ -291,7 +319,7 @@ function renderProfile(){
       <section class="accountHeroBannerV2">
         <div class="accountIdentityCardV2">
           <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
-          <div class="accountHeroName">${display}</div>
+          <div class="accountHeroName">${display}${vipBadgeImageHtml(me.vip_level,'accountNameVipBadge')}</div>
           <div class="accountHeroId">ID : <span>${uid}</span></div>
           <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(me.vip_level):''}</div>
           <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
@@ -340,8 +368,6 @@ function openImageViewer(url,title='รูปภาพ'){
 
 function profileBannerStyle(u){const url=u&&u.profile_banner_url?cssUrl(u.profile_banner_url):'';return url?`background-image:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.12)),url('${url}')`:''}
 function canChangeText(ts){if(!ts)return 'เปลี่ยนได้ทันที';const left=7*24*60*60*1000-(Date.now()-Number(ts));return left<=0?'เปลี่ยนได้ทันที':'เปลี่ยนได้อีกใน '+Math.ceil(left/(24*60*60*1000))+' วัน'}
-function vipLevelName(u){return (u&&(u.vip_level||u.vipLevel||u.level))||(u&&u.is_vip?'Member':'ทั่วไป')}
-function vipMiniBadge(u){const level=vipLevelName(u);const show=['Silver','Gold','Sapphire','Platinum','Diamond','Ruby','Elite'].includes(level);return show?`<span class="vipMini vip-${escapeHtml(level).toLowerCase()}">${escapeHtml(level)}</span>`:''}
 function fmtNum(n){return Number(n||0).toLocaleString('th-TH')}
 function crownHtml(rank){rank=Number(rank||0);if(!rank)return '';const src=rank<=10?'/assets/crown-gold.png':'/assets/crown-silver.png';return `<img class="rankCrown" src="${src}" alt="crown">`}
 function collectionRankText(profileData){const r=Number(profileData?.collection_rank||0);return r?`อันดับ ${r} ${crownHtml(r)}`:'ยังไม่มีอันดับ'}
