@@ -275,7 +275,7 @@ body.accountWide #profile> .panel.content>h2,body.accountWide #profile> .panel.c
 @media(max-width:1180px){.app{grid-template-columns:1fr!important}.side{position:static!important}.accountLayoutV2{grid-template-columns:1fr}.accountRightV2{position:static;grid-template-columns:1fr 1fr}.accountHeroBannerV2{grid-template-columns:1fr}.accountVipCard{max-width:520px}}
 @media(max-width:768px){.nav{top:66px!important}.tabs{overflow:auto;flex-wrap:nowrap!important}.tabs button{white-space:nowrap}.accountRightV2{grid-template-columns:1fr}.accountCardsGrid{grid-template-columns:1fr}.accountHeroBannerV2{min-height:auto;padding:16px;border-radius:22px}.accountIdentityCardV2{padding:18px}.accountHeroName{font-size:24px}.accountHeroStats{grid-template-columns:1fr}.accountVipCard{min-height:180px}.app{gap:12px}.container{padding:10px 10px 80px!important}}
 
-</style></head><body><header><div class="top"><a href="#home" class="brandLink" onclick="show('home');return false"><div class="logo">🔨 BidMarket</div><div class="small">เว็บประมูลสินค้า</div></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
+</style></head><body><header><div class="top"><a href="#home" class="brandLink brandImageLink" onclick="show('home');return false" aria-label="BidMarket"><img src="/assets/bidmarket-brand-gold.png" alt="BidMarket Global Auction Platform"></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
 <div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
   <div class="mobileMenuPanel" onclick="event.stopPropagation()">
     <button class="mobileMenuClose" onclick="closeMobileMenu()" aria-label="ปิดเมนู">×</button>
@@ -380,20 +380,35 @@ function applyTheme(mode=getTheme()){
 }
 function toggleTheme(){const next=getTheme()==='dark'?'light':'dark';localStorage.setItem(THEME_KEY,next);applyTheme(next);showToast(next==='dark'?'เปลี่ยนเป็นธีมมืดแล้ว':'เปลี่ยนเป็นธีมสว่างแล้ว')}
 function setNotificationBadge(count){const b=document.getElementById('notificationBadge');if(!b)return;b.textContent=count>99?'99+':String(count||0);b.classList.toggle('hasUnread',Number(count||0)>0)}
-async function refreshNotificationBadge(){if(!me){setNotificationBadge(0);return}try{const j=await api('/api/notifications');const unread=(j.notifications||[]).filter(n=>!n.read).length;setNotificationBadge(unread)}catch(e){setNotificationBadge(0)}}
+async function refreshNotificationBadge(){if(!me){setNotificationBadge(0);return}try{const j=await api('/api/notifications');const serverUnread=(j.notifications||[]).filter(n=>!n.read).length;const localUnread=getLocalNotifications().filter(n=>!n.read).length;setNotificationBadge(serverUnread+localUnread)}catch(e){setNotificationBadge(getLocalNotifications().filter(n=>!n.read).length)}}
 function bumpNotificationBadge(){const b=document.getElementById('notificationBadge');if(!b)return;const current=b.classList.contains('hasUnread')?Number((b.textContent||'0').replace('+',''))||0:0;setNotificationBadge(current+1)}
 async function openNotifications(){
   if(!me){show('login');return}
+  const panel=document.getElementById('notificationDropdown');
+  if(!panel)return;
+  if(panel.classList.contains('open')){panel.classList.remove('open');panel.setAttribute('aria-hidden','true');return}
   try{
     const j=await api('/api/notifications');
-    const list=(j.notifications||[]);
-    helpTitle.textContent='การแจ้งเตือน';
-    helpBody.className='';
-    helpBody.innerHTML=`<div class="notificationActions"><b>${list.filter(n=>!n.read).length} รายการยังไม่อ่าน</b><button class="light" onclick="markNotificationsRead()">ทำเครื่องหมายว่าอ่านแล้ว</button></div>`+(list.length?`<div class="notificationList">${list.map(n=>`<div class="notificationItem ${n.read?'':'unread'}"><div class="notificationItemTitle">${escapeHtml(n.title||'แจ้งเตือน')}</div><div class="notificationItemBody">${escapeHtml(n.body||'')}</div><div class="notificationItemTime">${n.created_at?new Date(n.created_at).toLocaleString('th-TH'):'-'}</div></div>`).join('')}</div>`:'<div class="notice">ยังไม่มีการแจ้งเตือน</div>');
-    helpModal.classList.add('show');
+    const serverList=(j.notifications||[]).map(n=>({...n,_local:false}));
+    const localList=getLocalNotifications().map(n=>({...n,_local:true}));
+    const list=[...localList,...serverList].sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+    const unread=list.filter(n=>!n.read).length;
+    panel.innerHTML=`<div class="notificationPanelHead"><div><b>การแจ้งเตือน</b><span>${unread} รายการยังไม่อ่าน</span></div><button class="light" onclick="markNotificationsRead()">อ่านทั้งหมด</button></div>`+
+      (list.length?`<div class="notificationList dropdownList">${list.map(n=>`<div class="notificationItem ${n.read?'':'unread'}"><div class="notificationItemTitle">${escapeHtml(n.title||'แจ้งเตือน')}</div><div class="notificationItemBody">${escapeHtml(n.body||'')}</div><div class="notificationItemTime">${n.created_at?new Date(n.created_at).toLocaleString('th-TH'):'-'}</div></div>`).join('')}</div>`:'<div class="notice">ยังไม่มีการแจ้งเตือน</div>');
+    panel.classList.add('open');panel.setAttribute('aria-hidden','false');setNotificationBadge(unread);
   }catch(e){alert(e.message)}
 }
-async function markNotificationsRead(){try{await api('/api/notifications/read',{method:'POST'});setNotificationBadge(0);openNotifications()}catch(e){alert(e.message)}}
+function getLocalNotifications(){try{return JSON.parse(localStorage.getItem('bidmarket_local_notifications')||'[]')}catch(e){return []}}
+function saveLocalNotifications(list){localStorage.setItem('bidmarket_local_notifications',JSON.stringify((list||[]).slice(0,60)))}
+function addLocalNotification(title,body=''){
+  const list=getLocalNotifications();
+  list.unshift({title:String(title||'แจ้งเตือนจากระบบ'),body:String(body||''),created_at:new Date().toISOString(),read:false});
+  saveLocalNotifications(list);
+  const unread=list.filter(n=>!n.read).length;
+  const b=document.getElementById('notificationBadge');
+  if(b){const current=b.classList.contains('hasUnread')?Number((b.textContent||'0').replace('+',''))||0:0;setNotificationBadge(Math.max(current,unread));}
+}
+async function markNotificationsRead(){try{await api('/api/notifications/read',{method:'POST'});const local=getLocalNotifications().map(n=>({...n,read:true}));saveLocalNotifications(local);setNotificationBadge(0);const p=document.getElementById('notificationDropdown');if(p)p.classList.remove('open');setTimeout(openNotifications,0)}catch(e){alert(e.message)}}
 
 function openMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.add('open')}
 function closeMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.remove('open')}
@@ -457,9 +472,7 @@ function handleRealtimeTimer(t){
   if(t.remaining!=null&&t.remaining>12000)timerWarnedByAuction[t.auction_id]=false;
 }
 function showToast(text){
-  let box=document.getElementById('rtToast');
-  if(!box){box=document.createElement('div');box.id='rtToast';box.style.cssText='position:fixed;right:18px;bottom:92px;z-index:9999;background:#111827;color:#fff;border:1px solid rgba(255,255,255,.18);padding:12px 14px;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.35);max-width:320px;font-size:14px';document.body.appendChild(box)}
-  box.textContent=text;box.style.display='block';clearTimeout(box._t);box._t=setTimeout(()=>box.style.display='none',2600);
+  addLocalNotification(text||'แจ้งเตือนจากระบบ','');
 }
 const pages={home:'หน้าหลัก',vipzone:'VIP Zone',sell:'ลงสินค้า',estimate:'ประเมิณราคา',wallet:'กระเป๋าเงิน',orders:'คำสั่งซื้อ / Escrow',favorites:'รายการที่สนใจ',publicProfile:'โปรไฟล์',collection:'คอลเลคชั่น',profile:'บัญชีผู้ใช้',vip:'สมัคร VIP',ads:'ดูโฆษณา',createAd:'ลงโฆษณา',activities:'กิจกรรม',createActivity:'สร้างกิจกรรม',chat:'สนทนา',reviews:'รีวิว',admin:'Admin',room:'หน้าประมูล',login:'เข้าสู่ระบบ',register:'สมัครสมาชิก',rules:'กฏ/เงื่อนไข'};function $(id){return document.getElementById(id)}function money(n,c){return Number(n||0).toLocaleString('th-TH')+' '+c}async function api(u,o={}){let r=await fetch(u,{headers:{'Content-Type':'application/json'},...o}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||'ผิดพลาด');return j}function av(u){let n=u?(u.display_name||u.username):'Guest';return u&&u.avatar_url?u.avatar_url:`https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=111827&color=fff`}
 async function loadMe(){me=(await api('/api/me')).user;joinRealtimeRooms()}function header(){
@@ -674,7 +687,7 @@ function cssUrl(url){return String(url||'').replace(/\\/g,'\\\\').replace(/'/g,"
 
 function updateRealtimeCollectionPanel(p={}){
   const val=document.querySelector('[data-collection-value]');
-  if(val&&p.collection_value!==undefined)val.textContent=fmtNum(p.collection_value)+' R';
+  if(val&&p.collection_value!==undefined){val.textContent=fmtNum(p.collection_value)+' R';const rb=document.querySelector('[data-collection-rank]');if(rb)rb.textContent=collectionRankLabel(p.collection_value);const bar=document.querySelector('.collectionRankBar span');if(bar)bar.style.width=collectionRankPercent(p.collection_value)+'%';}
   const card=document.querySelector(`[data-showcase-id="${p.showcase_id}"] .rValue`);
   if(card&&p.r_value!==undefined)card.textContent='มูลค่า '+fmtNum(p.r_value)+' R';
 }
@@ -701,6 +714,25 @@ async function saveShowcaseFromPopup(rank){
   try{const title=(document.getElementById('modalShowcaseTitle')?.value||'').trim();const f=document.getElementById('modalShowcaseFile')?.files?.[0];if(!f)throw new Error('กรุณาเลือกรูปภาพ');const image_url=await uploadAny(f);await api('/api/profiles/me/showcase',{method:'POST',body:JSON.stringify({rank:Number(rank),title,image_url})});helpModal.classList.remove('show');await renderPublicProfile();showToast('อัปเดตตู้โชว์สินค้าแล้ว')}catch(e){alert(e.message)}
 }
 
+function collectionRankLabel(score){
+  score=Number(score||0);
+  if(score>=1000000)return 'อันดับคอลเลคชั่น : Elite';
+  if(score>=600000)return 'อันดับคอลเลคชั่น : Ruby';
+  if(score>=300000)return 'อันดับคอลเลคชั่น : Diamond';
+  if(score>=50000)return 'อันดับคอลเลคชั่น : Platinum';
+  if(score>=15000)return 'อันดับคอลเลคชั่น : Sapphire';
+  if(score>=2000)return 'อันดับคอลเลคชั่น : Gold';
+  if(score>=100)return 'อันดับคอลเลคชั่น : Silver';
+  return 'อันดับคอลเลคชั่น : Member';
+}
+function collectionRankPercent(score){
+  score=Number(score||0);
+  const levels=[0,100,2000,15000,50000,300000,600000,1000000];
+  let prev=0,next=100;
+  for(let i=0;i<levels.length;i++){if(score>=levels[i]){prev=levels[i];next=levels[i+1]||levels[i];}}
+  if(next===prev)return 100;
+  return Math.max(0,Math.min(100,Math.round(((score-prev)/(next-prev))*100)));
+}
 function renderProfileShowcase(items,owner,profileData){
   const arr=[2,1,3].map(rank=>(items||[]).find(x=>Number(x.rank)===rank)||{rank});
   const cards=arr.map(x=>{
@@ -709,7 +741,7 @@ function renderProfileShowcase(items,owner,profileData){
   }).join('');
   const u=profileData?.user||{};
   const canCollection=!!profileData?.can_open_collection;
-  return `<div class="showcaseV3"><div class="showcaseLeft"><h3>ตู้โชว์สินค้า</h3><div class="showcaseGrid">${cards}</div></div><aside class="collectionSide"><section class="collectionValueCard"><div class="collectionTitle"><b>มูลค่าคอลเลคชั่น</b>${canCollection?`<button class="miniBtn" onclick="openCollectionVault()">∆</button>`:''}</div><div class="collectionValue" data-collection-value>${fmtNum(u.collection_value||0)} R</div><div class="muted">อัปเดตแบบ Real-time</div></section><section class="rcoinCard"><div class="rcoinLabel">บัญชี R-Coin</div><div class="rcoinValue" data-rcoin-balance>${fmtNum(u.r_coin||0)} R-Coin</div>${owner?`<button class="gold rcoinExchange" onclick="exchangeRCoin()">แลก R-Coin</button>`:''}</section></aside></div>`;
+  return `<div class="showcaseV3"><div class="showcaseLeft"><h3>ตู้โชว์สินค้า</h3><div class="showcaseGrid">${cards}</div></div><aside class="collectionSide"><section class="collectionValueCard"><div class="collectionTitle"><b>มูลค่าคอลเลคชั่น</b>${canCollection?`<button class="miniBtn" onclick="openCollectionVault()">∆</button>`:''}</div><div class="collectionValue" data-collection-value>${fmtNum(u.collection_value||0)} R</div><div class="muted">อัปเดตแบบ Real-time</div><div class="collectionRankBox"><b data-collection-rank>${collectionRankLabel(u.collection_value||0)}</b><div class="collectionRankBar"><span style="width:${collectionRankPercent(u.collection_value||0)}%"></span></div></div></section><section class="rcoinCard"><div class="rcoinLabel">บัญชี R-Coin</div><div class="rcoinValue" data-rcoin-balance>${fmtNum(u.r_coin||0)} R-Coin</div>${owner?`<button class="gold rcoinExchange" onclick="exchangeRCoin()">แลก R-Coin</button>`:''}</section></aside></div>`;
 }
 async function boostShowcaseValue(id){
   try{await api('/api/profiles/showcase/'+id+'/boost-value',{method:'POST',body:JSON.stringify({})});await renderPublicProfile();showToast('เพิ่มมูลค่า +100 R แล้ว')}catch(e){alert(e.message)}
@@ -757,7 +789,7 @@ async function renderPublicProfile(){
   if(window.profileLeftBox){
     profileLeftBox.innerHTML=`<div class="profileLeftCard"><div class="leftTop"><img src="${av(u)}"><h3>${displayName}</h3><div class="walletMini"><span>Coin <b>${fmtNum(u.coin||0)}</b></span><span>Credit <b>${fmtNum(u.credit||0)}</b></span></div></div><div class="leftMenu"><button onclick="openProfilePage(${u.id})">▣ โปรไฟล์</button><button onclick="show('profile')">👤 บัญชีผู้ใช้</button><button onclick="show('vip')">⭐ สมัคร VIP</button><button onclick="show('wallet')">💰 กระเป๋าเงิน</button><button onclick="show('orders')">🛡 คำสั่งซื้อของฉัน</button><button onclick="show('estimate')">🤖 ประเมินราคา</button><button onclick="show('favorites')">❤ รายการที่สนใจ</button><button onclick="show('sell')">📦 ลงทะเบียนสินค้า</button><button onclick="show('createAd')">📣 ลงโฆษณา</button><button onclick="show('createActivity')">🎯 สร้างกิจกรรม</button></div></div>`;
   }
-  publicProfileBox.innerHTML=`<div class="profileHero v3"><div class="profileBanner" style="${profileBannerStyle(u)}">${owner?`<label class="bannerChange">📷 เปลี่ยนพื้นหลัง<input id="profileBannerFile" type="file" accept="image/*" style="display:none" onchange="changeProfileMedia('banner',this)"></label>`:''}</div><div class="profileInfo"><img class="profilePic" src="${av(u)}">${owner?`<label class="avatarChange">📷<input id="profileAvatarFile" type="file" accept="image/*" style="display:none" onchange="changeProfileMedia('avatar',this)"></label>`:''}<div class="profileText"><div class="profileName">${displayName} ${vipBadge}</div><div class="profileLine">ID : ${escapeHtml(u.public_user_id||u.id)} <button class="profileTrustBtn" onclick="showTrustDetails(window.trustDetailProfile)">Trust Score : <b>${Number(u.trust_rate??50)}</b></button></div>${owner?`<div class="profileSmall">รูป: ${canChangeText(u.profile_image_changed_at)} • พื้นหลัง: ${canChangeText(u.profile_banner_changed_at)}</div>`:''}</div><div class="profileActions">${!owner?`<button class="green" onclick="addFriend(${u.id})">${j.is_friend?'เป็นเพื่อนแล้ว':'เพิ่มเพื่อน'}</button><button onclick="openChatWithUser(${u.id})">ส่งข้อความ</button>`:''}</div></div></div>`;
+  publicProfileBox.innerHTML=`<div class="profileHero v3"><div class="profileBanner" style="${profileBannerStyle(u)}">${owner?`<label class="bannerChange">📷 เปลี่ยนพื้นหลัง<input id="profileBannerFile" type="file" accept="image/*" style="display:none" onchange="changeProfileMedia('banner',this)"></label>`:''}</div><div class="profileInfo"><img class="profilePic" src="${av(u)}">${owner?`<label class="avatarChange">📷<input id="profileAvatarFile" type="file" accept="image/*" style="display:none" onchange="changeProfileMedia('avatar',this)"></label>`:''}<div class="profileText"><div class="profileName">${displayName} ${vipBadge}</div><div class="profileLine">ID : ${escapeHtml(u.public_user_id||u.id)} <button class="profileTrustBtn" onclick="showTrustDetails(window.trustDetailProfile)">Trust Score : <b>${Number(u.trust_rate??50)}</b></button></div></div><div class="profileActions">${!owner?`<button class="green" onclick="addFriend(${u.id})">${j.is_friend?'เป็นเพื่อนแล้ว':'เพิ่มเพื่อน'}</button><button onclick="openChatWithUser(${u.id})">ส่งข้อความ</button>`:''}</div></div></div>`;
   profileFriendsBox.innerHTML=`<div class="friendsPanel"><div class="panelHead"><h3>เพื่อน (${(j.friends||[]).length}/100)</h3><a href="#" onclick="return false">ทั้งหมด ›</a></div><input class="friendSearch" placeholder="ค้นหาเพื่อน">${friends.length?friends.map(f=>`<div class="friendRow" onclick="openChatWithUser(${f.id})"><img src="${av(f)}"><div><b>${escapeHtml(f.display_name||f.username)}</b><br><span class="muted">ออนไลน์</span></div><button class="chatTiny">💬</button></div>`).join(''):'<div class="profileEmpty">ยังไม่มีรายชื่อเพื่อน</div>'}</div>`;
   profileShowcaseBox.innerHTML=renderProfileShowcase(j.showcase||[],owner,j);
   profilePostBox.innerHTML=owner?`<h3>โพสต์</h3><div class="postComposer v3"><textarea id="profilePostText" placeholder="คุณกำลังคิดอะไรอยู่?"></textarea><div class="postTools"><input id="profilePostMedia" type="file" accept="image/*,video/*"><button class="green" onclick="createProfilePost()">โพสต์</button></div></div>`:`<h3>โพสต์</h3>`;
@@ -1025,4 +1057,40 @@ body.accountWide #profile> .panel.content>h2,body.accountWide #profile> .panel.c
 @media(max-width:1180px){.app{grid-template-columns:1fr!important}.side{position:static!important}.accountLayoutV2{grid-template-columns:1fr}.accountRightV2{position:static;grid-template-columns:1fr 1fr}.accountHeroBannerV2{grid-template-columns:1fr}.accountVipCard{max-width:520px}}
 @media(max-width:768px){.nav{top:66px!important}.tabs{overflow:auto;flex-wrap:nowrap!important}.tabs button{white-space:nowrap}.accountRightV2{grid-template-columns:1fr}.accountCardsGrid{grid-template-columns:1fr}.accountHeroBannerV2{min-height:auto;padding:16px;border-radius:22px}.accountIdentityCardV2{padding:18px}.accountHeroName{font-size:24px}.accountHeroStats{grid-template-columns:1fr}.accountVipCard{min-height:180px}.app{gap:12px}.container{padding:10px 10px 80px!important}}
 
+
+
+/* Requested final overrides: header/nav, theme, notifications, collection rank, brand image */
+header{height:70px!important;padding:10px 28px!important;background:#07111f!important;color:#fff!important;border-bottom:1px solid rgba(255,255,255,.08)!important;box-shadow:0 10px 30px rgba(0,0,0,.18)!important;display:flex!important;align-items:center!important;}
+header .top{width:100%!important;max-width:none!important;margin:0!important;min-height:50px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;}
+.brandImageLink{display:flex!important;align-items:center!important;padding:0!important;margin:0!important;min-width:0!important;height:50px!important;text-decoration:none!important;}
+.brandImageLink img{height:58px!important;width:auto!important;max-width:360px!important;object-fit:contain!important;display:block!important;}
+.nav{position:sticky!important;top:70px!important;min-height:42px!important;padding:4px 18px!important;z-index:55!important;}
+.tabs{min-height:34px!important;padding:4px 10px!important;gap:7px!important;align-items:center!important;}
+.tabs button{padding:6px 13px!important;font-size:12px!important;min-height:30px!important;line-height:1!important;}
+.topUserSearch input,.topUserSearch button{min-height:30px!important;height:30px!important;font-size:12px!important;}
+.side,.profileLeft,.profileRight,.accountRightV2{top:124px!important;}
+body.profileWide header.top{height:70px!important;padding:10px 28px!important;}
+body.profileWide .nav{top:70px!important;min-height:42px!important;padding:4px 18px!important;}
+body.theme-light header,body.theme-dark header{background:#07111f!important;color:#fff!important;border-bottom:1px solid rgba(255,255,255,.08)!important;box-shadow:0 10px 30px rgba(0,0,0,.18)!important;}
+body.theme-light .brandLink,body.theme-dark .brandLink{color:#fff!important;}
+body.theme-light{background:#eef2f7!important;color:#0f172a!important;}
+body.theme-dark{background:#07111f!important;color:#e5e7eb!important;}
+body.theme-dark .nav{background:rgba(15,23,42,.94)!important;border-bottom:1px solid rgba(255,255,255,.08)!important;}
+body.theme-dark .tabs button{background:#0f172a!important;color:#e5e7eb!important;border-color:#334155!important;}
+body.theme-dark .panel,body.theme-dark .card,body.theme-dark .hero,body.theme-dark .side,body.theme-dark .profileLeftCard,body.theme-dark .profileRight>*,body.theme-dark .profileCenter>*,body.theme-dark .collectionValueCard,body.theme-dark .rcoinCard,body.theme-dark .accountRightV2 .profileFriends,body.theme-dark .accountRightV2 .profileActivity{background:rgba(15,23,42,.96)!important;color:#e5e7eb!important;border-color:rgba(148,163,184,.24)!important;}
+body.theme-dark input,body.theme-dark textarea,body.theme-dark select{background:#0f172a!important;color:#e5e7eb!important;border-color:#334155!important;}
+body.theme-dark table,body.theme-dark .meta{background:#0f172a!important;color:#e5e7eb!important;}
+body.theme-dark td,body.theme-dark th{border-color:#334155!important;}
+body.theme-dark .muted,body.theme-dark .small{color:#cbd5e1!important;}
+body.theme-dark .leftMenu button,body.theme-dark button.light{background:#111827!important;color:#e5e7eb!important;border-color:#334155!important;}
+body.theme-light .panel,body.theme-light .card,body.theme-light .hero,body.theme-light .side,body.theme-light .profileLeftCard,body.theme-light .profileRight>*,body.theme-light .profileCenter>*,body.theme-light .collectionValueCard,body.theme-light .rcoinCard{background:rgba(255,255,255,.96)!important;color:#0f172a!important;}
+.notificationDropdown{position:fixed;right:22px;top:78px;width:min(420px,calc(100vw - 28px));max-height:calc(100vh - 96px);overflow:auto;background:#fff;color:#0f172a;border:1px solid rgba(226,232,240,.95);box-shadow:0 24px 80px rgba(15,23,42,.28);border-radius:22px;padding:14px;z-index:1000;display:none;}
+.notificationDropdown.open{display:block;}
+.notificationPanelHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.notificationPanelHead b{font-size:18px}.notificationPanelHead span{display:block;color:#64748b;font-size:12px;margin-top:3px}.dropdownList{max-height:58vh!important;}
+body.theme-dark .notificationDropdown{background:#0f172a;color:#e5e7eb;border-color:#334155;box-shadow:0 24px 80px rgba(0,0,0,.46)}body.theme-dark .notificationItem{background:#111827;color:#e5e7eb;border-color:#334155}body.theme-dark .notificationItem.unread{background:#1f2937;border-color:#facc15}body.theme-dark .notificationItemTitle{color:#fff}body.theme-dark .notificationItemBody{color:#cbd5e1}
+.profileSmall{display:none!important;}
+.collectionRankBox{margin-top:12px;border:2px solid #22c55e;border-radius:0;padding:10px;background:rgba(255,255,255,.52);color:#0f172a;font-weight:900;min-height:48px;}
+.collectionRankBar{height:8px;border-radius:999px;background:#e5e7eb;margin-top:8px;overflow:hidden}.collectionRankBar span{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#d4af37);border-radius:999px;}
+body.theme-dark .collectionRankBox{background:rgba(15,23,42,.72);color:#e5e7eb;border-color:#22c55e}.collectionValueCard .muted{margin-bottom:0!important;}
+@media(max-width:768px){header{height:auto!important;padding:10px 14px!important}.brandImageLink img{height:42px!important;max-width:210px!important}.nav{top:62px!important}.notificationDropdown{top:68px;right:10px}.topActionBtn{width:34px!important;height:34px!important}}
 </style>
