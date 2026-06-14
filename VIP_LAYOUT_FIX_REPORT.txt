@@ -1,0 +1,22 @@
+BidMarket VIP layout repair
+
+Fixed in this ZIP:
+1. Corrected VIP card asset mapping:
+   Member -> card-member.png, Silver -> card-silver.png, Gold -> card-gold.png, Sapphire -> card-sapphire.png, Platinum -> card-platinum.png, Diamond -> card-diamond.png, Ruby -> card-ruby.png, Elite -> card-elite.png.
+2. Replaced the wrongly mapped card-member image that was showing Elite.
+3. Enlarged the account VIP card area with responsive CSS.
+4. Moved/locked the account identity block to the left side and prevented the display name from overflowing outside its card.
+5. Enlarged only the badge after the profile name, while hiding badges in the left sidebar and top-right header.
+6. Kept popup help button on VIP card and preserved existing points/progress overlay logic.
+
+Main files changed:
+- public/index.html
+- public_inline.js
+- public/assets/vip/card-member.png
+- public/assets/vip/card-silver.png
+- public/assets/vip/card-gold.png
+- public/assets/vip/card-sapphire.png
+- public/assets/vip/card-platinum.png
+- public/assets/vip/card-diamond.png
+- public/assets/vip/card-ruby.png
+- public/assets/vip/card-elite.png

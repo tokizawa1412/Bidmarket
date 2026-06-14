@@ -258,7 +258,7 @@ const VIP_BADGE_ASSETS={Member:'/assets/vip/badge-member.png',Silver:'/assets/vi
 const VIP_NEXT_TARGET={Member:100,Silver:2000,Gold:15000,Sapphire:50000,Platinum:300000,Diamond:600000,Ruby:1000000,Elite:1000000};
 function normalizedVipLevel(level){level=String(level||'Member');if(level==='Emerald')level='Ruby';return VIP_LEVEL_ORDER.includes(level)?level:'Member'}
 function nextVipLevel(level){level=normalizedVipLevel(level);const i=VIP_LEVEL_ORDER.indexOf(level);return VIP_LEVEL_ORDER[Math.min(i+1,VIP_LEVEL_ORDER.length-1)]||level}
-function vipLevelName(u){return normalizedVipLevel((u&&(u.vip_level||u.vipLevel||u.level))||(u&&u.is_vip?'Member':'Member'))}
+function vipLevelName(u){return normalizedVipLevel((u&&(u.vip_level||u.vipLevel||u.level))||'Member')}
 function vipTargetForLevel(level){level=normalizedVipLevel(level);return VIP_NEXT_TARGET[level]||0}
 function vipProgressForUser(u){const level=vipLevelName(u);const points=Number(u?.vip_points||0);const target=vipTargetForLevel(level);const pct=level==='Elite'?100:(target?Math.max(0,Math.min(100,(points/target)*100)):0);return {level,points,target,pct,next:nextVipLevel(level)}}
 function vipBadgeImageHtml(level,extraClass=''){level=normalizedVipLevel(level);const src=VIP_BADGE_ASSETS[level]||VIP_BADGE_ASSETS.Member;return `<img class="vipBadgeImg ${extraClass}" src="${src}" alt="${escapeHtml(level)} badge">`}
@@ -319,9 +319,9 @@ function renderProfile(){
       <section class="accountHeroBannerV2">
         <div class="accountIdentityCardV2">
           <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
-          <div class="accountHeroName">${display}${vipBadgeImageHtml(me.vip_level,'accountNameVipBadge accountNameVipBadgeLarge')}</div>
+          <div class="accountHeroName"><span class="accountNameText">${display}</span>${vipBadgeImageHtml(vipLevelName(me),'accountNameVipBadge')}</div>
           <div class="accountHeroId">ID : <span>${uid}</span></div>
-          <div class="accountHeroStatus"><span>${statusText}</span></div>
+          <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(vipLevelName(me)):''}</div>
           <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
           <div class="accountHeroStats">
             <button class="trustStatBtn" onclick="showTrustDetails(window.trustDetailMe)"><b>Trust Score</b><span>${Number(me.trust_rate??50)}</span></button>
