@@ -1624,3 +1624,76 @@ body.profileWide .profileRight .activityItem .muted{color:#64748b!important;disp
 /* Final user fix: do not show VIP badge after name on account page */
 .accountHeroName .vipBadgeImg,.accountHeroName .accountNameVipBadge{display:none!important;}
 </style>
+
+<style id="vip-card-progress-visual-fix-20260614">
+/* VIP card overlay precision fix: smaller text, percent inside card frame, progress fill aligned to printed bar */
+.accountVipCardImageBox .vipCardOverlayText{
+  left:14.7%!important;
+  bottom:22.6%!important;
+  width:31.4%!important;
+  height:9.6%!important;
+  gap:4px!important;
+  justify-content:center!important;
+  align-items:center!important;
+  font-size:clamp(10px,1.05vw,15px)!important;
+  line-height:1!important;
+  letter-spacing:-.4px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  transform:none!important;
+}
+.accountVipCardImageBox .vipCardOverlayText span{
+  display:inline-block!important;
+  max-width:46%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.accountVipCardImageBox .vipCardOverlayText em{
+  flex:0 0 auto!important;
+  font-size:.95em!important;
+  line-height:1!important;
+}
+.accountVipCardImageBox .vipCardProgress{
+  left:16.2%!important;
+  bottom:10.2%!important;
+  width:27.9%!important;
+  height:4.2%!important;
+  padding:0!important;
+  border-radius:999px!important;
+  overflow:hidden!important;
+  background:transparent!important;
+  transform:none!important;
+}
+.accountVipCardImageBox .vipCardProgress>div{
+  height:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  border-radius:999px!important;
+  transform:none!important;
+}
+.accountVipCardImageBox .vipCardPercent{
+  left:44.6%!important;
+  bottom:9.2%!important;
+  width:10.5%!important;
+  height:6.2%!important;
+  font-size:clamp(10px,.95vw,14px)!important;
+  line-height:1!important;
+  justify-content:center!important;
+  align-items:center!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  transform:none!important;
+}
+/* Cards with light text panels still need dark readable overlay */
+.vipCard_member .vipCardOverlayText,.vipCard_silver .vipCardOverlayText,.vipCard_gold .vipCardOverlayText,.vipCard_platinum .vipCardOverlayText,.vipCard_sapphire .vipCardOverlayText,
+.vipCard_member .vipCardPercent,.vipCard_silver .vipCardPercent,.vipCard_gold .vipCardPercent,.vipCard_platinum .vipCardPercent,.vipCard_sapphire .vipCardPercent{
+  color:#0f172a!important;
+  text-shadow:0 1px 2px rgba(255,255,255,.7)!important;
+}
+@media(max-width:1180px){
+  .accountVipCardImageBox .vipCardOverlayText{font-size:clamp(10px,2.1vw,14px)!important;}
+  .accountVipCardImageBox .vipCardPercent{font-size:clamp(10px,1.8vw,13px)!important;}
+}
+</style>
