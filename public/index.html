@@ -1385,4 +1385,100 @@ body.profileWide .profileRight .activityItem:last-child{border-bottom:0!importan
 @media(max-width:1180px){body.profileWide .profileRight{position:static!important;grid-template-columns:1fr 1fr!important;gap:16px!important;}body.profileWide .profileRight #profileActivityBox.profileActivity{max-height:420px!important;}}
 @media(max-width:768px){body.profileWide .profileRight{grid-template-columns:1fr!important;}body.profileWide .profileRight #profileFriendsBox.profileFriends,body.profileWide .profileRight #profileActivityBox.profileActivity{min-height:auto!important;}}
 
+
+
+/* === FINAL USER REQUEST 2026-06-14: Profile right panels must exactly follow Account page cards === */
+body.profileWide .profileRight{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  width:340px!important;
+  max-width:340px!important;
+  gap:16px!important;
+  align-content:start!important;
+  align-items:start!important;
+  position:sticky!important;
+  top:104px!important;
+}
+body.profileWide .profileRight #profileFriendsBox.profileFriends,
+body.profileWide .profileRight #profileActivityBox.profileActivity{
+  width:100%!important;
+  max-width:340px!important;
+  box-sizing:border-box!important;
+  display:block!important;
+  margin:0!important;
+  padding:18px!important;
+  background:rgba(255,255,255,.96)!important;
+  color:#111827!important;
+  border:1px solid rgba(226,232,240,.9)!important;
+  border-radius:24px!important;
+  box-shadow:0 16px 44px rgba(15,23,42,.14)!important;
+  overflow:visible!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+body.profileWide .profileRight #profileFriendsBox.profileFriends{
+  min-height:170px!important;
+}
+body.profileWide .profileRight #profileActivityBox.profileActivity{
+  min-height:0!important;
+}
+body.profileWide .profileRight .friendsPanel,
+body.profileWide .profileRight .activityPanel{
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+body.profileWide .profileRight .panelHead{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin:0 0 12px 0!important;
+}
+body.profileWide .profileRight .panelHead h3,
+body.profileWide .profileRight .activityPanel h3{
+  margin:0 0 12px 0!important;
+  font-size:22px!important;
+  font-weight:1000!important;
+  line-height:1.2!important;
+  color:#111827!important;
+}
+body.profileWide .profileRight .panelHead h3{margin:0!important;}
+body.profileWide .profileRight .friendSearch{
+  height:42px!important;
+  width:100%!important;
+  margin:0 0 12px 0!important;
+  padding:12px!important;
+  border:1px solid #ddd!important;
+  border-radius:14px!important;
+  background:#fff!important;
+  color:#111827!important;
+}
+body.profileWide .profileRight .profileEmpty{
+  padding:15px!important;
+  border:1px dashed #d9dde6!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.64)!important;
+  color:#64748b!important;
+}
+body.profileWide .profileRight .activityItem{
+  padding:12px 0!important;
+  border-bottom:1px solid #e5e7eb!important;
+  color:#111827!important;
+}
+body.profileWide .profileRight .activityItem:last-child{border-bottom:0!important;}
+body.profileWide .profileRight .activityItem .muted{color:#64748b!important;display:inline!important;}
+@media(max-width:1180px){
+  body.profileWide .profileRight{position:static!important;width:100%!important;max-width:none!important;grid-template-columns:1fr 1fr!important;gap:16px!important;}
+  body.profileWide .profileRight #profileFriendsBox.profileFriends,
+  body.profileWide .profileRight #profileActivityBox.profileActivity{max-width:none!important;width:100%!important;}
+}
+@media(max-width:768px){
+  body.profileWide .profileRight{grid-template-columns:1fr!important;}
+}
 </style>
