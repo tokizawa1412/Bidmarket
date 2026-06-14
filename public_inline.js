@@ -319,9 +319,9 @@ function renderProfile(){
       <section class="accountHeroBannerV2">
         <div class="accountIdentityCardV2">
           <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
-          <div class="accountHeroName">${display}${vipBadgeImageHtml(me.vip_level,'accountNameVipBadge')}</div>
+          <div class="accountHeroName">${display}${vipBadgeImageHtml(me.vip_level,'accountNameVipBadge accountNameVipBadgeLarge')}</div>
           <div class="accountHeroId">ID : <span>${uid}</span></div>
-          <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(me.vip_level):''}</div>
+          <div class="accountHeroStatus"><span>${statusText}</span></div>
           <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
           <div class="accountHeroStats">
             <button class="trustStatBtn" onclick="showTrustDetails(window.trustDetailMe)"><b>Trust Score</b><span>${Number(me.trust_rate??50)}</span></button>

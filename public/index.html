@@ -448,7 +448,8 @@ body.profileWide .profileRight .activityItem:last-child{border-bottom:0!importan
 .accountVipCardImage{width:100%!important;height:auto!important}
 .bigVipBadge{height:54px!important;vertical-align:middle!important}
 .topNameVipBadge,.sidebarVipBadge{display:none!important}
-</style></head><body><header><div class="top"><a href="#home" class="brandLink brandImageLink" onclick="show('home');return false" aria-label="BidMarket"><img src="/assets/bidmarket-brand-gold.png" alt="BidMarket Global Auction Platform"></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
+</style>
+</head><body><header><div class="top"><a href="#home" class="brandLink brandImageLink" onclick="show('home');return false" aria-label="BidMarket"><img src="/assets/bidmarket-brand-gold.png" alt="BidMarket Global Auction Platform"></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
 <div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
   <div class="mobileMenuPanel" onclick="event.stopPropagation()">
     <button class="mobileMenuClose" onclick="closeMobileMenu()" aria-label="ปิดเมนู">×</button>
@@ -658,7 +659,7 @@ async function loadMe(){me=(await api('/api/me')).user;joinRealtimeRooms()}funct
   document.body.classList.toggle('admin',!!(me&&me.role==='admin'));
   const themeBtn=`<button id="topThemeBtn" class="topActionBtn" onclick="toggleTheme()" title="เปลี่ยนธีม"><span class="themeToggleIcon">🌙</span></button>`;
   const bellBtn=me?`<button id="topNotificationBtn" class="topActionBtn" onclick="openNotifications()" title="การแจ้งเตือน">🔔<span id="notificationBadge" class="notificationBadge">0</span></button>`:'';
-  auth.innerHTML=me?`${themeBtn}${bellBtn}<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}${me?vipBadgeImageHtml(me.vip_level,'topNameVipBadge'):''}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">Admin</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`${themeBtn}<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;
+  auth.innerHTML=me?`${themeBtn}${bellBtn}<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">Admin</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`${themeBtn}<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;
   applyTheme();
   refreshNotificationBadge();
   sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'Admin':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.body.classList.toggle('accountWide',id==='profile');document.querySelector('.app')?.classList.toggle('noSidebar',id!=='profile');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
@@ -861,9 +862,9 @@ function renderProfile(){
       <section class="accountHeroBannerV2">
         <div class="accountIdentityCardV2">
           <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
-          <div class="accountHeroName">${display}${vipBadgeImageHtml(me.vip_level,'accountNameVipBadge')}</div>
+          <div class="accountHeroName">${display}${vipBadgeImageHtml(me.vip_level,'accountNameVipBadge accountNameVipBadgeLarge')}</div>
           <div class="accountHeroId">ID : <span>${uid}</span></div>
-          <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(me.vip_level):''}</div>
+          <div class="accountHeroStatus"><span>${statusText}</span></div>
           <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
           <div class="accountHeroStats">
             <button class="trustStatBtn" onclick="showTrustDetails(window.trustDetailMe)"><b>Trust Score</b><span>${Number(me.trust_rate??50)}</span></button>
@@ -1529,4 +1530,105 @@ body.profileWide .profileRight .activityItem .muted{color:#64748b!important;disp
 .accountVipCardImage{width:100%!important;height:auto!important}
 .bigVipBadge{height:54px!important;vertical-align:middle!important}
 .topNameVipBadge,.sidebarVipBadge{display:none!important}
+</style>
+
+
+<style id="bidmarket-vip-card-final-layout-fix">
+/* Final VIP card/profile layout fix: only affects account/profile hero and VIP assets. */
+.accountLayoutV2{grid-template-columns:minmax(0,1fr) 340px!important;gap:16px!important;align-items:start!important;}
+.accountMainV2{min-width:0!important;}
+.accountHeroBannerV2{
+  min-height:430px!important;
+  padding:22px 28px!important;
+  display:grid!important;
+  grid-template-columns:minmax(390px,46%) minmax(560px,1fr)!important;
+  gap:22px!important;
+  justify-content:start!important;
+  align-items:center!important;
+  overflow:hidden!important;
+}
+.accountIdentityCardV2{
+  justify-self:start!important;
+  align-self:center!important;
+  width:100%!important;
+  max-width:560px!important;
+  min-height:330px!important;
+  margin-left:0!important;
+  padding:26px!important;
+  box-sizing:border-box!important;
+}
+.accountVipCardWrapV2{
+  justify-self:stretch!important;
+  align-self:center!important;
+  width:100%!important;
+  height:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  position:relative!important;
+}
+.accountVipCardImageBox{
+  width:min(100%,680px)!important;
+  max-width:680px!important;
+  min-width:560px!important;
+  aspect-ratio:1050/600!important;
+  height:auto!important;
+  border-radius:20px!important;
+  overflow:visible!important;
+  filter:drop-shadow(0 22px 48px rgba(0,0,0,.42))!important;
+}
+.accountVipCardImage{width:100%!important;height:100%!important;object-fit:contain!important;display:block!important;}
+.accountHeroName{gap:14px!important;flex-wrap:nowrap!important;white-space:nowrap!important;}
+.accountNameVipBadgeLarge{
+  width:260px!important;
+  max-width:260px!important;
+  max-height:78px!important;
+  height:auto!important;
+  margin-left:8px!important;
+  object-fit:contain!important;
+  flex:0 0 auto!important;
+}
+.accountHeroStatus .heroVipBadge,.topNameVipBadge,.side .vipBadgeImg,.userChip .vipBadgeImg{display:none!important;}
+.vipHelpBtn{
+  right:3.2%!important;
+  top:4.2%!important;
+  width:34px!important;
+  height:34px!important;
+  font-size:19px!important;
+  z-index:5!important;
+}
+.vipCardOverlayText{
+  left:16.5%!important;
+  bottom:21.5%!important;
+  width:35%!important;
+  height:13%!important;
+  font-size:clamp(16px,1.45vw,25px)!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+.vipCardProgress{left:18.2%!important;bottom:13.6%!important;width:27.8%!important;height:4.8%!important;}
+.vipCardPercent{left:47.0%!important;bottom:10.2%!important;width:12.5%!important;height:8%!important;font-size:clamp(14px,1.35vw,22px)!important;}
+/* Keep the old CSS card implementation disabled; the image-card version is the only VIP card display. */
+.accountVipCard{display:none!important;}
+@media(max-width:1320px){
+  .accountHeroBannerV2{grid-template-columns:minmax(360px,45%) minmax(500px,1fr)!important;}
+  .accountVipCardImageBox{min-width:500px!important;max-width:620px!important;}
+  .accountNameVipBadgeLarge{width:220px!important;max-width:220px!important;}
+}
+@media(max-width:1180px){
+  .accountLayoutV2{grid-template-columns:1fr!important;}
+  .accountHeroBannerV2{grid-template-columns:1fr!important;min-height:auto!important;}
+  .accountIdentityCardV2{justify-self:center!important;max-width:620px!important;}
+  .accountVipCardImageBox{min-width:0!important;width:min(100%,680px)!important;}
+  .accountRightV2{position:static!important;width:100%!important;max-width:none!important;grid-template-columns:1fr 1fr!important;}
+}
+@media(max-width:768px){
+  .accountHeroBannerV2{padding:14px!important;gap:14px!important;}
+  .accountIdentityCardV2{min-height:0!important;padding:18px!important;}
+  .accountNameVipBadgeLarge{width:150px!important;max-height:46px!important;}
+  .accountHeroName{flex-wrap:wrap!important;}
+  .accountVipCardImageBox{min-width:0!important;width:100%!important;}
+  .vipCardOverlayText{font-size:12px!important;gap:4px!important;}
+  .vipCardPercent{font-size:12px!important;}
+}
 </style>
