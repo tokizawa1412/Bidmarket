@@ -323,6 +323,36 @@ body.theme-dark .notificationWinHeader{background:#07111f;color:#fff;}
 body.theme-dark .notificationItem{background:#fff;color:#0f172a;border-color:#e5e7eb}body.theme-dark .notificationItem.unread{background:#fffbeb;border-color:#facc15}body.theme-dark .notificationItemTitle{color:#111827}body.theme-dark .notificationItemBody{color:#475569}
 @media(max-width:768px){.notificationWindow{right:10px;top:72px;width:calc(100vw - 20px)}.accountRightV2 .profileActivity,.profileRight .profileActivity{max-height:420px!important}.rankCrown{width:30px!important;height:30px!important}}
 
+
+
+/* Final profile/collection fixes 2026-06-14 */
+/* Profile right column: make Friends and Recent Activity separate cards like Account page */
+body.profileWide .profileRight{display:grid!important;grid-template-columns:1fr!important;gap:18px!important;align-content:start!important;align-items:start!important;position:sticky!important;top:104px!important;}
+body.profileWide .profileRight .profileFriends,
+body.profileWide .profileRight .profileActivity{display:block!important;background:rgba(255,255,255,.96)!important;border:1px solid rgba(226,232,240,.9)!important;border-radius:24px!important;box-shadow:0 16px 44px rgba(15,23,42,.14)!important;padding:18px!important;margin:0!important;max-height:none!important;overflow:hidden!important;}
+body.profileWide .profileRight .profileActivity{max-height:520px!important;overflow-y:auto!important;}
+body.profileWide .profileRight .friendsPanel,
+body.profileWide .profileRight .activityPanel{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important;}
+body.profileWide .profileRight .panelHead{display:flex!important;justify-content:space-between!important;align-items:center!important;margin:0!important;}
+body.profileWide .profileRight .panelHead h3,
+body.profileWide .profileRight .activityPanel h3{margin:0 0 12px 0!important;font-size:22px!important;font-weight:1000!important;color:#111827!important;}
+body.profileWide .profileRight .friendSearch{width:100%!important;margin:10px 0 10px!important;}
+body.profileWide .profileRight .activityItem{padding:12px 0!important;border-bottom:1px solid #e5e7eb!important;}
+body.profileWide .profileRight .activityItem:last-child{border-bottom:0!important;}
+/* Larger rank crown next to collection rank; intentionally bigger than the rank number */
+.collectionRankBox b{font-size:22px!important;gap:10px!important;line-height:1.2!important;}
+.collectionRankBox .rankCrown{width:52px!important;height:34px!important;object-fit:contain!important;vertical-align:middle!important;filter:drop-shadow(0 4px 5px rgba(0,0,0,.28))!important;}
+.collectionRankRow .rankCrown{width:34px!important;height:24px!important;object-fit:contain!important;vertical-align:middle!important;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))!important;}
+/* remove Real-time text under collection value */
+.collectionValueCard .muted{display:none!important;}
+/* Collection ranking panel: align to top of page area */
+#collection .panel.content{padding-top:18px!important;}
+#collectionBox{margin-top:0!important;}
+.collectionPageLayout{align-items:start!important;margin-top:0!important;padding-top:0!important;}
+.collectionRankPanel{align-self:start!important;margin-top:0!important;top:92px!important;}
+@media(max-width:1180px){body.profileWide .profileRight{position:static!important;grid-template-columns:1fr 1fr!important;}body.profileWide .profileRight .profileActivity{max-height:420px!important;}}
+@media(max-width:768px){body.profileWide .profileRight{grid-template-columns:1fr!important}.collectionRankBox .rankCrown{width:44px!important;height:30px!important}.collectionRankPanel{top:auto!important}}
+
 </style></head><body><header><div class="top"><a href="#home" class="brandLink brandImageLink" onclick="show('home');return false" aria-label="BidMarket"><img src="/assets/bidmarket-brand-gold.png" alt="BidMarket Global Auction Platform"></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
 <div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
   <div class="mobileMenuPanel" onclick="event.stopPropagation()">
@@ -778,7 +808,7 @@ function renderProfileShowcase(items,owner,profileData){
   }).join('');
   const u=profileData?.user||{};
   const canCollection=!!profileData?.can_open_collection;
-  return `<div class="showcaseV3"><div class="showcaseLeft"><h3>ตู้โชว์สินค้า</h3><div class="showcaseGrid">${cards}</div></div><aside class="collectionSide"><section class="collectionValueCard"><div class="collectionTitle"><b>มูลค่าคอลเลคชั่น</b>${canCollection?`<button class="miniBtn" onclick="openCollectionVault()">∆</button>`:''}</div><div class="collectionValue" data-collection-value>${fmtNum(u.collection_value||0)} R</div><div class="muted">อัปเดตแบบ Real-time</div><div class="collectionRankBox"><span>อันดับคอลเลคชั่น</span><b data-collection-rank>${collectionRankText(profileData)}</b></div></section><section class="rcoinCard"><div class="rcoinLabel">บัญชี R-Coin</div><div class="rcoinValue" data-rcoin-balance>${fmtNum(u.r_coin||0)} R-Coin</div>${owner?`<button class="gold rcoinExchange" onclick="exchangeRCoin()">แลก R-Coin</button>`:''}</section></aside></div>`;
+  return `<div class="showcaseV3"><div class="showcaseLeft"><h3>ตู้โชว์สินค้า</h3><div class="showcaseGrid">${cards}</div></div><aside class="collectionSide"><section class="collectionValueCard"><div class="collectionTitle"><b>มูลค่าคอลเลคชั่น</b>${canCollection?`<button class="miniBtn" onclick="openCollectionVault()">∆</button>`:''}</div><div class="collectionValue" data-collection-value>${fmtNum(u.collection_value||0)} R</div><div class="collectionRankBox"><span>อันดับคอลเลคชั่น</span><b data-collection-rank>${collectionRankText(profileData)}</b></div></section><section class="rcoinCard"><div class="rcoinLabel">บัญชี R-Coin</div><div class="rcoinValue" data-rcoin-balance>${fmtNum(u.r_coin||0)} R-Coin</div>${owner?`<button class="gold rcoinExchange" onclick="exchangeRCoin()">แลก R-Coin</button>`:''}</section></aside></div>`;
 }
 async function boostShowcaseValue(id){
   try{await api('/api/profiles/showcase/'+id+'/boost-value',{method:'POST',body:JSON.stringify({})});await renderPublicProfile();showToast('เพิ่มมูลค่า +100 R แล้ว')}catch(e){alert(e.message)}
@@ -1156,5 +1186,35 @@ body.theme-dark .leftMenu button,body.theme-dark button.light{background:#fff!im
 .rankNo{font-weight:900;text-align:center}.rankAvatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb}.rankName{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rankScore{white-space:nowrap;display:flex;align-items:center;gap:4px}.showCaseBtn{padding:7px 10px!important;font-size:12px!important;margin:0!important;}
 @media(max-width:1100px){.collectionPageLayout{grid-template-columns:1fr}.collectionRankPanel{position:static;max-height:520px}.collectionAuctionGrid{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.collectionAuctionGrid{grid-template-columns:1fr}.collectionRankRow{grid-template-columns:28px 34px 1fr;}.rankScore,.showCaseBtn{grid-column:3}.showCaseBtn{width:max-content}}
+
+
+
+/* Final profile/collection fixes 2026-06-14 */
+/* Profile right column: make Friends and Recent Activity separate cards like Account page */
+body.profileWide .profileRight{display:grid!important;grid-template-columns:1fr!important;gap:18px!important;align-content:start!important;align-items:start!important;position:sticky!important;top:104px!important;}
+body.profileWide .profileRight .profileFriends,
+body.profileWide .profileRight .profileActivity{display:block!important;background:rgba(255,255,255,.96)!important;border:1px solid rgba(226,232,240,.9)!important;border-radius:24px!important;box-shadow:0 16px 44px rgba(15,23,42,.14)!important;padding:18px!important;margin:0!important;max-height:none!important;overflow:hidden!important;}
+body.profileWide .profileRight .profileActivity{max-height:520px!important;overflow-y:auto!important;}
+body.profileWide .profileRight .friendsPanel,
+body.profileWide .profileRight .activityPanel{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important;}
+body.profileWide .profileRight .panelHead{display:flex!important;justify-content:space-between!important;align-items:center!important;margin:0!important;}
+body.profileWide .profileRight .panelHead h3,
+body.profileWide .profileRight .activityPanel h3{margin:0 0 12px 0!important;font-size:22px!important;font-weight:1000!important;color:#111827!important;}
+body.profileWide .profileRight .friendSearch{width:100%!important;margin:10px 0 10px!important;}
+body.profileWide .profileRight .activityItem{padding:12px 0!important;border-bottom:1px solid #e5e7eb!important;}
+body.profileWide .profileRight .activityItem:last-child{border-bottom:0!important;}
+/* Larger rank crown next to collection rank; intentionally bigger than the rank number */
+.collectionRankBox b{font-size:22px!important;gap:10px!important;line-height:1.2!important;}
+.collectionRankBox .rankCrown{width:52px!important;height:34px!important;object-fit:contain!important;vertical-align:middle!important;filter:drop-shadow(0 4px 5px rgba(0,0,0,.28))!important;}
+.collectionRankRow .rankCrown{width:34px!important;height:24px!important;object-fit:contain!important;vertical-align:middle!important;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))!important;}
+/* remove Real-time text under collection value */
+.collectionValueCard .muted{display:none!important;}
+/* Collection ranking panel: align to top of page area */
+#collection .panel.content{padding-top:18px!important;}
+#collectionBox{margin-top:0!important;}
+.collectionPageLayout{align-items:start!important;margin-top:0!important;padding-top:0!important;}
+.collectionRankPanel{align-self:start!important;margin-top:0!important;top:92px!important;}
+@media(max-width:1180px){body.profileWide .profileRight{position:static!important;grid-template-columns:1fr 1fr!important;}body.profileWide .profileRight .profileActivity{max-height:420px!important;}}
+@media(max-width:768px){body.profileWide .profileRight{grid-template-columns:1fr!important}.collectionRankBox .rankCrown{width:44px!important;height:30px!important}.collectionRankPanel{top:auto!important}}
 
 </style>
