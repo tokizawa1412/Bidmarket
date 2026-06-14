@@ -12,18 +12,38 @@ function toggleTheme(){const next=getTheme()==='dark'?'light':'dark';localStorag
 function setNotificationBadge(count){const b=document.getElementById('notificationBadge');if(!b)return;b.textContent=count>99?'99+':String(count||0);b.classList.toggle('hasUnread',Number(count||0)>0)}
 async function refreshNotificationBadge(){if(!me){setNotificationBadge(0);return}try{const j=await api('/api/notifications');const unread=(j.notifications||[]).filter(n=>!n.read).length;setNotificationBadge(unread)}catch(e){setNotificationBadge(0)}}
 function bumpNotificationBadge(){const b=document.getElementById('notificationBadge');if(!b)return;const current=b.classList.contains('hasUnread')?Number((b.textContent||'0').replace('+',''))||0:0;setNotificationBadge(current+1)}
+function ensureNotificationWindow(){
+  let wrap=document.getElementById('notificationWindow');
+  if(wrap)return wrap;
+  wrap=document.createElement('div');
+  wrap.id='notificationWindow';
+  wrap.className='notificationWindow hidden';
+  wrap.innerHTML=`<div class="notificationWinHeader"><span>การแจ้งเตือน</span><button class="light" onclick="toggleNotificationWindow(false)">ย่อ</button></div><div id="notificationWinBody" class="notificationWinBody"><div class="notice">กำลังโหลด...</div></div>`;
+  document.body.appendChild(wrap);
+  return wrap;
+}
+function toggleNotificationWindow(force){
+  const wrap=ensureNotificationWindow();
+  const shouldOpen=force===undefined?wrap.classList.contains('hidden'):!!force;
+  wrap.classList.toggle('hidden',!shouldOpen);
+  if(shouldOpen)loadNotificationWindow();
+}
 async function openNotifications(){
   if(!me){show('login');return}
+  toggleNotificationWindow();
+}
+async function loadNotificationWindow(){
+  const body=document.getElementById('notificationWinBody');
+  if(!body)return;
+  body.innerHTML='<div class="notice">กำลังโหลด...</div>';
   try{
     const j=await api('/api/notifications');
     const list=(j.notifications||[]);
-    helpTitle.textContent='การแจ้งเตือน';
-    helpBody.className='';
-    helpBody.innerHTML=`<div class="notificationActions"><b>${list.filter(n=>!n.read).length} รายการยังไม่อ่าน</b><button class="light" onclick="markNotificationsRead()">ทำเครื่องหมายว่าอ่านแล้ว</button></div>`+(list.length?`<div class="notificationList">${list.map(n=>`<div class="notificationItem ${n.read?'':'unread'}"><div class="notificationItemTitle">${escapeHtml(n.title||'แจ้งเตือน')}</div><div class="notificationItemBody">${escapeHtml(n.body||'')}</div><div class="notificationItemTime">${n.created_at?new Date(n.created_at).toLocaleString('th-TH'):'-'}</div></div>`).join('')}</div>`:'<div class="notice">ยังไม่มีการแจ้งเตือน</div>');
-    helpModal.classList.add('show');
-  }catch(e){alert(e.message)}
+    const unread=list.filter(n=>!n.read).length;
+    body.innerHTML=`<div class="notificationActions"><b>${unread} รายการยังไม่อ่าน</b><button class="light" onclick="markNotificationsRead()">ทำเครื่องหมายว่าอ่านแล้ว</button></div>`+(list.length?`<div class="notificationList floatingNotificationList">${list.map(n=>`<div class="notificationItem ${n.read?'':'unread'}"><div class="notificationItemTitle">${escapeHtml(n.title||'แจ้งเตือน')}</div><div class="notificationItemBody">${escapeHtml(n.body||'')}</div><div class="notificationItemTime">${n.created_at?new Date(n.created_at).toLocaleString('th-TH'):'-'}</div></div>`).join('')}</div>`:'<div class="notice">ยังไม่มีการแจ้งเตือน</div>');
+  }catch(e){body.innerHTML='<div class="notice error">'+escapeHtml(e.message)+'</div>'}
 }
-async function markNotificationsRead(){try{await api('/api/notifications/read',{method:'POST'});setNotificationBadge(0);openNotifications()}catch(e){alert(e.message)}}
+async function markNotificationsRead(){try{await api('/api/notifications/read',{method:'POST'});setNotificationBadge(0);await loadNotificationWindow()}catch(e){alert(e.message)}}
 
 function openMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.add('open')}
 function closeMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.remove('open')}

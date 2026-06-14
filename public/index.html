@@ -300,6 +300,29 @@ body.theme-dark .leftMenu button,body.theme-dark button.light{background:#fff!im
 @media(max-width:1100px){.collectionPageLayout{grid-template-columns:1fr}.collectionRankPanel{position:static;max-height:520px}.collectionAuctionGrid{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.collectionAuctionGrid{grid-template-columns:1fr}.collectionRankRow{grid-template-columns:28px 34px 1fr;}.rankScore,.showCaseBtn{grid-column:3}.showCaseBtn{width:max-content}}
 
+
+
+/* Final polish: separated right panels, larger rank crown/R values, floating notification window */
+.accountRightV2,.profileRight{display:grid!important;gap:22px!important;align-items:start!important;align-content:start!important;grid-auto-rows:max-content!important;}
+.accountRightV2 .profileFriends,.accountRightV2 .profileActivity,.profileRight .profileFriends,.profileRight .profileActivity{display:block!important;margin:0!important;border-radius:24px!important;overflow:hidden!important;}
+.accountRightV2 .profileActivity,.profileRight .profileActivity{max-height:520px!important;overflow:auto!important;}
+.accountRightV2 .profileFriends,.profileRight .profileFriends{max-height:230px!important;overflow:auto!important;}
+.collectionRankBox b{font-size:20px!important;display:flex!important;align-items:center!important;gap:10px!important;}
+.rankCrown{width:36px!important;height:36px!important;object-fit:contain!important;vertical-align:middle!important;display:inline-block!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.24));}
+.collectionRankRow .rankCrown{width:30px!important;height:30px!important;}
+.showcaseItem .rValue{font-size:20px!important;line-height:1.1!important;padding:12px 12px!important;letter-spacing:.2px!important;}
+.showcaseItem.rank1 .rValue{font-size:22px!important;}
+.notificationWindow{position:fixed;right:22px;top:86px;width:min(420px,calc(100vw - 28px));max-height:calc(100vh - 108px);background:#fff;color:#0f172a;border:1px solid rgba(226,232,240,.95);border-radius:22px;box-shadow:0 24px 80px rgba(15,23,42,.30);z-index:1002;overflow:hidden;display:flex;flex-direction:column;}
+.notificationWindow.hidden{display:none!important;}
+.notificationWinHeader{background:#07111f;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:1000;}
+.notificationWinHeader .light{background:#fff!important;color:#07111f!important;border-radius:999px!important;padding:7px 12px!important;margin:0!important;}
+.notificationWinBody{padding:14px;overflow:auto;max-height:calc(100vh - 166px);}
+.floatingNotificationList{max-height:none!important;overflow:visible!important;}
+body.theme-dark .notificationWindow{background:#fff;color:#0f172a;border-color:#e5e7eb;box-shadow:0 24px 80px rgba(15,23,42,.38)}
+body.theme-dark .notificationWinHeader{background:#07111f;color:#fff;}
+body.theme-dark .notificationItem{background:#fff;color:#0f172a;border-color:#e5e7eb}body.theme-dark .notificationItem.unread{background:#fffbeb;border-color:#facc15}body.theme-dark .notificationItemTitle{color:#111827}body.theme-dark .notificationItemBody{color:#475569}
+@media(max-width:768px){.notificationWindow{right:10px;top:72px;width:calc(100vw - 20px)}.accountRightV2 .profileActivity,.profileRight .profileActivity{max-height:420px!important}.rankCrown{width:30px!important;height:30px!important}}
+
 </style></head><body><header><div class="top"><a href="#home" class="brandLink brandImageLink" onclick="show('home');return false" aria-label="BidMarket"><img src="/assets/bidmarket-brand-gold.png" alt="BidMarket Global Auction Platform"></a><div id="auth"></div></div></header><nav class="nav"><div class="tabs"><button class="mobileMenuBtn" onclick="openMobileMenu()" aria-label="เปิดเมนู">☰</button><button onclick="show('home')">หน้าหลัก</button><button onclick="showVip()">VIP Zone</button><button onclick="show('ads')">ดูโฆษณา</button><button onclick="show('activities')">กิจกรรม</button><button onclick="show('rules')">กฏ/เงื่อนไข</button><button onclick="show('reviews')">รีวิว</button><button onclick="openProfilePage()">โปรไฟล์</button><button onclick="show('collection')">คอลเลคชั่น</button><button onclick="show('profile')">บัญชีผู้ใช้</button><button id="topAdminBtn" class="adminOnly" onclick="showAdmin()">Admin</button><div class="topUserSearch"><input id="topUserSearch" placeholder="ค้นหาชื่อบัญชี หรือ ID" onkeydown="if(event.key==='Enter')topSearchUsers()"><button class="green" onclick="topSearchUsers()">ค้นหา</button></div></div><div id="topSearchPanel" class="topSearchPanel hidden"></div></nav>
 <div id="mobileMenuOverlay" class="mobileMenuOverlay" onclick="closeMobileMenu()">
   <div class="mobileMenuPanel" onclick="event.stopPropagation()">
@@ -406,18 +429,38 @@ function toggleTheme(){const next=getTheme()==='dark'?'light':'dark';localStorag
 function setNotificationBadge(count){const b=document.getElementById('notificationBadge');if(!b)return;b.textContent=count>99?'99+':String(count||0);b.classList.toggle('hasUnread',Number(count||0)>0)}
 async function refreshNotificationBadge(){if(!me){setNotificationBadge(0);return}try{const j=await api('/api/notifications');const unread=(j.notifications||[]).filter(n=>!n.read).length;setNotificationBadge(unread)}catch(e){setNotificationBadge(0)}}
 function bumpNotificationBadge(){const b=document.getElementById('notificationBadge');if(!b)return;const current=b.classList.contains('hasUnread')?Number((b.textContent||'0').replace('+',''))||0:0;setNotificationBadge(current+1)}
+function ensureNotificationWindow(){
+  let wrap=document.getElementById('notificationWindow');
+  if(wrap)return wrap;
+  wrap=document.createElement('div');
+  wrap.id='notificationWindow';
+  wrap.className='notificationWindow hidden';
+  wrap.innerHTML=`<div class="notificationWinHeader"><span>การแจ้งเตือน</span><button class="light" onclick="toggleNotificationWindow(false)">ย่อ</button></div><div id="notificationWinBody" class="notificationWinBody"><div class="notice">กำลังโหลด...</div></div>`;
+  document.body.appendChild(wrap);
+  return wrap;
+}
+function toggleNotificationWindow(force){
+  const wrap=ensureNotificationWindow();
+  const shouldOpen=force===undefined?wrap.classList.contains('hidden'):!!force;
+  wrap.classList.toggle('hidden',!shouldOpen);
+  if(shouldOpen)loadNotificationWindow();
+}
 async function openNotifications(){
   if(!me){show('login');return}
+  toggleNotificationWindow();
+}
+async function loadNotificationWindow(){
+  const body=document.getElementById('notificationWinBody');
+  if(!body)return;
+  body.innerHTML='<div class="notice">กำลังโหลด...</div>';
   try{
     const j=await api('/api/notifications');
     const list=(j.notifications||[]);
-    helpTitle.textContent='การแจ้งเตือน';
-    helpBody.className='';
-    helpBody.innerHTML=`<div class="notificationActions"><b>${list.filter(n=>!n.read).length} รายการยังไม่อ่าน</b><button class="light" onclick="markNotificationsRead()">ทำเครื่องหมายว่าอ่านแล้ว</button></div>`+(list.length?`<div class="notificationList">${list.map(n=>`<div class="notificationItem ${n.read?'':'unread'}"><div class="notificationItemTitle">${escapeHtml(n.title||'แจ้งเตือน')}</div><div class="notificationItemBody">${escapeHtml(n.body||'')}</div><div class="notificationItemTime">${n.created_at?new Date(n.created_at).toLocaleString('th-TH'):'-'}</div></div>`).join('')}</div>`:'<div class="notice">ยังไม่มีการแจ้งเตือน</div>');
-    helpModal.classList.add('show');
-  }catch(e){alert(e.message)}
+    const unread=list.filter(n=>!n.read).length;
+    body.innerHTML=`<div class="notificationActions"><b>${unread} รายการยังไม่อ่าน</b><button class="light" onclick="markNotificationsRead()">ทำเครื่องหมายว่าอ่านแล้ว</button></div>`+(list.length?`<div class="notificationList floatingNotificationList">${list.map(n=>`<div class="notificationItem ${n.read?'':'unread'}"><div class="notificationItemTitle">${escapeHtml(n.title||'แจ้งเตือน')}</div><div class="notificationItemBody">${escapeHtml(n.body||'')}</div><div class="notificationItemTime">${n.created_at?new Date(n.created_at).toLocaleString('th-TH'):'-'}</div></div>`).join('')}</div>`:'<div class="notice">ยังไม่มีการแจ้งเตือน</div>');
+  }catch(e){body.innerHTML='<div class="notice error">'+escapeHtml(e.message)+'</div>'}
 }
-async function markNotificationsRead(){try{await api('/api/notifications/read',{method:'POST'});setNotificationBadge(0);openNotifications()}catch(e){alert(e.message)}}
+async function markNotificationsRead(){try{await api('/api/notifications/read',{method:'POST'});setNotificationBadge(0);await loadNotificationWindow()}catch(e){alert(e.message)}}
 
 function openMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.add('open')}
 function closeMobileMenu(){const m=document.getElementById('mobileMenuOverlay');if(m)m.classList.remove('open')}
