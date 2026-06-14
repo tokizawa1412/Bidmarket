@@ -134,7 +134,7 @@ function save(){
   }
 }
 const nid=k=>(db.next[k]=db.next[k]||1,db.next[k]++);const user=id=>db.users.find(u=>u.id==id);const uname=n=>db.users.find(u=>u.username==n);const trust=u=>u&&u.trust_total_orders?Math.round(u.trust_completed_sales/u.trust_total_orders*100):50;
-function pub(u){if(!u)return null;const benefits=getVipBenefits(u);return {id:u.id,public_user_id:u.public_user_id,user_id16:u.public_user_id,username:u.display_name||u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name||u.username,avatar_url:u.profile_image_url||u.avatar_url,bio:u.bio||'',profile_image_url:u.profile_image_url||u.avatar_url||'',profile_banner_url:u.profile_banner_url||'',profile_image_changed_at:Number(u.profile_image_changed_at||0),profile_banner_changed_at:Number(u.profile_banner_changed_at||0),coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,vip_level:currentVipLevel(u),vip_points:Number(u.vip_points||0),vip_coin_spent_for_silver:Number(u.vip_coin_spent_for_silver||0),vip_credit_spent_for_silver:Number(u.vip_credit_spent_for_silver||0),vip_benefits:benefits,username_change_count:Number(u.username_change_count||0),lifetime_credit_topup:Number(u.lifetime_credit_topup||0),trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders,verified:!!u.verified||!!u.google_id,google_linked:!!u.google_id}}
+function pub(u){if(!u)return null;const benefits=getVipBenefits(u);return {id:u.id,public_user_id:u.public_user_id,user_id16:u.public_user_id,username:u.display_name||u.username,email:u.email,role:u.role,status:u.status,display_name:u.display_name||u.username,avatar_url:u.profile_image_url||u.avatar_url,bio:u.bio||'',profile_image_url:u.profile_image_url||u.avatar_url||'',profile_banner_url:u.profile_banner_url||'',profile_image_changed_at:Number(u.profile_image_changed_at||0),profile_banner_changed_at:Number(u.profile_banner_changed_at||0),coin:u.coin,credit:u.credit,token:u.token,is_vip:vip(u),vip_until:u.vip_until,vip_level:currentVipLevel(u),vip_points:Number(u.vip_points||0),vip_coin_spent_for_silver:Number(u.vip_coin_spent_for_silver||0),vip_credit_spent_for_silver:Number(u.vip_credit_spent_for_silver||0),vip_benefits:benefits,username_change_count:Number(u.username_change_count||0),lifetime_credit_topup:Number(u.lifetime_credit_topup||0),trust_rate:trust(u),trust_completed_sales:u.trust_completed_sales,trust_total_orders:u.trust_total_orders,verified:!!u.verified||!!u.google_id,google_linked:!!u.google_id,collection_value:Number(u.collection_value||0),r_coin:Number(u.r_coin||0)}}
 function adminEmailSet(){return new Set(String(process.env.ADMIN_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean))}
 function isAdminEmail(email){return !!email&&adminEmailSet().has(String(email).toLowerCase())}
 function uniqueUsername(base){let clean=String(base||'user').toLowerCase().replace(/[^a-z0-9_ก-๙.-]+/g,'').replace(/^[.-]+|[.-]+$/g,'')||'user';let name=clean, i=1;while(uname(name))name=clean+i++;return name}
@@ -926,6 +926,11 @@ function collectionValueForUser(uid){
   return roundCoinHundred(total);
 }
 function updateCollectionValue(uid){const u=user(uid);if(u)u.collection_value=collectionValueForUser(uid);return u?.collection_value||0}
+function collectionRankings(){
+  (db.users||[]).forEach(u=>updateCollectionValue(u.id));
+  return (db.users||[]).map(u=>({id:u.id,public_user_id:u.public_user_id,username:u.username,display_name:u.display_name||u.username,avatar_url:u.profile_image_url||u.avatar_url||'',collection_value:Number(u.collection_value||0)})).sort((a,b)=>Number(b.collection_value||0)-Number(a.collection_value||0)||Number(a.id)-Number(b.id)).map((u,i)=>({...u,rank:i+1}));
+}
+function collectionRankForUser(uid){const r=collectionRankings().find(x=>Number(x.id)===Number(uid));return r?Number(r.rank):0}
 function canUseCollectionFeatures(u){return VIP_LEVEL_ORDER.indexOf(currentVipLevel(u))>=1 && isVipActive(u)}
 function resetDailyValueBoostIfNeeded(u){const key=bangkokDayKey();if(u.value_boost_daily_key!==key){u.value_boost_daily_key=key;u.value_boost_daily_used=0}}
 function assertCollectionCapacity(u){
@@ -976,7 +981,7 @@ app.get('/api/profiles/:id',need,(req,res)=>{
   const showcase=userShowcase(target.id).sort((a,b)=>Number(a.rank||0)-Number(b.rank||0)).slice(0,3);
   const collection_items=userCollectionItems(target.id).slice(0,100);
   updateCollectionValue(target.id);
-  res.json({user:pub(target),is_self:target.id==meId,is_friend:isFriend(meId,target.id),friends:friendList(target.id).slice(0,100),showcase,collection_items,can_open_collection:canUseCollectionFeatures(target),posts,recent_activities:profileRecentActivities(target.id)});
+  res.json({user:pub(target),is_self:target.id==meId,is_friend:isFriend(meId,target.id),friends:friendList(target.id).slice(0,100),showcase,collection_items,collection_rank:collectionRankForUser(target.id),can_open_collection:canUseCollectionFeatures(target),posts,recent_activities:profileRecentActivities(target.id)});
 });
 app.post('/api/profiles/:id/friend',need,(req,res)=>{
   const meId=req.session.userId;
@@ -1069,6 +1074,11 @@ app.post('/api/me/collection/:id/showcase',need,(req,res)=>{
     else db.profile_showcase.push({id:nid('profile_showcase'),user_id:u.id,owner_id:u.id,rank,title:ci.title,image_url:ci.image_url,r_value:Number(ci.r_value||100),collection_item_id:ci.id,created_at:now(),updated_at:now(),last_boost_week_key:bangkokWeekKey(),boost_count_week:0});
     updateCollectionValue(u.id);save();res.json({showcase:userShowcase(u.id),collection_value:updateCollectionValue(u.id)});
   }catch(e){res.status(400).json({error:e.message})}
+});
+app.get('/api/collection-rankings',need,(req,res)=>{
+  const rankings=collectionRankings().slice(0,100);
+  save();
+  res.json({rankings});
 });
 app.get('/api/collection-auctions',need,(req,res)=>res.json({auctions:(db.collection_auctions||[]).filter(a=>a.status==='active').map(a=>({...a,seller_name:user(a.seller_id)?.display_name||user(a.seller_id)?.username||''}))}));
 app.post('/api/collection-auctions',need,(req,res)=>{
