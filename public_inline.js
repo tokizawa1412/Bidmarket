@@ -319,7 +319,7 @@ function renderProfile(){
       <section class="accountHeroBannerV2">
         <div class="accountIdentityCardV2">
           <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
-          <div class="accountHeroName"><span class="accountNameText">${display}</span>${vipBadgeImageHtml(vipLevelName(me),'accountNameVipBadge')}</div>
+          <div class="accountHeroName"><span class="accountNameText">${display}</span></div>
           <div class="accountHeroId">ID : <span>${uid}</span></div>
           <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(vipLevelName(me)):''}</div>
           <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>

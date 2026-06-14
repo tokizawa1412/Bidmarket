@@ -861,7 +861,7 @@ function renderProfile(){
       <section class="accountHeroBannerV2">
         <div class="accountIdentityCardV2">
           <img class="accountHeroAvatar" src="${av(me)}" alt="profile">
-          <div class="accountHeroName"><span class="accountNameText">${display}</span>${vipBadgeImageHtml(vipLevelName(me),'accountNameVipBadge')}</div>
+          <div class="accountHeroName"><span class="accountNameText">${display}</span></div>
           <div class="accountHeroId">ID : <span>${uid}</span></div>
           <div class="accountHeroStatus"><span>${statusText}</span>${isVip?vipPremiumCard(vipLevelName(me)):''}</div>
           <div class="accountHeroVerified ${verified?'ok':'no'}">${verified?'✓ VERIFIED':'ยังไม่ยืนยันตัวตน'}</div>
@@ -1608,4 +1608,8 @@ body.profileWide .profileRight .activityItem .muted{color:#64748b!important;disp
   .accountHeroName{font-size:24px!important;gap:8px!important;}
   .accountNameVipBadge{width:110px!important;max-height:38px!important;}
 }
+</style>
+<style>
+/* Final user fix: do not show VIP badge after name on account page */
+.accountHeroName .vipBadgeImg,.accountHeroName .accountNameVipBadge{display:none!important;}
 </style>

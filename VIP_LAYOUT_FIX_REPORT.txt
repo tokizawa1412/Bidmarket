@@ -20,3 +20,8 @@ Main files changed:
 - public/assets/vip/card-diamond.png
 - public/assets/vip/card-ruby.png
 - public/assets/vip/card-elite.png
+
+FINAL CORRECTION 2:
+- Fixed VIP card image mapping: card-member now uses MEMBER image; card-elite uses ELITE image; all other levels remapped correctly.
+- Removed VIP badge after username in Account page hero name.
+- Kept side menu/top-right user chip badge hidden as requested.
