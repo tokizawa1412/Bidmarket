@@ -1,0 +1,23 @@
+BidMarket Discord Item Escrow Alerts
+
+เพิ่มระบบแจ้งเตือน Discord Webhook สำหรับระบบกลางไอเทมแล้ว
+
+ENV ที่ต้องตั้งค่า:
+- DISCORD_NOTIFY_ENABLED=true
+- DISCORD_WEBHOOK_URL=<Discord webhook URL>
+- DISCORD_ITEM_ESCROW_WEBHOOK_URL=<optional webhook เฉพาะกลางไอเทม>
+- DISCORD_WEBHOOK_NAME=BidMarket Admin Alert
+
+Event ที่ส่งเข้า Discord:
+1. ลงขายกลางไอเทมใหม่
+2. มีคำสั่งซื้อกลางไอเทมใหม่ / ผู้ซื้อชำระ Credit แล้ว
+3. ผู้ขายส่งมอบไอเทมและแนบหลักฐานแล้ว รอ Admin Check
+4. Admin Check อนุมัติ
+5. Admin Check ไม่ผ่าน / ตีกลับหลักฐาน
+6. ผู้ซื้อยืนยันรับสินค้า / ปล่อย Credit ให้ผู้ขาย
+7. คืน Credit ให้ผู้ซื้อ
+8. เปิดข้อพิพาทกลางไอเทม
+
+หมายเหตุความปลอดภัย:
+- อย่า commit Webhook URL จริงขึ้น GitHub
+- หากเคยส่ง Webhook URL ในที่สาธารณะ ให้ Regenerate Webhook ใน Discord แล้วเปลี่ยน ENV ใหม่

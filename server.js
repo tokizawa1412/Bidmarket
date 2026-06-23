@@ -573,6 +573,75 @@ function notifyAdmin(title,body='',meta={}){
     return payload;
   }catch(e){console.warn('notify admin failed',e.message);return null}
 }
+
+
+// ============================================================
+// Discord Admin Webhook Notifications
+// ============================================================
+function discordWebhookUrl(){
+  return String(process.env.DISCORD_ITEM_ESCROW_WEBHOOK_URL||process.env.DISCORD_WEBHOOK_URL||'').trim();
+}
+function discordEnabled(){
+  return String(process.env.DISCORD_NOTIFY_ENABLED||'true').toLowerCase()!=='false' && !!discordWebhookUrl();
+}
+function discordName(uid){
+  const u=user(uid)||{};
+  return u.display_name||u.username||u.email||String(uid||'-');
+}
+function discordOrderFields(o, extra=[]){
+  if(!o)return extra;
+  return [
+    {name:'Order ID',value:String(o.id||'-'),inline:true},
+    {name:'สินค้า',value:String(o.item_title||'-').slice(0,1024),inline:false},
+    {name:'ผู้ซื้อ',value:discordName(o.buyer_id),inline:true},
+    {name:'ผู้ขาย',value:discordName(o.seller_id),inline:true},
+    {name:'ราคา',value:`${Number(o.amount||0)} ${o.currency||'credit'}`,inline:true},
+    {name:'ค่าธรรมเนียม',value:`${Number(o.service_fee||0)} ${o.currency||'credit'}`,inline:true},
+    {name:'ผู้ซื้อจ่ายทั้งหมด',value:`${Number(o.locked_amount||o.amount||0)} ${o.currency||'credit'}`,inline:true},
+    {name:'ตัวละครผู้ซื้อ',value:String(o.buyer_character||'-'),inline:true},
+    {name:'ตัวละครผู้ขาย',value:String(o.seller_character||'-'),inline:true},
+    {name:'สถานะ',value:String(o.status||'-'),inline:true},
+    ...extra
+  ].filter(f=>f.value!==undefined&&f.value!==null&&String(f.value).length>0).map(f=>({...f,value:String(f.value).slice(0,1024)}));
+}
+async function sendDiscordAdminAlert({title,description='',color=0xf1c40f,fields=[]}={}){
+  if(!discordEnabled())return false;
+  const url=discordWebhookUrl();
+  const payload={
+    username:process.env.DISCORD_WEBHOOK_NAME||'BidMarket Admin Alert',
+    avatar_url:process.env.DISCORD_WEBHOOK_AVATAR_URL||undefined,
+    embeds:[{
+      title:String(title||'BidMarket Alert').slice(0,256),
+      description:String(description||'').slice(0,4096),
+      color:Number(color||0xf1c40f),
+      fields:(fields||[]).slice(0,25),
+      footer:{text:'BidMarket Item Escrow'},
+      timestamp:new Date().toISOString()
+    }]
+  };
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok)console.warn('Discord webhook failed',r.status,(await r.text()).slice(0,300));
+    return r.ok;
+  }catch(e){console.warn('Discord webhook error',e.message);return false}
+}
+function discordItemEscrowAlert(title,o,description='',color=0xf1c40f,extra=[]){
+  sendDiscordAdminAlert({title,description,color,fields:discordOrderFields(o,extra)}).catch(e=>console.warn('discord item escrow alert failed',e.message));
+}
+function discordMarketItemAlert(title,item,description='',color=0x3498db,extra=[]){
+  const seller=user(item?.seller_id)||{};
+  sendDiscordAdminAlert({title,description,color,fields:[
+    {name:'Item ID',value:String(item?.id||'-'),inline:true},
+    {name:'สินค้า',value:String(item?.title||'-'),inline:false},
+    {name:'ผู้ขาย',value:seller.display_name||seller.username||String(item?.seller_id||'-'),inline:true},
+    {name:'ราคา',value:`${Number(item?.price||0)} ${item?.currency||'credit'}`,inline:true},
+    {name:'ค่าธรรมเนียม',value:`${Number(item?.fee_amount||itemEscrowFee(item?.price||0)||0)} ${item?.currency||'credit'}`,inline:true},
+    {name:'ผู้ขายรับค่าธรรมเนียม',value:item?.seller_pays_fee?'ใช่':'ไม่ใช่',inline:true},
+    {name:'ตัวละครผู้ขาย',value:String(item?.seller_character||'-'),inline:true},
+    ...extra
+  ].map(f=>({...f,value:String(f.value).slice(0,1024)}))}).catch(e=>console.warn('discord market item alert failed',e.message));
+}
+
 function emitChatMessage(msg){
   try{
     const payload={...msg,from_name:user(msg.from_id)?.display_name||user(msg.from_id)?.username||'ผู้ใช้'};
@@ -1022,14 +1091,28 @@ app.get('/api/orders',need,(req,res)=>{
   let uid=req.session.userId,t=req.query.type||'all',rows=db.orders.filter(o=>t==='buy'?o.buyer_id==uid:t==='sell'?o.seller_id==uid:(o.buyer_id==uid||o.seller_id==uid));
   res.json({orders:rows.map(orderPublic)})
 });
-app.post('/api/orders/:id/ship',need,(req,res)=>{
+app.post('/api/orders/:id/ship',need,up.array('evidence',6),async(req,res)=>{try{
   let o=db.orders.find(x=>x.id==req.params.id);if(!o)return res.status(404).json({error:'ไม่พบคำสั่งซื้อ'});
   if(o.seller_id!=req.session.userId)return res.status(403).json({error:'เฉพาะผู้ขาย'});
-  if(!['WAIT_SHIPPING','SHIPPED'].includes(o.status))return res.status(400).json({error:'สถานะนี้ไม่สามารถแจ้งจัดส่งได้'});
-  o.shipping_company=String(req.body.shipping_company||'');o.tracking_number=String(req.body.tracking_number||'');o.delivery_note=String(req.body.delivery_note||'');
-  o.delivery_evidence=o.tracking_number?[o.tracking_number]:[];
-  o.status='PENDING_ADMIN_CHECK';o.seller_confirmed=true;o.shipped_at=now();o.updated_at=now();escrowEvent(o,'SELLER_SHIPPED',req.session.userId,'ผู้ขายแจ้งจัดส่ง',{shipping_company:o.shipping_company,tracking_number:o.tracking_number});audit(req.session.userId,'ORDER_SHIPPED','order',o.id,{shipping_company:o.shipping_company,tracking_number:o.tracking_number});save();emitOrderUpdate(o);io.to(roomUser(o.buyer_id)).emit('system:update',{order_id:o.id,status:o.status});res.json({order:orderPublic(o)})
-});
+  if(!['WAIT_SHIPPING','SHIPPED'].includes(o.status))return res.status(400).json({error:'สถานะนี้ไม่สามารถแจ้งส่งมอบได้'});
+  const deliveredCharacter=String(req.body.delivered_character||req.body.shipping_company||'').trim();
+  const deliveryNote=String(req.body.delivery_note||'');
+  let evidence=[];
+  if(req.files&&req.files.length) evidence=await saveUploadedFiles(req.files,'item_delivery');
+  if(String(req.body.evidence_url||req.body.tracking_number||'').trim()) evidence.push(String(req.body.evidence_url||req.body.tracking_number).trim());
+  if(!evidence.length)throw Error('กรุณาแนบรูปหลักฐานการส่งมอบอย่างน้อย 1 รูป');
+  o.shipping_company='ส่งมอบไอเทมเกม';
+  o.tracking_number=evidence[0]||'';
+  o.delivered_character=deliveredCharacter;
+  o.delivery_note=deliveryNote;
+  o.delivery_evidence=evidence;
+  o.status='PENDING_ADMIN_CHECK';o.seller_confirmed=true;o.shipped_at=now();o.updated_at=now();
+  escrowEvent(o,'SELLER_SHIPPED',req.session.userId,'ผู้ขายส่งมอบไอเทมและส่งให้ Admin ตรวจสอบ',{delivered_character:deliveredCharacter,evidence});
+  audit(req.session.userId,'ITEM_ESCROW_DELIVERY_SUBMITTED','order',o.id,{delivered_character:deliveredCharacter,evidence_count:evidence.length});
+  notifyAdmin('รายการกลางไอเทมรอ Admin ตรวจสอบ',o.item_title,{type:'item_escrow_admin_check',order_id:o.id});
+  discordItemEscrowAlert('📦 ผู้ขายส่งมอบไอเทมแล้ว',o,'รอ Admin Check ตรวจสินค้าและชื่อตัวละครก่อนส่งให้ผู้ซื้อยืนยัน',0xf39c12,[{name:'ตัวละครที่ส่งมอบจริง',value:deliveredCharacter||'-',inline:true},{name:'จำนวนรูปหลักฐาน',value:String(evidence.length),inline:true}]);
+  save();emitOrderUpdate(o);io.to(roomUser(o.buyer_id)).emit('system:update',{order_id:o.id,status:o.status});res.json({order:orderPublic(o)})
+}catch(e){res.status(400).json({error:e.message})}});
 function release(o,by='system',actor_id=null,note=''){
   if(!o)throw Error('ไม่พบคำสั่งซื้อ');
   if(o.status==='COMPLETED')return o;
@@ -1040,12 +1123,16 @@ function release(o,by='system',actor_id=null,note=''){
   const payout=Number(o.amount||0)-Number(o.service_fee||0)-Number(o.sale_success_fee||0)+Number(o.escrow_cashback||0);
   if(payout<0)throw Error('ยอดจ่ายผู้ขายผิดปกติ');
   bal(s.id,o.currency,payout,'รับเงิน Escrow',o.item_title,{ref_type:'order',ref_id:o.id});
+  if(Number(o.service_fee||0)>0)recordCompanyRevenue(Number(o.service_fee||0),o.currency||'credit','ค่าธรรมเนียมกลางไอเทม',{ref_type:'order',ref_id:o.id});
+  notifyUser(o.seller_id,'ระบบปล่อย Credit ให้ผู้ขายแล้ว',o.item_title,{type:'item_escrow_released',order_id:o.id,payout});
+  notifyUser(o.buyer_id,'รายการกลางไอเทมสำเร็จแล้ว',o.item_title,{type:'item_escrow_completed',order_id:o.id});
   if(o.seller_vip_penalty_income)bal(s.id,'credit',o.seller_vip_penalty_income,'รับ Credit ประมูล VIP',o.item_title,{ref_type:'order',ref_id:o.id});
   s.trust_completed_sales=(s.trust_completed_sales||0)+1;
   o.status='COMPLETED';o.escrow_status='RELEASED';o.released_at=now();o.resolved_by=by;o.resolved_by_user_id=actor_id;o.resolution_note=note||'';o.updated_at=now();
   const held=db.escrow.find(e=>e.order_id==o.id&&e.status==='HELD');if(held){held.status='RELEASED';held.updated_at=now()}
-  db.escrow.push({id:nid('escrow'),order_id:o.id,amount:o.amount,currency:o.currency,status:'RELEASED',type:'RELEASE',created_at:now(),note:'Escrow V2: ปล่อยเงินให้ผู้ขาย'});
+  db.escrow.push({id:nid('escrow'),order_id:o.id,amount:Number(o.locked_amount||o.amount),currency:o.currency,status:'RELEASED',type:'RELEASE',created_at:now(),note:'Escrow V2: ปล่อยเงินให้ผู้ขาย'});
   escrowEvent(o,'RELEASE',actor_id,note||'ปล่อยเงินให้ผู้ขาย',{payout,service_fee:o.service_fee,sale_success_fee:o.sale_success_fee,escrow_cashback:o.escrow_cashback,by});audit(actor_id,'ESCROW_RELEASE','order',o.id,{payout,service_fee:o.service_fee,sale_success_fee:o.sale_success_fee,escrow_cashback:o.escrow_cashback,by,note});
+  if(o.source==='item_escrow'||o.market_item_id)discordItemEscrowAlert('💰 กลางไอเทมสำเร็จ / ปล่อย Credit แล้ว',o,'ผู้ซื้อยืนยันรับสินค้าแล้ว ระบบหักค่าธรรมเนียมและปล่อย Credit ให้ผู้ขาย',0x9b59b6,[{name:'ผู้ขายได้รับสุทธิ',value:`${payout} ${o.currency||'credit'}`,inline:true}]);
   emitOrderUpdate(o);io.to(roomUser(o.seller_id)).emit('system:update',{order_id:o.id,status:o.status});io.to(roomUser(o.buyer_id)).emit('system:update',{order_id:o.id,status:o.status});return o;
 }
 function refundOrder(o,by='admin',actor_id=null,note=''){
@@ -1053,11 +1140,14 @@ function refundOrder(o,by='admin',actor_id=null,note=''){
   if(o.status==='REFUNDED')return o;
   if(o.status==='COMPLETED')throw Error('รายการนี้ปล่อยเงินแล้ว');
   assertHeld(o);
-  bal(o.buyer_id,o.currency,o.amount,'คืนเงิน Escrow',o.item_title,{ref_type:'order',ref_id:o.id});
+  const refundAmount=Number(o.locked_amount||o.amount||0);
+  bal(o.buyer_id,o.currency,refundAmount,'คืนเงิน Escrow',o.item_title,{ref_type:'order',ref_id:o.id});
   o.status='REFUNDED';o.escrow_status='REFUNDED';o.refunded_at=now();o.resolved_by=by;o.resolved_by_user_id=actor_id;o.resolution_note=note||'';o.updated_at=now();
   const held=db.escrow.find(e=>e.order_id==o.id&&e.status==='HELD');if(held){held.status='REFUNDED';held.updated_at=now()}
-  db.escrow.push({id:nid('escrow'),order_id:o.id,amount:o.amount,currency:o.currency,status:'REFUNDED',type:'REFUND',created_at:now(),note:'Escrow V2: คืนเงินให้ผู้ซื้อ'});
-  escrowEvent(o,'REFUND',actor_id,note||'คืนเงินให้ผู้ซื้อ',{amount:o.amount,by});audit(actor_id,'ESCROW_REFUND','order',o.id,{amount:o.amount,by,note});
+  db.escrow.push({id:nid('escrow'),order_id:o.id,amount:Number(o.locked_amount||o.amount),currency:o.currency,status:'REFUNDED',type:'REFUND',created_at:now(),note:'Escrow V2: คืนเงินให้ผู้ซื้อ'});
+  escrowEvent(o,'REFUND',actor_id,note||'คืนเงินให้ผู้ซื้อ',{amount:refundAmount,by});audit(actor_id,'ESCROW_REFUND','order',o.id,{amount:refundAmount,by,note});
+  notifyUser(o.buyer_id,'ระบบคืน Credit ให้ผู้ซื้อแล้ว',o.item_title,{type:'item_escrow_refunded',order_id:o.id,amount:refundAmount});
+  if(o.source==='item_escrow'||o.market_item_id)discordItemEscrowAlert('↩️ คืน Credit ให้ผู้ซื้อแล้ว',o,note||'ระบบคืน Credit จากรายการกลางไอเทม',0x95a5a6,[{name:'ยอดคืน',value:`${refundAmount} ${o.currency||'credit'}`,inline:true}]);
   emitOrderUpdate(o);io.to(roomUser(o.buyer_id)).emit('system:update',{order_id:o.id,status:o.status});io.to(roomUser(o.seller_id)).emit('system:update',{order_id:o.id,status:o.status});return o;
 }
 app.post('/api/orders/:id/confirm',need,(req,res)=>{
@@ -1077,7 +1167,7 @@ app.post('/api/orders/:id/dispute',need,up.array('files',6),async(req,res)=>{
   if(['COMPLETED','REFUNDED'].includes(o.status))return res.status(400).json({error:'รายการนี้จบแล้ว'});
   let evidence=await saveUploadedFiles(req.files||[],'disputes');
   let d={id:nid('dispute'),order_id:o.id,opened_by:req.session.userId,reason:req.body.reason||'',evidence,status:'OPEN',admin_note:'',created_at:now(),updated_at:now()};
-  db.disputes.unshift(d);o.status='DISPUTE';o.dispute_id=d.id;o.updated_at=now();escrowEvent(o,'DISPUTE_OPENED',req.session.userId,d.reason,{evidence:d.evidence});audit(req.session.userId,'DISPUTE_OPENED','order',o.id,{reason:d.reason,evidence_count:d.evidence.length});notifyAdmin('มีข้อพิพาทใหม่',o.item_title,{type:'dispute',order_id:o.id,dispute_id:d.id});notifyUser(o.buyer_id,'มีข้อพิพาทในคำสั่งซื้อ',o.item_title,{type:'dispute',order_id:o.id});notifyUser(o.seller_id,'มีข้อพิพาทในคำสั่งซื้อ',o.item_title,{type:'dispute',order_id:o.id});save();emitOrderUpdate(o);res.json({dispute:d})
+  db.disputes.unshift(d);o.status='DISPUTE';o.dispute_id=d.id;o.updated_at=now();escrowEvent(o,'DISPUTE_OPENED',req.session.userId,d.reason,{evidence:d.evidence});audit(req.session.userId,'DISPUTE_OPENED','order',o.id,{reason:d.reason,evidence_count:d.evidence.length});notifyAdmin('มีข้อพิพาทใหม่',o.item_title,{type:'dispute',order_id:o.id,dispute_id:d.id});notifyUser(o.buyer_id,'มีข้อพิพาทในคำสั่งซื้อ',o.item_title,{type:'dispute',order_id:o.id});notifyUser(o.seller_id,'มีข้อพิพาทในคำสั่งซื้อ',o.item_title,{type:'dispute',order_id:o.id});discordItemEscrowAlert('⚠️ เปิดข้อพิพาทกลางไอเทม',o,d.reason||'มีการเปิดข้อพิพาทในคำสั่งซื้อ',0xe67e22,[{name:'ผู้เปิดข้อพิพาท',value:discordName(req.session.userId),inline:true},{name:'จำนวนหลักฐาน',value:String(evidence.length),inline:true}]);save();emitOrderUpdate(o);res.json({dispute:d})
 });
 
 function fdata(file){let ext=path.extname(file.originalname||file.path||'').toLowerCase(),mime=file.mimetype||(ext=='.png'?'image/png':ext=='.webp'?'image/webp':'image/jpeg');let buf=file.buffer||fs.readFileSync(file.path);return `data:${mime};base64,${Buffer.from(buf).toString('base64')}`}
@@ -1129,25 +1219,30 @@ function createSafeTradeOrder(item,buyer){
   audit(buyer.id,'SAFE_TRADE_BUY','market_item',item.id,{order_id:o.id,price,currency,seller_id:item.seller_id});
   notifyUser(item.seller_id,'มีคำสั่งซื้อกลางไอเทมใหม่','ผู้ซื้อชำระเงินและล็อก Credit แล้ว',{type:'market_order',order_id:o.id,market_item_id:item.id});
   notifyUser(buyer.id,'เริ่มคำสั่งซื้อกลางไอเทมแล้ว','ระบบล็อก Credit ไว้แล้ว รอผู้ขายส่งมอบไอเทม',{type:'market_order',order_id:o.id,market_item_id:item.id});
+  discordItemEscrowAlert('🛒 มีคำสั่งซื้อกลางไอเทมใหม่',o,'ผู้ซื้อชำระเงินแล้ว ระบบล็อก Credit และแจ้งผู้ขายแล้ว',0x2ecc71);
   emitOrderUpdate(o);
   try{io.emit('market:item_update',marketItemPublic(item));io.to(roomUser(item.seller_id)).emit('system:update',{order_id:o.id,status:o.status});io.to(roomUser(buyer.id)).emit('system:update',{order_id:o.id,status:o.status});}catch(e){}
   return o;
 }
 app.get('/api/market/items',(req,res)=>{res.json({items:activeMarketItems().map(marketItemPublic)});});
 app.get('/api/market/items/mine',need,(req,res)=>{const uid=req.session.userId;res.json({items:(db.market_items||[]).filter(x=>Number(x.seller_id)===Number(uid)||Number(x.buyer_id)===Number(uid)).sort((a,b)=>Number(b.created_at||0)-Number(a.created_at||0)).map(marketItemPublic)});});
-app.post('/api/market/items',need,(req,res)=>{try{
+app.post('/api/market/items',need,up.array('images',6),async(req,res)=>{try{
   const u=user(req.session.userId), b=req.body||{};
-  const title=String(b.title||'').trim(), description=String(b.description||'').trim(), image_url=String(b.image_url||'').trim();
-  const price=Number(b.price||0), currency='credit'; const seller_character=String(b.seller_character||'').trim(); const seller_pays_fee=!!b.seller_pays_fee;
+  const title=String(b.title||'').trim(), description=String(b.description||'').trim();
+  let imageUrls=[];
+  if(req.files&&req.files.length) imageUrls=await saveUploadedFiles(req.files,'market_items');
+  if(String(b.image_url||'').trim()) imageUrls.push(String(b.image_url||'').trim());
+  const image_url=imageUrls[0]||'';
+  const price=Number(b.price||0), currency='credit'; const seller_character=String(b.seller_character||'').trim(); const seller_pays_fee=String(b.seller_pays_fee)==='true'||b.seller_pays_fee===true||b.seller_pays_fee==='on';
   if(!title)throw Error('กรุณากรอกชื่อไอเทม');
   if(!description)throw Error('กรุณากรอกรายละเอียด');
-  if(!image_url)throw Error('กรุณาใส่ URL รูปสินค้า');
+  if(!image_url)throw Error('กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป');
   if(!u.kyc_verified && u.role!=='admin')throw Error('ผู้ขายต้องผ่าน KYC ก่อนจึงจะลงสินค้ากลางไอเทมได้');
   if(price<=0)throw Error('กรุณากรอกราคา');
   if(!seller_character)throw Error('กรุณากรอกชื่อตัวละครผู้ขาย');
   const fee_amount=itemEscrowFee(price);
-  const item={id:nid('market_item'),seller_id:u.id,title,description,category:String(b.category||'ไอเทมเกม'),image_url,price,currency,seller_character,seller_pays_fee,fee_amount,status:'active',buyer_id:null,created_at:now(),updated_at:now()};
-  db.market_items.unshift(item);audit(u.id,'MARKET_ITEM_CREATE','market_item',item.id,{price,currency,title});save();
+  const item={id:nid('market_item'),seller_id:u.id,title,description,category:String(b.category||'ไอเทมเกม'),image_url,image_urls:imageUrls,price,currency,seller_character,seller_pays_fee,fee_amount,status:'active',buyer_id:null,created_at:now(),updated_at:now()};
+  db.market_items.unshift(item);audit(u.id,'MARKET_ITEM_CREATE','market_item',item.id,{price,currency,title,image_count:imageUrls.length});discordMarketItemAlert('🧾 ลงขายกลางไอเทมใหม่',item,'มีผู้ขายลงรายการกลางไอเทมใหม่ รอผู้ซื้อ',0x3498db);save();
   res.json({item:marketItemPublic(item)});
 }catch(e){res.status(400).json({error:e.message})}});
 app.post('/api/market/items/:id/buy',need,(req,res)=>{try{
@@ -1164,7 +1259,7 @@ app.post('/api/market/items/:id/cancel',need,(req,res)=>{try{
 
 app.get('/api/favorites',need,(req,res)=>{cleanupExpiredAuctions();let ids=db.favorites.filter(f=>f.user_id==req.session.userId).map(f=>f.auction_id);res.json({favorite_ids:ids,auctions:db.auctions.filter(a=>ids.includes(a.id)&&a.status==='active'&&!isAuctionExpired(a)).map(a=>au(a,req.session.userId))})});app.post('/api/favorites/:id',need,(req,res)=>{let id=Number(req.params.id);if(!db.favorites.find(f=>f.user_id==req.session.userId&&f.auction_id==id))db.favorites.push({user_id:req.session.userId,auction_id:id});save();res.json({ok:true})});app.delete('/api/favorites/:id',need,(req,res)=>{db.favorites=db.favorites.filter(f=>!(f.user_id==req.session.userId&&f.auction_id==req.params.id));save();res.json({ok:true})});
 app.get('/api/admin/escrow',admin,(req,res)=>res.json({
-  held:db.orders.filter(o=>!['COMPLETED','REFUNDED'].includes(o.status)).reduce((s,o)=>s+Number(o.amount||0),0),
+  held:db.orders.filter(o=>!['COMPLETED','REFUNDED'].includes(o.status)).reduce((s,o)=>s+Number(o.locked_amount||o.amount||0),0),
   waitShipping:db.orders.filter(o=>o.status==='WAIT_SHIPPING').length,
   shipped:db.orders.filter(o=>['SHIPPED','DELIVERED'].includes(o.status)).length,
   disputes:db.orders.filter(o=>o.status==='DISPUTE').length,
@@ -1178,12 +1273,13 @@ app.get('/api/admin/orders/:id/detail',admin,(req,res)=>{
   if(!o)return res.status(404).json({error:'ไม่พบคำสั่งซื้อ'});
   res.json({order:orderPublic(o),events:(db.escrow_events||[]).filter(e=>String(e.order_id)===String(o.id)),audit:(db.audit_logs||[]).filter(a=>a.target_type==='order'&&String(a.target_id)===String(o.id))});
 });
-app.post('/api/admin/orders/:id/approve-item',admin,(req,res)=>{try{let o=db.orders.find(x=>x.id==req.params.id);if(!o)throw Error('ไม่พบคำสั่งซื้อ'); if(o.status!=='PENDING_ADMIN_CHECK') throw Error('รายการนี้ไม่ได้รอ Admin ตรวจสอบ'); o.admin_approved=true; o.status='ADMIN_APPROVED'; o.updated_at=now(); escrowEvent(o,'ADMIN_APPROVED',req.session.userId,'Admin อนุมัติการส่งมอบ'); notifyUser(o.buyer_id,'Admin อนุมัติการส่งมอบแล้ว','กรุณาตรวจสอบและกดยืนยันรับสินค้า',{type:'item_escrow_approved',order_id:o.id}); save(); res.json({order:orderPublic(o)})}catch(e){res.status(400).json({error:e.message})}});
+app.post('/api/admin/orders/:id/approve-item',admin,(req,res)=>{try{let o=db.orders.find(x=>x.id==req.params.id);if(!o)throw Error('ไม่พบคำสั่งซื้อ'); if(o.status!=='PENDING_ADMIN_CHECK') throw Error('รายการนี้ไม่ได้รอ Admin ตรวจสอบ'); if(!o.delivery_evidence||!o.delivery_evidence.length)throw Error('ยังไม่มีหลักฐานส่งมอบ'); o.admin_approved=true; o.admin_check_note=String(req.body.note||''); o.status='ADMIN_APPROVED'; o.updated_at=now(); escrowEvent(o,'ADMIN_APPROVED',req.session.userId,'Admin อนุมัติการส่งมอบ',{note:o.admin_check_note,delivered_character:o.delivered_character}); audit(req.session.userId,'ITEM_ESCROW_ADMIN_APPROVED','order',o.id,{note:o.admin_check_note}); notifyUser(o.buyer_id,'Admin อนุมัติการส่งมอบแล้ว','กรุณาตรวจสอบและกดยืนยันรับสินค้า',{type:'item_escrow_approved',order_id:o.id}); discordItemEscrowAlert('✅ Admin Check อนุมัติแล้ว',o,'ผู้ซื้อสามารถกดยืนยันได้รับสินค้าได้แล้ว',0x2ecc71,[{name:'หมายเหตุ Admin',value:o.admin_check_note||'-',inline:false}]); save(); emitOrderUpdate(o); res.json({order:orderPublic(o)})}catch(e){res.status(400).json({error:e.message})}});
+app.post('/api/admin/orders/:id/reject-item',admin,(req,res)=>{try{let o=db.orders.find(x=>x.id==req.params.id);if(!o)throw Error('ไม่พบคำสั่งซื้อ'); if(o.status!=='PENDING_ADMIN_CHECK') throw Error('รายการนี้ไม่ได้รอ Admin ตรวจสอบ'); o.admin_check_note=String(req.body.note||'Admin ตีกลับหลักฐาน'); o.status='WAIT_SHIPPING'; o.seller_confirmed=false; o.updated_at=now(); escrowEvent(o,'ADMIN_REJECTED_DELIVERY',req.session.userId,o.admin_check_note,{delivered_character:o.delivered_character}); audit(req.session.userId,'ITEM_ESCROW_ADMIN_REJECTED','order',o.id,{note:o.admin_check_note}); notifyUser(o.seller_id,'Admin ตีกลับหลักฐานส่งมอบ',o.admin_check_note,{type:'item_escrow_rejected',order_id:o.id}); discordItemEscrowAlert('❌ Admin Check ไม่ผ่าน',o,'Admin ตีกลับหลักฐานส่งมอบให้ผู้ขายแก้ไข',0xe74c3c,[{name:'เหตุผล/หมายเหตุ',value:o.admin_check_note||'-',inline:false}]); save(); emitOrderUpdate(o); res.json({order:orderPublic(o)})}catch(e){res.status(400).json({error:e.message})}});
 app.post('/api/admin/orders/:id/release',admin,(req,res)=>{try{let o=db.orders.find(x=>x.id==req.params.id);release(o,'admin',req.session.userId,req.body.note||'Admin อนุมัติปล่อยเงิน');const d=db.disputes.find(x=>x.id==o.dispute_id);if(d){d.status='RESOLVED_RELEASED';d.admin_note=req.body.note||'';d.updated_at=now()}save();res.json({order:orderPublic(o)})}catch(e){res.status(400).json({error:e.message})}});
 app.post('/api/admin/orders/:id/refund',admin,(req,res)=>{try{let o=db.orders.find(x=>x.id==req.params.id);refundOrder(o,'admin',req.session.userId,req.body.note||'Admin อนุมัติคืนเงิน');const d=db.disputes.find(x=>x.id==o.dispute_id);if(d){d.status='RESOLVED_REFUNDED';d.admin_note=req.body.note||'';d.updated_at=now()}save();res.json({order:orderPublic(o)})}catch(e){res.status(400).json({error:e.message})}});
 app.get('/api/orders/:id/audit',need,(req,res)=>{const o=db.orders.find(x=>x.id==req.params.id);try{assertOrderParticipant(o,req.session.userId);res.json({events:(db.escrow_events||[]).filter(e=>e.order_id==o.id),audit:(db.audit_logs||[]).filter(a=>a.target_type==='order'&&a.target_id==o.id)})}catch(e){res.status(403).json({error:e.message})}});
 app.get('/api/admin/audit-logs',admin,(req,res)=>res.json({audit_logs:(db.audit_logs||[]).slice(0,300),escrow_events:(db.escrow_events||[]).slice(0,300)}));
-app.get('/api/admin/escrow/health',admin,(req,res)=>{const heldOrders=db.orders.filter(o=>o.escrow_status==='HELD'&&ESCROW_ACTIVE.has(o.status));const ledgerHeld=(db.escrow||[]).filter(e=>e.status==='HELD').reduce((s,e)=>s+Number(e.amount||0),0);const orderHeld=heldOrders.reduce((s,o)=>s+Number(o.amount||0),0);res.json({ok:ledgerHeld===orderHeld,held_orders:heldOrders.length,ledger_held:ledgerHeld,order_held:orderHeld,terminal_orders:db.orders.filter(o=>ESCROW_TERMINAL.has(o.status)).length})});
+app.get('/api/admin/escrow/health',admin,(req,res)=>{const heldOrders=db.orders.filter(o=>o.escrow_status==='HELD'&&ESCROW_ACTIVE.has(o.status));const ledgerHeld=(db.escrow||[]).filter(e=>e.status==='HELD').reduce((s,e)=>s+Number(e.amount||0),0);const orderHeld=heldOrders.reduce((s,o)=>s+Number(o.locked_amount||o.amount||0),0);res.json({ok:ledgerHeld===orderHeld,held_orders:heldOrders.length,ledger_held:ledgerHeld,order_held:orderHeld,terminal_orders:db.orders.filter(o=>ESCROW_TERMINAL.has(o.status)).length})});
 app.get('/api/admin/summary',admin,(req,res)=>res.json({active:{general:db.auctions.filter(a=>a.status=='active'&&a.level=='general').length,vip:db.auctions.filter(a=>a.status=='active'&&a.level=='vip').length,total:db.auctions.filter(a=>a.status=='active').length},total_revenue:db.company_revenue.reduce((s,r)=>s+r.amount,0),monthly_revenue:{},closed_count:db.winners.length}));app.get('/api/admin/closed-auctions',admin,(req,res)=>res.json({rows:db.winners,total:db.winners.length}));app.get('/api/admin/users',admin,(req,res)=>res.json({users:db.users.map(pub)}));
 
 function reviewAuctionDetails(order){
