@@ -1,0 +1,27 @@
+VIP per-level overlay fix
+
+Base ZIP used: BidMarket-VIPCard-Overlay-Progress-REALFIX(1).zip
+
+Files changed:
+- public/index.html
+
+What was fixed:
+1. Added final CSS block: #vip-card-overlay-per-level-final-20260615
+2. Added separate overlay variables per VIP level:
+   - .vipCard_member
+   - .vipCard_silver
+   - .vipCard_gold
+   - .vipCard_sapphire
+   - .vipCard_platinum
+   - .vipCard_diamond
+   - .vipCard_ruby
+   - .vipCard_elite
+3. Replaced shared bottom-based overlay positioning with top/left positions per level.
+4. Reduced score text size and constrained score text inside the lower-left information box.
+5. Moved the percent text inside the lower-left information box.
+6. Repositioned progress fill so it aligns with the printed progress rail on the new VIP cards.
+7. Added high-specificity !important overrides to neutralize older duplicated CSS rules that were forcing the text and percent to the same position.
+
+Important:
+- This fix does not replace images and does not change the VIP level calculation logic.
+- It only fixes overlay positioning, sizing, and per-level CSS separation.

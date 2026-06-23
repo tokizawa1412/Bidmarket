@@ -1,0 +1,43 @@
+BidMarket ซื้อ/ขาย + ระบบซื้อขายปลอดภัย
+
+ฐานที่ใช้:
+- BidMarket-CollectionDelete-AdminOrderDetail-FIXED.zip
+
+ไฟล์ที่แก้:
+- server.js
+- public/index.html
+- public_inline.js
+- migrations/001_real_backend_schema.sql
+
+สิ่งที่เพิ่ม:
+1) หน้าเมนูบน "ซื้อ/ขาย"
+   - แสดงรายการไอเทมที่ขายแบบกำหนดราคา
+   - ฟอร์มลงขายไอเทม: ชื่อ, รายละเอียด, หมวดหมู่, รูป, ราคา, สกุลเงิน
+   - ใช้คำว่า "ระบบซื้อขายปลอดภัย" แทน Escrow ในหน้าผู้ใช้
+
+2) API หลังบ้าน
+   - GET /api/market/items
+   - GET /api/market/items/mine
+   - POST /api/market/items
+   - POST /api/market/items/:id/buy
+   - POST /api/market/items/:id/cancel
+
+3) ระบบพักเงินฝั่ง Server
+   - เมื่อผู้ซื้อกดซื้อ ระบบหัก Coin/Credit จากผู้ซื้อทันที
+   - สร้าง Order สถานะ WAIT_SHIPPING
+   - บันทึกเงินพักไว้ในระบบกลาง
+   - ผู้ขายต้องจัดส่ง ผู้ซื้อยืนยันรับสินค้า แล้วระบบจ่ายเงินให้ผู้ขายผ่าน flow คำสั่งซื้อเดิม
+   - หากมีปัญหา ผู้ใช้เปิดข้อพิพาทได้ และ Admin ตรวจสอบจากหน้า Admin ได้
+
+4) Security / Audit
+   - ป้องกันผู้ขายซื้อสินค้าของตนเอง
+   - ป้องกันซื้อสินค้าที่ขายไปแล้ว
+   - ตรวจยอดเงินก่อนพักเงิน
+   - บันทึก Audit Log ตอนลงขาย / ซื้อ / ยกเลิกขาย
+
+5) PostgreSQL schema
+   - เพิ่ม backend_market_items สำหรับ sync ข้อมูล market items
+
+ตรวจสอบ:
+- node --check server.js ผ่าน
+- node --check public_inline.js ผ่าน

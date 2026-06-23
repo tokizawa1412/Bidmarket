@@ -1,0 +1,23 @@
+/* BidMarket sidebar wallet + no stuck active background fix */
+.sideMenu button,
+.sideMenu button:focus,
+.sideMenu button:active,
+.sideMenu button.active,
+.sideMenu button.isActive,
+.sideMenu button.selected,
+.sideMenu button.current{
+  background:#fff!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  outline:none!important;
+}
+.sideMenu button:hover{
+  background:#f8fafc!important;
+  border-color:#dbe3ef!important;
+}
+.sideMenu button:first-child,
+.sideMenu button:first-child:focus,
+.sideMenu button:first-child:active{
+  background:#fff!important;
+}
+#sideCoin,#sideCredit{font-weight:1000!important;color:#1455d9!important;}

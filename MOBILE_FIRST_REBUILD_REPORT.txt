@@ -1,0 +1,9 @@
+BidMarket Mobile First Layout rebuild
+- Replaced old mobile desktop-shrink behavior with mobile-first layout rules.
+- Mobile header now uses 2 rows: logo + bell/profile, then hamburger + search + search button.
+- Desktop sidebar and right panels are hidden on mobile.
+- Auction lists render as one-item-per-row mobile cards.
+- Added fixed bottom navigation: auction, home, profile.
+- Added slide-in hamburger overlay menu behavior with both open/show class support.
+- Profile/account/collection/mobile pages are forced into a clean one-column layout.
+- Added dark theme mobile support.

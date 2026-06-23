@@ -1,0 +1,16 @@
+BidMarket Auto Bid System
+
+Implemented:
+- Auto Bid server-side only for fee/เคาะราคา auctions.
+- Users set budget via clock button on auction detail page.
+- Server checks remaining time <= 5 seconds, active auction, last bidder is not self, budget and wallet balance are sufficient.
+- Server places one automatic knock bid and resets countdown through existing fee auction logic.
+- Remaining Auto Bid budget is reduced by bid_fee. If remaining budget is below next fee, Auto Bid is disabled immediately.
+- API endpoints: GET/POST/PATCH/DELETE /api/auctions/:id/auto-bid.
+- Socket events: autoBid:enabled, autoBid:disabled, autoBid:triggered, autoBid:update.
+- Audit logs are written for Auto Bid enable/disable/trigger/error.
+- PostgreSQL migration table backend_auto_bids added.
+
+Scope:
+- Enabled only for auction method fee (เคาะราคา).
+- Not enabled for English/เสนอราคา or sealed/ปิดซอง.

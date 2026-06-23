@@ -1,0 +1,18 @@
+BidMarket Notification / Collection / System Status Fix
+
+Base used: BidMarket-AutoBid-FeeAuction-COMPLETE.zip
+
+Changes:
+1. Outbid notifications are no longer stored in the bell notification database.
+2. Outbid alerts are displayed only on the auction item image with a 3-second fade overlay.
+3. Escrow/system workflow messages are no longer stored in the bell notification database.
+4. Auction win bell notification now shows two buttons:
+   - คอลเลคชั่น: adds the won product image once to the winner's collection storage if VIP Silver+ is active; otherwise adds to the first empty showcase slot only.
+   - ระบบ: opens a user-friendly system timeline without showing the word Escrow.
+5. Added server-side duplicate protection for collection/showcase add from auction win.
+6. Added system status API for auction/order flow timeline.
+7. Existing old outbid/escrow notifications are filtered out from bell API responses and unread count.
+
+Validation:
+- node --check server.js passed
+- node --check public_inline.js passed

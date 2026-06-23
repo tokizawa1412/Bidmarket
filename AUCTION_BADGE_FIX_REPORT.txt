@@ -1,0 +1,27 @@
+BidMarket Auction cleanup + Profile Badge size fix
+
+Base ZIP:
+- BidMarket-VIPCard-ProgressRail-ArrowPoint-REALFIX.zip
+
+Files changed:
+1) server.js
+   - Added isAuctionExpired(a)
+   - Added cleanupExpiredAuctions()
+   - Added auctionVisibleInList(a, level)
+   - /api/auctions now removes/filters active auctions whose end_at has passed.
+   - Expired auctions with a winner are closed by closeAuction(a).
+   - Expired auctions without a winner are marked status='expired' and no longer shown.
+   - /api/favorites also filters expired auctions so old expired auctions do not remain visible.
+   - Realtime timer now marks expired auctions without winners as expired and emits auction:closed/list update.
+
+2) public_inline.js
+   - loadAuctions(level) additionally filters out expired auctions on the client side.
+
+3) public/index.html
+   - loadAuctions(level) additionally filters out expired auctions on the client side.
+   - Enlarged VIP Badge after the public profile name only.
+   - Did not show badge in sidebar/top user chip/account page name because existing hidden rules remain intact.
+
+Validation:
+- node --check public_inline.js: PASS
+- node --check server.js: PASS

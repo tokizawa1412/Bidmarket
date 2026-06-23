@@ -1,0 +1,7 @@
+BidMarket Sidebar Wallet Final Fix
+
+แก้ไข:
+- Coin/Credit ด้านซ้ายซิงก์จากค่าที่แสดงจริงในบัญชีผู้ใช้ก่อน แล้วใช้ /api/me เป็น fallback
+- เพิ่ม MutationObserver และ interval เพื่ออัปเดตยอดหลัง render ทุกหน้า
+- ลบสถานะ active/focus ของปุ่มเมนูซ้าย เพื่อไม่ให้แถบพื้นหลังหัวข้อ กระเป๋าเงิน ค้าง
+- ไม่แตะระบบประมูล/Payment/KYC

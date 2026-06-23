@@ -1,0 +1,23 @@
+VIP Card Overlay + Preview Arrow Fix
+
+Base used:
+- BidMarket-VIPCard-BlueBorder-Percent-FIXED.zip
+
+Files changed:
+1) public_inline.js
+   - Updated accountVipCardHtml() to remove the separator character between current points and target points.
+   - Percent display now uses whole numbers only.
+   - Added VIP card preview navigation buttons under the card: left and right arrows.
+   - Added changeVipCardPreview(delta) to cycle through Member, Silver, Gold, Sapphire, Platinum, Diamond, Ruby, Elite for visual inspection.
+
+2) public/index.html
+   - Added final CSS overrides for VIP card overlay positions.
+   - Moved percent text slightly left.
+   - Moved progress fill slightly upward to align inside the built-in progress rail.
+   - Added styling for the left/right preview arrow buttons below the card, outside the card image.
+   - Kept per-level overlay variables and applied final overrides after previous CSS blocks so they take effect.
+
+Notes:
+- No image generation was performed.
+- Existing VIP card images were not replaced.
+- The separator line is no longer inserted by code because the card image already includes the center divider.

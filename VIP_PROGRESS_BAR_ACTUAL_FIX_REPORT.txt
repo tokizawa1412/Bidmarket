@@ -1,0 +1,8 @@
+แก้ไขจริงจากฐาน BidMarket-VIPCard-EliteProgress-FIXED(2).zip
+
+รายการแก้ไข:
+1. แก้ public_inline.js และ public/index.html ให้คำนวณความกว้างหลอดสีด้วย barPct โดยจำกัดไม่เกิน 96% เพื่อไม่ให้ล้นกรอบหลอด
+2. เพิ่ม CSS override ท้ายไฟล์สำหรับบัตรทุกระดับ Member, Silver, Gold, Sapphire, Platinum, Diamond, Ruby, Elite
+3. ปรับตำแหน่ง/ความกว้างหลอดสีทุกระดับให้สั้นลงและอยู่ในกรอบหลอด
+4. ปรับตำแหน่งเปอร์เซ็นต์ให้ยังอยู่ในกรอบข้อมูล
+5. ไม่แก้โครงสร้างหน้า Login/Layout หลัก เพื่อไม่ให้เว็บพัง

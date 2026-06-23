@@ -1,0 +1,15 @@
+Badge asset replacement report
+
+Base ZIP: BidMarket-AuctionExpired-BadgeSize-FIXED.zip
+
+Replaced old VIP badge image assets in public/assets/vip/ with the new uploaded PNG set:
+- badge-member.png
+- badge-silver.png
+- badge-gold.png
+- badge-sapphire.png
+- badge-platinum.png
+- badge-diamond.png
+- badge-ruby.png
+- badge-elite.png
+
+No layout/login/auction logic was changed in this ZIP. Existing code paths that reference public/assets/vip/badge-*.png will now use the new badge images.

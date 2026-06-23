@@ -1,0 +1,22 @@
+VIP card display fix
+
+Base ZIP used:
+- BidMarket-VIPCard-Overlay-PerLevel-COMPLETE.zip
+
+Files changed:
+- public/index.html
+
+Fixes applied:
+1. Removed the unwanted blue/theme strip around VIP cards.
+   Cause: the same class name vipCard_sapphire was used on the image box, and older CSS gave that class a blue gradient background. Because the VIP card PNG has transparent edges, the blue gradient showed through around the card.
+   Fix: forced .accountVipCardImageBox.vipCard_<level> to background: transparent, no border, no outline, no box-shadow.
+
+2. Changed VIP progress percent display to integer only.
+   Example: 34.2% now displays as 34%.
+
+3. Adjusted Sapphire percent overlay position so it sits inside the printed panel instead of outside the card.
+
+Notes:
+- Did not regenerate images.
+- Did not change VIP card artwork.
+- Did not change the per-level overlay architecture.

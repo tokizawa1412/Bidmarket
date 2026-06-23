@@ -1,0 +1,12 @@
+VIP Progress Rail Clip Final Fix
+
+แก้ไขตามคำสั่งล่าสุด:
+1. แก้ logic ความกว้างหลอดสีใน public_inline.js และ public/index.html จากการบีบ 96/98.5% เป็นใช้เปอร์เซ็นต์จริง 0-100%
+2. แก้ CSS ให้กรอบหลอดเป็นตัวตัดด้วย overflow:hidden + clip-path ทำให้ 100% เต็มพอดีในราง ไม่ล้นกรอบ และไม่สั้นเกินไป
+3. ปรับตำแหน่ง/ความกว้างหลอดสีทุกระดับพร้อมกัน: Member, Silver, Gold, Sapphire, Platinum, Diamond, Ruby, Elite
+4. ปรับตัวเลข % ทุกระดับให้อยู่ตำแหน่งเดียวกัน โดยใช้ CSS variable ชุดเดียวกันทุกระดับ
+5. ไม่แตะระบบ Login/Layout หลักของเว็บ
+
+ไฟล์ที่แก้:
+- public_inline.js
+- public/index.html

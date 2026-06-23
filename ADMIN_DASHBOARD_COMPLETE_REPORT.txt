@@ -1,0 +1,34 @@
+BidMarket Admin Dashboard COMPLETE
+
+เพิ่มระบบ Admin Dashboard สำหรับจัดการผู้ใช้ / ประมูล / ธุรกรรม / Log
+
+ไฟล์ที่แก้:
+- server.js
+- public_inline.js
+- public/index.html
+
+Backend API ที่เพิ่ม:
+- GET /api/admin/dashboard
+- GET /api/admin/users/full
+- POST /api/admin/users/:id/status
+- POST /api/admin/users/:id/role
+- POST /api/admin/users/:id/wallet
+- POST /api/admin/users/:id/vip
+- GET /api/admin/auctions/full
+- POST /api/admin/auctions/:id/status
+- GET /api/admin/transactions/full
+- GET /api/admin/logs/full
+
+ความสามารถ:
+- แดชบอร์ดภาพรวม
+- จัดการผู้ใช้: ระงับ/ปลดระงับ, ตั้ง/ลด Admin, ปรับ Coin/Credit/Token, ปรับ VIP
+- จัดการประมูล: เปิด, ปิด/ตัดสิน, ยกเลิก, ลบ
+- ดูธุรกรรมทั้งหมด
+- ดู Audit Log
+- คงหน้า Escrow/Payment เดิมไว้ในแท็บ Escrow
+
+ความปลอดภัย:
+- ทุก API ใช้ middleware admin
+- ไม่เชื่อ role จาก client
+- มี audit log ทุก action สำคัญ
+- ป้องกัน Admin ระงับ/ลดสิทธิ์บัญชีตัวเอง

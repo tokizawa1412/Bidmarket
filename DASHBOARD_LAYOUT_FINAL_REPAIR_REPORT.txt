@@ -1,0 +1,9 @@
+BidMarket Dashboard Layout Final Repair
+
+- Centered top search bar with fixed/max width so it is not too long and not pushed left.
+- Enforced one master 3-column layout on all main pages: left sidebar, center content, right friends/activity.
+- Removed auction subtabs from public profile page.
+- Account page now shows only account subtabs: บัญชีผู้ใช้ and คอลเลคชั่น.
+- Removed duplicated friends/activity inside account/profile content; only global right rail remains.
+- Public profile no longer creates its own left/right sidebars inside the center content.
+- Re-applied final CSS after earlier global-width overrides so all pages align from the same top position.

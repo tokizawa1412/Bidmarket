@@ -1,0 +1,18 @@
+BidMarket dashboard side/search/theme correction
+
+Changes applied:
+1. Left sidebar Coin/Credit now syncs from the logged-in user's real wallet values after header/refresh.
+2. Removed requested left sidebar menu items:
+   - ประมูลล่าสุด
+   - หน้าโปรไฟล์
+   - บัญชีผู้ใช้
+   - คลังคอลเลคชั่น
+   - ซื้อ/ขาย
+3. Re-centered the top search bar using absolute centering inside the header.
+4. Reduced search input height and search button size.
+5. Fixed theme toggle visual behavior by overriding page background for light/dark mode while keeping content cards readable.
+6. Kept existing backend/server logic unchanged.
+
+Validation:
+- node --check server.js: PASS
+- node --check public_inline.js: PASS

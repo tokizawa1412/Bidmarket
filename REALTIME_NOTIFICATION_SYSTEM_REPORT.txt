@@ -1,0 +1,42 @@
+BidMarket Realtime Notification System
+
+Base ZIP:
+- BidMarket-RealBackend-PostgreSQL-GoogleLogin-COMPLETE(1).zip
+
+Files changed:
+- server.js
+- public_inline.js
+- public/index.html
+
+Implemented:
+1. Notification persistence
+   - notifyUser() now creates normalized notification records with id, user_id, title, body, type, meta/data, read, read_at, created_at.
+   - Notifications are saved into the main database state and synchronized into backend_notifications when PostgreSQL is enabled.
+   - Admin notifications are also stored for real admin accounts, not only emitted through Socket.IO.
+
+2. Realtime Socket.IO notification delivery
+   - Added session-backed Socket.IO room joining.
+   - Socket user rooms no longer trust userId or role sent from the browser.
+   - The server reads req.session.userId from the Socket.IO connection and joins only the authenticated user's room.
+   - Admin room is joined only if the authenticated user is actually an admin.
+
+3. Bell notification APIs
+   - GET /api/notifications returns notifications plus unread count.
+   - GET /api/notifications/unread-count returns current unread count.
+   - POST /api/notifications/read marks all notifications read.
+   - POST /api/notifications/:id/read marks one notification read.
+   - POST /api/admin/notifications/send lets admin send direct or broadcast notifications.
+
+4. Frontend bell behavior
+   - The bell badge updates from realtime notification:unread events.
+   - notification:new increments the badge and refreshes the notification panel if open.
+   - Mark-as-read updates unread count from the API response.
+   - Socket join now requests session-based join instead of sending userId/role.
+
+Validation:
+- node --check server.js passed.
+- node --check public_inline.js passed.
+
+Notes:
+- This completes Realtime Notification foundation: bell UI + Socket.IO + DB persistence.
+- Future systems such as Realtime Auction and Admin Dashboard can call notifyUser()/notifyAdmin() to create durable realtime notifications.

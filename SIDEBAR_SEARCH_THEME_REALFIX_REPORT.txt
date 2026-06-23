@@ -1,0 +1,15 @@
+BidMarket sidebar/search/theme real fix
+
+Base: BidMarket-SidebarSearchTheme-FIXED.zip
+
+Fixed:
+1. Left sidebar Coin/Credit now synchronizes from the real logged-in user object and falls back to the rendered account wallet values when needed.
+2. Added repeated safe sync after header/refresh/profile render so the left wallet no longer stays at 0 while the account page shows the real balance.
+3. Top search bar is now centered against the full viewport, not just centered inside the remaining space after the logo.
+4. Top search bar height is kept compact.
+5. Theme toggle now visibly changes only the website background between light/dark while keeping content cards/panels unchanged.
+6. Kept the previously removed left-menu items removed.
+
+Validation:
+- node --check server.js passed
+- node --check public_inline.js passed

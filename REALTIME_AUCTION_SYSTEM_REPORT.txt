@@ -1,0 +1,54 @@
+Realtime Auction System - BidMarket
+
+ฐานไฟล์: BidMarket-RealtimeNotification-COMPLETE.zip
+
+สิ่งที่เพิ่ม/แก้ไข:
+1. เพิ่มระบบเสนอราคาผ่าน Socket.IO
+   - เพิ่ม socket event: auction:bid
+   - client สามารถส่ง bid ผ่าน socket พร้อม callback ได้
+   - หาก socket ใช้งานไม่ได้ ระบบ fallback ไปใช้ REST API เดิม
+
+2. รวม logic เสนอราคาไว้ที่ server ฝั่งเดียว
+   - เพิ่ม performAuctionBid()
+   - REST API /api/auctions/:id/bid และ Socket.IO ใช้ logic เดียวกัน
+   - ไม่เชื่อราคา/สถานะจาก client
+
+3. กันบิดหลังหมดเวลา
+   - ตรวจเวลา server-side ด้วย now() >= end_at
+   - กันบิดก่อนเวลาเริ่ม
+   - กันบิดในรายการที่ปิด/หมดเวลาแล้ว
+
+4. Realtime update
+   - เมื่อมี bid ใหม่ จะ emit auction:bid ไปยัง room ของการประมูล
+   - emit auction:list:update เพื่อให้รายการหน้าหลัก/หน้า VIP อัปเดต
+   - emit wallet:update ให้ผู้ใช้ที่ยอดเงินเปลี่ยน
+   - timer ยังคงส่ง auction:timer ทุกวินาทีสำหรับห้องที่เข้าร่วม
+
+5. ตัดสินผู้ชนะอัตโนมัติ
+   - เมื่อเวลาถึง 0 ระบบปิดประมูลอัตโนมัติ
+   - ถ้ามีผู้ชนะ จะเรียก closeAuction()
+   - สร้าง order / escrow ตามระบบเดิม
+   - ถ้าไม่มีผู้ชนะ จะตั้งสถานะ expired และซ่อนออกจากรายการ
+
+6. แจ้งเตือน
+   - แจ้งผู้ขายเมื่อมี bid ใหม่
+   - แจ้งผู้ที่ถูกบิดแซง
+   - แจ้งผู้ชนะเมื่อชนะประมูล
+   - แจ้งผู้ขายเมื่อประมูลสิ้นสุด
+   - แจ้งผู้ขายเมื่อประมูลหมดเวลาแต่ไม่มีผู้ชนะ
+
+7. กติกาประมูล
+   - English Auction ต้องเข้าร่วมก่อนเสนอราคา
+   - English Auction ต้องมีผู้เข้าร่วมอย่างน้อย 3 คน
+   - กันเสนอราคาต่ำกว่าหรือเท่ากับราคาปัจจุบัน
+   - รองรับ min_bid_increment / bid_increment หากตั้งค่าไว้
+   - รองรับ Bidding Fee Auction และ Sealed Bid ตามโครงสร้างเดิม
+
+ไฟล์ที่แก้:
+- server.js
+- public_inline.js
+- public/index.html
+
+ตรวจสอบ:
+- node --check server.js ผ่าน
+- node --check public_inline.js ผ่าน

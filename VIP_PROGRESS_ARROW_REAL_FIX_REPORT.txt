@@ -1,0 +1,18 @@
+VIP Progress Arrow Real Fix
+
+ฐานที่ใช้แก้: BidMarket-VIPCard-ProgressRail-ArrowPoint-FIXED.zip
+
+แก้ไขจริงในไฟล์:
+- public_inline.js
+- public/index.html
+
+รายละเอียด:
+1. ไม่ได้สร้างภาพใหม่
+2. แก้ logic ของ progress fill โดยตรง
+3. ค่าคะแนนและ % ยังคำนวณตามจริงเหมือนเดิม
+4. เมื่อ progress ถึง 99-100% ระบบจะแสดงหลอดสีที่ 94% เพื่อให้ปลายหลอดหยุดตรงจุดลูกศรที่ผู้ใช้ชี้ ไม่ยาวเกินกรอบหลอด
+5. ระดับที่ไม่เต็ม 100% เช่น Sapphire 34%, Elite 2% ยังแสดงตามเปอร์เซ็นต์จริง
+6. เพิ่ม CSS override ท้ายไฟล์เพื่อกัน style เก่าทับซ้อน
+
+หมายเหตุ:
+การแก้นี้แตะเฉพาะ VIP card progress overlay ไม่แตะ Login, Layout หลัก, ข้อมูลบัญชี, หรือหน้าอื่น

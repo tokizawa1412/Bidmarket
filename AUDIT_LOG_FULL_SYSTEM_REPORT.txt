@@ -1,0 +1,42 @@
+BidMarket Audit/Log Full System
+
+Base ZIP: BidMarket-AdminDashboard-COMPLETE.zip
+
+Implemented:
+1) Wallet audit for every Coin/Credit/Token change
+   - Centralized in bal()
+   - Logs before balance, after balance, delta, currency, type, note, ref_type, ref_id
+   - Applies to user actions, auctions, rewards, admin wallet adjustments, escrow, VIP purchases, and exchanges.
+
+2) VIP audit for every VIP point / VIP level / VIP expiry change
+   - Added addVipPoints()
+   - Logs vip_points before/after and point delta
+   - Logs vip level-up before/after
+   - Logs VIP subscription vip_until before/after
+   - Admin VIP update logs before/after snapshot.
+
+3) Role and account status audit
+   - Admin role changes log field, before, after
+   - Admin suspend/activate logs field, before, after
+   - Protects current admin from self-demotion/self-suspension as before.
+
+4) Admin action audit
+   - Added middleware for all successful POST/PUT/PATCH/DELETE under /api/admin
+   - Logs method, path, response status, and safe request body
+   - Existing endpoint-specific admin logs remain.
+
+5) Admin audit view / export
+   - /api/admin/logs/full supports filters q, action, target_type, actor_id
+   - /api/admin/logs/export.csv exports latest audit rows
+   - CSV export itself is audited.
+
+6) PostgreSQL compatibility
+   - Uses existing backend_audit_logs table with JSONB details.
+   - syncToPostgres continues to sync audit_logs.
+
+Validation:
+- node --check server.js: PASS
+- node --check public_inline.js: PASS
+
+Main changed file:
+- server.js

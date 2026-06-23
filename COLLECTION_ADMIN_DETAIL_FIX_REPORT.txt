@@ -1,0 +1,25 @@
+BidMarket Collection/Admin Detail Fix Report
+
+Base: BidMarket-CollectionCredit-SystemPage-FIXED.zip
+
+Changes made:
+1. Collection vault
+   - Added delete button on each collection image card.
+   - Added delete button in full image detail view.
+   - Added DELETE /api/me/collection/:id server endpoint.
+   - Server checks owner and Silver+ collection permission before deleting.
+   - Recalculates collection value after deletion.
+   - Writes audit log: COLLECTION_ITEM_DELETE.
+
+2. Collection image detail layout
+   - Full image displays first.
+   - Details now display below the image, not beside it.
+
+3. Admin order / system detail
+   - In Admin order management, replaced dispute/shipping text column with a Details button.
+   - Added GET /api/admin/orders/:id/detail endpoint.
+   - Admin detail view shows order info, buyer/seller, shipping details, dispute reason, evidence images/files, and event history.
+
+Validation:
+- node --check server.js passed.
+- node --check public_inline.js passed.

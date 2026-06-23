@@ -1,0 +1,15 @@
+VIP Progress Rail Arrow Point Fix
+
+Base ZIP: BidMarket-VIPCard-ProgressRail-FINAL-FIX.zip
+
+Changes made:
+1. Adjusted the VIP card progress rail width for all levels:
+   Member, Silver, Gold, Sapphire, Platinum, Diamond, Ruby, Elite.
+2. The 100% fill now stops before the percentage label area, at the user-indicated arrow point.
+3. Kept the progress fill clipped inside the rail with overflow hidden and rounded clipping.
+4. Updated inline fill style to use --vip-fill-width so CSS can control the rail box safely.
+5. Did not generate or modify any images.
+
+Edited files:
+- public/index.html
+- public_inline.js
