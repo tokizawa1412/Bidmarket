@@ -1,0 +1,16 @@
+BidMarket fixed shell + shared UI update
+
+Base: BidMarket-ItemEscrow-UIFixedLayout-GmailLogin-COMPLETE.zip
+
+Changes:
+- Desktop dashboard shell changed to fixed viewport layout.
+- Header, left sidebar, and right sidebar remain fixed; only center content section scrolls.
+- Header height reduced to a compact 58px with smaller logo/search/auth controls.
+- Dashboard top icon row reduced to 54px, sub-tab row reduced to 46px.
+- Applied the improved card/panel UI style from Item Escrow to General, VIP, and Activities pages.
+- Auction sub-tabs now keep: ทั่วไป, Vip, กลางไอเทม, กิจกรรม. Removed คำอธิบาย from the hammer section.
+- Mobile-first layout rules are kept under mobile breakpoint.
+
+Validation:
+- node --check server.js passed
+- node --check public_inline.js passed
