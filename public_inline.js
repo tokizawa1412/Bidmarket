@@ -780,7 +780,7 @@ async function loadAdminEscrow(){
     if(!sub)return;
     const group=pageGroup(id);
     if(group==='auction'){
-      sub.innerHTML=`<button data-page="home" onclick="show('home')">ทั่วไป</button><button data-page="vipzone" onclick="showVip()">Vip</button><button data-page="market" onclick="show('market')">ซื้อ/ขาย</button><button data-page="activities" onclick="show('activities')">กิจกรรม</button><button data-page="rules" onclick="show('rules')">คำอธิบาย</button>`;
+      sub.innerHTML=`<button data-page="home" onclick="show('home')">ทั่วไป</button><button data-page="vipzone" onclick="showVip()">Vip</button><button data-page="market" onclick="show('market')">กลางไอเทม</button><button data-page="activities" onclick="show('activities')">กิจกรรม</button>`;
     }else if(group==='account'){
       sub.innerHTML=`<button data-page="profile" onclick="show('profile')">บัญชีผู้ใช้</button><button data-page="collection" onclick="show('collection')">คอลเลคชั่น</button>`;
     }else{
@@ -986,57 +986,3 @@ async function loadAdminEscrow(){
   setInterval(syncSidebarWalletExact,900);
 })();
 
-
-
-/* BIDMARKET FINAL CLEAN NAV FIX 2026-07-02 */
-(function(){
-  function pageGroup(id){
-    if(['home','vipzone','market','activities'].includes(id))return 'auction';
-    if(['profile','collection','wallet','orders','vip'].includes(id))return 'account';
-    if(id==='publicProfile')return 'profile';
-    return 'none';
-  }
-  function renderSubTabs(id){
-    const sub=document.querySelector('.dashboardSubTabs');
-    if(!sub)return;
-    const group=pageGroup(id);
-    if(group==='auction'){
-      sub.innerHTML='<button data-page="home" onclick="show(\'home\')">ทั่วไป</button><button data-page="vipzone" onclick="showVip()">Vip</button><button data-page="market" onclick="show(\'market\')">กลางไอเทม</button><button data-page="activities" onclick="show(\'activities\')">กิจกรรม</button>';
-    }else if(group==='account'){
-      sub.innerHTML='<button data-page="profile" onclick="show(\'profile\')">บัญชีผู้ใช้</button><button data-page="collection" onclick="show(\'collection\')">คอลเลคชั่น</button>';
-    }else{
-      sub.innerHTML='';
-    }
-    sub.querySelectorAll('button').forEach(b=>b.classList.toggle('isActive',b.dataset.page===id));
-  }
-  window.applyDashboardNav=function(id){
-    id=id||'home';
-    const group=pageGroup(id);
-    document.body.dataset.page=id;
-    document.body.dataset.navGroup=group;
-    renderSubTabs(id);
-    const top=document.querySelector('.dashboardTopTabs');
-    if(top){
-      top.querySelectorAll('button').forEach(b=>b.classList.remove('isActive','active'));
-      let btn=null;
-      if(group==='auction')btn=top.children[0];
-      else if(group==='profile')btn=top.children[1];
-      else if(group==='account')btn=top.children[2];
-      if(btn)btn.classList.add('isActive','active');
-      top.querySelectorAll('span').forEach(x=>x.remove());
-    }
-    const sec=document.getElementById(id);
-    if(sec && sec.parentElement && sec.parentElement.classList.contains('dashboardCenter')) sec.scrollTop=0;
-  };
-  const oldShow=window.show;
-  if(typeof oldShow==='function' && !oldShow.__bmFinalClean){
-    const wrapped=function(id){oldShow(id);setTimeout(()=>window.applyDashboardNav(id),0);};
-    wrapped.__bmFinalClean=true; window.show=wrapped;
-  }
-  const oldOpen=window.openProfilePage;
-  if(typeof oldOpen==='function' && !oldOpen.__bmFinalClean){
-    const wrapped=function(){oldOpen.apply(this,arguments);setTimeout(()=>window.applyDashboardNav('publicProfile'),0);};
-    wrapped.__bmFinalClean=true; window.openProfilePage=wrapped;
-  }
-  setTimeout(()=>{const visible=[...document.querySelectorAll('.dashboardCenter>section')].find(s=>!s.classList.contains('hidden'));window.applyDashboardNav(visible?visible.id:'home');},50);
-})();

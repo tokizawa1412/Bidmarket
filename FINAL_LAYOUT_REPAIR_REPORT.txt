@@ -1,0 +1,1 @@
+Fixed desktop shell: centered top search, fixed left/right/header, center-only hidden scrollbar, public profile no overflow, shared item-escrow style applied to General/VIP/Activities.
