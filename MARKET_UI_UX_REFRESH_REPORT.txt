@@ -1,0 +1,31 @@
+BidMarket กลางไอเทม UI/UX Refresh Report
+
+ฐานไฟล์:
+- BidMarket-ItemEscrow-DiscordWebhook-COMPLETE(3).zip
+
+ขอบเขตการแก้ไข:
+- ปรับเฉพาะหน้า public/index.html ส่วนหน้า "กลางไอเทม"
+- ไม่แก้ฐานข้อมูล
+- ไม่แก้ endpoint/API ฝั่ง server
+- ไม่แก้ logic การซื้อ/ขาย/ล็อก Credit/Escrow/Admin ตรวจสอบ
+- คง id ฟอร์มเดิมไว้ ได้แก่ marketTitle, marketDesc, marketCategory, marketImage, marketImages, marketPrice, marketChar, marketSellerFee
+- คง function หลักเดิม ได้แก่ createMarketItem(), buyMarketItem(), cancelMarketItem(), loadMarket()
+
+สิ่งที่ปรับเพิ่ม:
+1. Hero section ใหม่สำหรับหน้า Marketplace
+2. Trust badges: Escrow Lock, KYC Seller, Credit Only
+3. Search bar สำหรับค้นหาไอเทม/เกม/ผู้ขาย/ตัวละครบน client side
+4. Category chips สำหรับกรองรายการบน client side
+5. Sort dropdown สำหรับเรียงล่าสุด/ราคาต่ำ/ราคาสูง/ผู้ขาย
+6. Card สินค้าแบบใหม่ รูปใหญ่ขึ้น พร้อม hover effect
+7. Price box แยกราคาให้เห็นชัด
+8. Seller mini profile พร้อม Verified Seller visual badge
+9. Badge สถานะพร้อมขาย/ขายแล้ว และ Escrow
+10. Empty state และ skeleton loading
+11. Responsive layout สำหรับมือถือและแท็บเล็ต
+12. Dark-mode compatible styling
+
+การตรวจสอบ:
+- ตรวจสอบ server.js ด้วย node --check ผ่าน
+- ไม่พบการแก้ไข schema/database migration
+- npm dependencies ไม่ได้ติดตั้งใน sandbox จึงไม่ได้รัน server จริง แต่ไม่มีการเปลี่ยน dependency หรือ package.json
