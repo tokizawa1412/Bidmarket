@@ -1,0 +1,10 @@
+BidMarket Fixed Shell Final Corrected
+
+- Reverted to stable UIFixedLayout base.
+- Added final non-destructive CSS override only at the end of index.html.
+- Header is compact fixed 64px.
+- Left sidebar and right sidebar stay fixed inside viewport.
+- Only the middle dashboard section scrolls.
+- Dashboard top/sub tabs remain inside middle shell and do not break profile/account pages.
+- Removed คำอธิบาย from hammer subtabs; hammer subtabs are now ทั่วไป / Vip / กลางไอเทม / กิจกรรม.
+- Preserved item escrow UI and applied softer shared card styles to general/VIP/activity pages.
