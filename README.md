@@ -7,13 +7,13 @@
 - VIP System + VIP Points + ระดับ Member ถึง Elite
 - เติม Credit: กรอกจำนวน Credit ขั้นต่ำ 10 Credit, 1 Credit = 6 บาท
 - แลก Coin: 1 Credit = 100 Coin และไม่สามารถแลก Coin กลับ Credit
-- Fee Engine: ค่าธรรมเนียมประมูลสำเร็จ, Escrow ขั้นบันได, Activity Fee, Pin Fee, Username Change Fee
-- Escrow V2 พร้อม Audit / Transaction / Timeline
-- Reward Ads พร้อมซ่อนอัตโนมัติและ Review Queue หากตอบคำถามผิดเกิน 30% หลัง 23:30
+- Fee Engine: ค่าธรรมเนียมประมูลสำเร็จ, ระบบซื้อขายปลอดภัย ขั้นบันได, Activity Fee, Pin Fee, Username Change Fee
+- ระบบซื้อขายปลอดภัย พร้อม Audit / Transaction / Timeline
+- Reward Ads พร้อมซ่อนอัตโนมัติและ คิวรอตรวจสอบ หากตอบคำถามผิดเกิน 30% หลัง 23:30
 - Activity System: เมนู “กิจกรรม”, สร้างกิจกรรม, หมวด ประมูล / เว็บไซต์ / เติมเงินสะสม
 - Reward Code Engine: โค้ด A-Z a-z 0-9 เท่านั้น, สุ่มโค้ด 16 ตัวอักษร, จำกัดจำนวน, กันรับซ้ำ
 - ปุ่มแชร์หน้าประมูล: กดแชร์แล้วรับโค้ดทันทีถ้ามีกิจกรรมผูกไว้
-- Admin Review Queue สำหรับตรวจสอบกิจกรรม/โฆษณาที่ถูกรายงานหรือซ่อนอัตโนมัติ
+- คิวรอตรวจสอบของระบบ สำหรับตรวจสอบกิจกรรม/โฆษณาที่ถูกรายงานหรือซ่อนอัตโนมัติ
 - กิจกรรมระบบ “สะสม Credit 2026” พร้อมตารางรางวัล
 
 ## Render Environment Variables
@@ -80,8 +80,8 @@ npm start
 
 - ห้องประมูล `auction:{auctionId}`
 - ห้องผู้ใช้ `user:{userId}`
-- ห้อง Admin `admin`
-- ห้อง Escrow `escrow:{orderId}`
+- ห้อง ระบบจัดการ `admin`
+- ห้อง ระบบซื้อขายปลอดภัย `escrow:{orderId}`
 
 Event ที่เพิ่ม:
 
@@ -98,7 +98,7 @@ Event ที่เพิ่ม:
 - `notification:new`
 - `admin:notification`
 
-ระบบจะอัปเดตราคา/ผู้เข้าร่วม/เวลานับถอยหลัง/สถานะ Escrow/ยอด Coin-Credit/ข้อความแชท และแจ้งเตือนโดยไม่ต้องรีเฟรชหน้าเว็บ
+ระบบจะอัปเดตราคา/ผู้เข้าร่วม/เวลานับถอยหลัง/สถานะ ระบบซื้อขายปลอดภัย/ยอด Coin-Credit/ข้อความแชท และแจ้งเตือนโดยไม่ต้องรีเฟรชหน้าเว็บ
 
 ## Realtime Notification Sounds
 
@@ -107,7 +107,7 @@ Event ที่เพิ่ม:
 - เหลือเวลาประมูลต่ำกว่า 10 วินาที: ใช้ไฟล์ที่ผู้ใช้อัปโหลด `public/assets/sounds/timer-warning.mp3`
 - ชนะประมูล: `public/assets/sounds/hammer-close.wav`
 - ได้รับข้อความใหม่: `public/assets/sounds/chat-new.wav`
-- Escrow เปลี่ยนสถานะ: `public/assets/sounds/escrow-update.wav`
+- ระบบซื้อขายปลอดภัย เปลี่ยนสถานะ: `public/assets/sounds/escrow-update.wav`
 - VIP เลื่อนระดับ: `public/assets/sounds/vip-levelup.wav`
 
 ผู้ใช้สามารถเปิด/ปิดเสียงแจ้งเตือนได้ในหน้า “บัญชีผู้ใช้” ระบบจะบันทึกค่าไว้ใน `localStorage` ของ Browser
@@ -118,8 +118,8 @@ Event ที่เพิ่ม:
 เพิ่มระบบแล้ว:
 - อัปโหลดรูป/วิดีโอไป Cloudflare R2 ได้ถาวร
 - fallback เป็น local uploads ถ้ายังไม่ตั้งค่า R2
-- Admin export backup JSON ได้
-- Admin backup ไป R2 ได้
+- ระบบจัดการ export backup JSON ได้
+- ระบบจัดการ backup ไป R2 ได้
 - API ตรวจสุขภาพฐานข้อมูลและ storage
 
 
@@ -136,7 +136,7 @@ This build applies the latest locked requirements:
 - VIP points carry over after level-up.
 - Fee rounding: >= 0.5 rounds up, <= 0.4 rounds down.
 - Coin fees round down to full 100 Coin and Coin transactions receive no fee cashback.
-- Escrow step fee table is kept unchanged.
+- ระบบซื้อขายปลอดภัย step fee table is kept unchanged.
 - VIP benefits text is exposed in the สมัคร VIP help popup.
 - Silver+ displays VIP card/badge data in API.
 - Profile showcase items use R value and realtime +100 R boosts.

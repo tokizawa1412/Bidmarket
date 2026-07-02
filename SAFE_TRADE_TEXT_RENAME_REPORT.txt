@@ -1,0 +1,32 @@
+BidMarket Safe Trade Text Rename Report
+
+Base file:
+- BidMarket-ItemEscrow-MarketUI-UX-REFRESH.zip
+
+Scope:
+- เปลี่ยนเฉพาะข้อความที่ผู้ใช้เห็น (UI Text / Alert / Notice / Toast / Section Label)
+- ไม่เปลี่ยน Database schema
+- ไม่เปลี่ยน API endpoint เช่น /api/admin และ /api/admin/escrow
+- ไม่เปลี่ยน role ภายในระบบ เช่น role='admin'
+- ไม่เปลี่ยน logic การพักเงิน / คืนเงิน / ปล่อยเงิน / ตรวจหลักฐาน
+
+Main wording changes:
+- Escrow -> ระบบซื้อขายปลอดภัย
+- Escrow Status -> สถานะการซื้อขาย
+- คำสั่งซื้อ / Escrow -> รายการซื้อขาย
+- เงินพัก Escrow -> เงินที่ระบบพักไว้
+- Admin (ข้อความบนหน้าเว็บ) -> ระบบ / ระบบจัดการ / ระบบตรวจสอบ ตามบริบท
+- Waiting Admin / รอ Admin ตรวจสอบ -> รอระบบตรวจสอบ
+- Admin Reviewing / Admin Check -> ระบบตรวจสอบ
+- Admin Panel / Admin Dashboard -> ศูนย์จัดการระบบ
+
+Files updated:
+- public/index.html
+- public_inline.js
+- server.js
+- README.md
+
+Validation:
+- npm run check ผ่านแล้ว
+- node --check public_inline.js ผ่านแล้ว
+- เก็บ function/API/internal role เดิมไว้ เพื่อไม่กระทบ backend logic
