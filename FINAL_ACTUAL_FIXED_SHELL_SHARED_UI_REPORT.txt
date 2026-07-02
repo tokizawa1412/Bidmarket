@@ -1,7 +1,0 @@
-FINAL ACTUAL FIX
-- Header is fixed and compact (56px).
-- Left sidebar and right sidebar stay fixed in the shell.
-- Only the center dashboard content scrolls vertically on desktop.
-- Removed old top nav space from desktop shell.
-- Dashboard top icon bar is smaller and fixed inside the center panel.
-- Shared card/panel UI styling applied across General, VIP, Activities, and Item Escrow sections.
