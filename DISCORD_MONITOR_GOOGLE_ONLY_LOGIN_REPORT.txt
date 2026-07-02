@@ -1,0 +1,42 @@
+BidMarket Update Report: Discord Monitor + Gmail-only Login
+
+ฐานไฟล์ที่ใช้:
+- BidMarket-ItemEscrow-SafeTrade-DiscordMonitor.zip
+
+สิ่งที่เพิ่ม/แก้ไข:
+1) หน้า "แจ้งเตือน Discord" ในศูนย์จัดการระบบ
+   - แสดงเฉพาะบัญชี role=admin ผ่าน API admin middleware เดิม
+   - เพิ่มปุ่ม "ทดสอบ Discord"
+   - แสดงสถานะ Webhook: เชื่อมต่อแล้ว / ยังเชื่อมต่อไม่ได้ / ยังไม่ได้ตั้งค่า
+   - แสดงเวลาส่งล่าสุด
+   - แสดง Error ล่าสุด
+   - นับจำนวนส่งสำเร็จและส่งไม่สำเร็จ
+   - แสดง Log ย้อนหลัง 100 รายการ
+   - ค้นหา Log หน้าเว็บ
+   - Export Log เป็น CSV
+   - ล้าง Log ได้ผ่าน API สำหรับ Admin เท่านั้น
+   - เพิ่มกราฟสถิติรายวันจาก Log ล่าสุด
+
+2) Backend
+   - ใช้ไฟล์ data/discord-notification-log.json เก็บสถานะ/Log โดยไม่เพิ่มหรือแก้ไข Database schema
+   - เพิ่ม endpoint Admin-only:
+     GET /api/admin/discord-notifications
+     POST /api/admin/discord-notifications/test
+     DELETE /api/admin/discord-notifications/logs
+
+3) Login UI
+   - นำปุ่ม/ฟอร์มเข้าสู่ระบบด้วย username/password ออกจากหน้าเว็บ
+   - นำปุ่ม/ฟอร์มสมัครสมาชิกออกจากหน้าเว็บ
+   - ผู้ใช้ทั่วไปเห็นเฉพาะปุ่ม Gmail Login
+   - เมนูสมัครสมาชิกถูกเปลี่ยนให้กลับไปหน้า Gmail Login
+   - ยังไม่ลบ API เดิม เพื่อเลี่ยงผลกระทบกับระบบ/ข้อมูลเดิม
+
+การตรวจสอบ:
+- npm run check ผ่าน
+- node --check public_inline.js ผ่าน
+
+Environment Variables ที่ใช้กับ Discord:
+- DISCORD_ITEM_ESCROW_WEBHOOK_URL หรือ DISCORD_WEBHOOK_URL
+- DISCORD_NOTIFY_ENABLED=true/false
+- DISCORD_WEBHOOK_NAME (optional)
+- DISCORD_WEBHOOK_AVATAR_URL (optional)

@@ -123,10 +123,10 @@ async function loadMe(){me=(await api('/api/me')).user;joinRealtimeRooms()}funct
   document.body.classList.toggle('admin',!!(me&&me.role==='admin'));
   const themeBtn=`<button id="topThemeBtn" class="topActionBtn" onclick="toggleTheme()" title="เปลี่ยนธีม"><span class="themeToggleIcon">🌙</span></button>`;
   const bellBtn=me?`<button id="topNotificationBtn" class="topActionBtn" onclick="openNotifications()" title="การแจ้งเตือน">🔔<span id="notificationBadge" class="notificationBadge">0</span></button>`:'';
-  auth.innerHTML=me?`${themeBtn}${bellBtn}<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">ระบบจัดการ</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`${themeBtn}<a class="googleTopBtn" href="/auth/google">Gmail Login</a><button class="light" onclick="show('login')">เข้าสู่ระบบ</button><button class="gold" onclick="show('register')">สมัครสมาชิก</button>`;
+  auth.innerHTML=me?`${themeBtn}${bellBtn}<button onclick="show('profile')" class="userChip" title="${escapeHtml(me.display_name||me.username)}"><img src="${av(me)}"><span class="userChipName">${escapeHtml(me.display_name||me.username)}</span></button>${me.role==='admin'?`<button class="gold" onclick="showAdmin()">ระบบจัดการ</button>`:''}<button class="danger" onclick="logout()">ออกจากระบบ</button>`:`${themeBtn}<a class="googleTopBtn" href="/auth/google">Gmail Login</a>`;
   applyTheme();
   refreshNotificationBadge();
-  sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'ระบบจัดการ':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!market.classList.contains('hidden'))loadMarket();if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.body.classList.toggle('accountWide',id==='profile');document.querySelector('.app')?.classList.toggle('noSidebar',id==='login'||id==='register');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){try{me=(await api('/api/login',{method:'POST',body:JSON.stringify({username:loginUser.value,password:loginPass.value})})).user;show('home')}catch(e){loginMsg.innerHTML='<div class="notice error">'+e.message+'</div>'}}async function register(){me=(await api('/api/register',{method:'POST',body:JSON.stringify({username:regUser.value,email:regEmail.value,password:regPass.value})})).user;show('home')}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
+  sideAvatar.src=av(me);sideName.textContent=me?(me.display_name||me.username):'Guest';sideStatus.textContent=me?(me.role==='admin'?'ระบบจัดการ':(me.is_vip?'สมาชิก VIP':'สมาชิกทั่วไป')):'กรุณาเข้าสู่ระบบ';const mmA=document.getElementById('mobileMenuAvatar'),mmN=document.getElementById('mobileMenuName'),mmC=document.getElementById('mobileMenuCredit');if(mmA)mmA.src=av(me);if(mmN)mmN.textContent=me?(me.display_name||me.username):'Guest';if(mmC)mmC.textContent='Credit: '+Number(me?.credit||0).toLocaleString('th-TH')}async function refresh(){await loadMe();header();await loadFavIds();renderWallet();if(!home.classList.contains('hidden'))loadAuctions('general');if(!vipzone.classList.contains('hidden'))loadAuctions('vip');if(!market.classList.contains('hidden'))loadMarket();if(!favorites.classList.contains('hidden'))loadFavs();if(!orders.classList.contains('hidden'))loadOrders('all');if(!reviews.classList.contains('hidden'))loadReviews();if(!estimate.classList.contains('hidden'))loadEstHistory();if(!publicProfile.classList.contains('hidden'))renderPublicProfile();if(!collection.classList.contains('hidden'))renderCollectionPage();if(!profile.classList.contains('hidden'))renderProfile();if(!admin.classList.contains('hidden'))loadAdmin();if(!ads.classList.contains('hidden'))loadAds();if(!createAd.classList.contains('hidden'))loadMyAds();if(!activities.classList.contains('hidden'))loadActivities('');renderHearts()}function show(id){if(id==='register')id='login';if(id==='admin')return showAdmin();Object.keys(pages).forEach(p=>$(p)?.classList.add('hidden'));$(id)?.classList.remove('hidden');document.body.classList.toggle('profileWide',id==='publicProfile');document.body.classList.toggle('accountWide',id==='profile');document.querySelector('.app')?.classList.toggle('noSidebar',id==='login'||id==='register');title.textContent=pages[id]||'BidMarket';desc.textContent='BidMarket';refresh()}function need(){if(!me){show('login');return false}return true}function showVip(){if(need())show('vipzone')}async function login(){location.href='/auth/google'}async function register(){location.href='/auth/google'}async function logout(){await api('/api/logout',{method:'POST'});me=null;show('login')}
 async function upload(f){let fd=new FormData();fd.append('file',f);let r=await fetch('/api/upload',{method:'POST',body:fd}),j=await r.json();if(!r.ok)throw Error(j.error||'อัปโหลดไม่สำเร็จ');return j.url}
 function showHelp(title,text){helpTitle.textContent=title;helpBody.innerHTML=String(text||'');helpModal.classList.add('show')}
 function trustDetailHtml(u){
@@ -986,3 +986,80 @@ async function loadAdminEscrow(){
   setInterval(syncSidebarWalletExact,900);
 })();
 
+
+
+/* ============================================================
+   BidMarket Admin Discord Monitor + Google-only visible auth
+   - UI-only Google/G-mail login choice for public users
+   - Admin-only notification monitor tab
+   - No database schema changes
+============================================================ */
+(function(){
+  function fmtDate(v){try{return v?new Date(v).toLocaleString('th-TH'):'-'}catch(e){return '-'}}
+  function safe(v){return (typeof escapeHtml==='function')?escapeHtml(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+  function ensureAdminOnly(){return !!(window.me&&window.me.role==='admin')}
+  window.adminDiscordDailyStats=function(logs){
+    const map={};
+    (logs||[]).forEach(l=>{const d=(l.created_at||'').slice(0,10)||'ไม่ทราบวัน'; if(!map[d])map[d]={ok:0,fail:0}; l.ok?map[d].ok++:map[d].fail++;});
+    return Object.entries(map).slice(0,7).reverse();
+  };
+  window.adminDiscordGraphHtml=function(logs){
+    const rows=window.adminDiscordDailyStats(logs); if(!rows.length)return '<div class="notice">ยังไม่มีข้อมูลสำหรับกราฟ</div>';
+    const max=Math.max(1,...rows.map(([,v])=>v.ok+v.fail));
+    return `<div class="discordGraph">${rows.map(([d,v])=>{const okW=Math.max(4,Math.round(v.ok/max*100));const failW=Math.max(0,Math.round(v.fail/max*100));return `<div class="discordGraphRow"><div class="discordGraphDate">${safe(d)}</div><div class="discordGraphBar"><span class="ok" style="width:${okW}%"></span>${v.fail?`<span class="fail" style="width:${failW}%"></span>`:''}</div><div class="discordGraphNum">✅ ${v.ok} / ❌ ${v.fail}</div></div>`}).join('')}</div>`;
+  };
+  window.adminDiscordLogsHtml=function(logs){
+    const q=(document.getElementById('discordLogSearch')?.value||'').toLowerCase().trim();
+    let list=(logs||[]); if(q)list=list.filter(l=>JSON.stringify(l).toLowerCase().includes(q));
+    return list.length?`<table class="adminTable discordLogTable"><tr><th>เวลา</th><th>ผลลัพธ์</th><th>หัวข้อ</th><th>Status</th><th>Error</th></tr>${list.map(l=>`<tr><td>${fmtDate(l.created_at)}</td><td>${l.ok?'<span class="tag success">สำเร็จ</span>':'<span class="tag danger">ไม่สำเร็จ</span>'}</td><td><b>${safe(l.title||'-')}</b><br><span class="muted">${safe(l.description||'')}</span></td><td>${safe(l.status||'-')}</td><td>${safe(l.error||'-')}</td></tr>`).join('')}</table>`:'<div class="notice">ไม่พบ Log</div>';
+  };
+  window.loadAdminDiscord=function(){
+    if(!ensureAdminOnly()){alert('เฉพาะผู้มีสิทธิ์จัดการระบบ');return}
+    const box=document.getElementById('adminBox')||window.adminBox; if(!box)return;
+    box.innerHTML=(typeof adminTabs==='function'?adminTabs('discord'):'')+'<div class="notice">กำลังโหลดสถานะแจ้งเตือน...</div>';
+    api('/api/admin/discord-notifications').then(j=>{
+      const st=j.state||{}; const logs=st.logs||[];
+      const statusBadge=j.connected?'<span class="tag success">เชื่อมต่อแล้ว</span>':(j.configured?'<span class="tag danger">ยังเชื่อมต่อไม่ได้ / รอทดสอบ</span>':'<span class="tag danger">ยังไม่ได้ตั้งค่า Webhook</span>');
+      box.innerHTML=(typeof adminTabs==='function'?adminTabs('discord'):'')+`
+        <div class="discordMonitorHero">
+          <div><h2>ตรวจสอบระบบแจ้งเตือน Discord</h2><p class="muted">สำหรับผู้ดูแลระบบเท่านั้น ใช้ตรวจสอบ Webhook และส่งข้อความทดสอบไปยัง Discord</p></div>
+          <button class="green discordTestBtn" onclick="adminTestDiscord()">ทดสอบ Discord</button>
+        </div>
+        <div class="grid discordMonitorStats">
+          <div class="card content"><h3>สถานะ Webhook</h3><div class="price">${statusBadge}</div><p class="muted">${j.enabled?'เปิดใช้งาน':'ปิดใช้งานหรือยังไม่ได้ตั้งค่า'}</p></div>
+          <div class="card content"><h3>ส่งล่าสุด</h3><div class="price">${fmtDate(st.last_sent_at)}</div></div>
+          <div class="card content"><h3>สำเร็จ</h3><div class="price">${Number(st.success_count||0).toLocaleString('th-TH')}</div></div>
+          <div class="card content"><h3>ไม่สำเร็จ</h3><div class="price">${Number(st.fail_count||0).toLocaleString('th-TH')}</div></div>
+        </div>
+        <div class="card content discordErrorBox"><h3>Error ล่าสุด</h3><pre class="adminPre">${safe(st.last_error||'-')}</pre></div>
+        <div class="card content"><h3>กราฟสถิติย้อนหลัง</h3>${adminDiscordGraphHtml(logs)}</div>
+        <div class="card content"><div class="adminToolbar discordToolbar"><input id="discordLogSearch" placeholder="ค้นหา Log / หัวข้อ / Error" oninput="adminFilterDiscordLogs()"><button class="light" onclick="adminExportDiscordCsv()">Export CSV</button><button class="danger" onclick="adminClearDiscordLogs()">ล้าง Log</button></div><div id="discordLogBox">${adminDiscordLogsHtml(logs)}</div></div>
+      `;
+      window.__discordLogs=logs;
+    }).catch(e=>{box.innerHTML=(typeof adminTabs==='function'?adminTabs('discord'):'')+`<div class="notice error">${safe(e.message)}</div>`});
+  };
+  window.adminFilterDiscordLogs=function(){const el=document.getElementById('discordLogBox'); if(el)el.innerHTML=adminDiscordLogsHtml(window.__discordLogs||[])};
+  window.adminTestDiscord=async function(){
+    try{const btn=document.querySelector('.discordTestBtn'); if(btn){btn.disabled=true;btn.textContent='กำลังทดสอบ...'} await api('/api/admin/discord-notifications/test',{method:'POST',body:JSON.stringify({})}); alert('ส่งข้อความทดสอบไป Discord สำเร็จ'); loadAdminDiscord();}
+    catch(e){alert('ทดสอบไม่สำเร็จ: '+e.message); loadAdminDiscord();}
+  };
+  window.adminClearDiscordLogs=async function(){if(!confirm('ล้าง Log การแจ้งเตือน Discord ทั้งหมด?'))return; await api('/api/admin/discord-notifications/logs',{method:'DELETE'}); loadAdminDiscord();};
+  window.adminExportDiscordCsv=function(){
+    const logs=window.__discordLogs||[]; const rows=[['created_at','ok','title','description','status','error'],...logs.map(l=>[l.created_at||'',l.ok?'success':'fail',l.title||'',l.description||'',l.status||'',l.error||''])];
+    const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download='bidmarket-discord-notification-log.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
+  const oldAdminTabs=window.adminTabs||adminTabs;
+  window.adminTabs=function(active='overview'){
+    if(typeof adminTab!=='undefined')adminTab=active;
+    const tabs=['overview','users','auctions','transactions','logs','escrow','discord'];
+    const labels={overview:'ภาพรวม',users:'ผู้ใช้',auctions:'ประมูล',transactions:'ธุรกรรม',logs:'Log',escrow:'ระบบซื้อขายปลอดภัย',discord:'แจ้งเตือน Discord'};
+    return `<div class="adminTabs">${tabs.map(t=>`<button class="${active===t?'gold':'light'}" onclick="loadAdmin('${t}')">${labels[t]}</button>`).join('')}</div>`;
+  };
+  const prevLoadAdmin=window.loadAdmin;
+  window.loadAdmin=async function(tab){
+    if(tab==='discord')return window.loadAdminDiscord();
+    if(tab && typeof adminTab!=='undefined')adminTab=tab;
+    return prevLoadAdmin?prevLoadAdmin(tab):undefined;
+  };
+})();

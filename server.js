@@ -697,6 +697,16 @@ app.post('/api/admin/discord-notifications/test',admin,async(req,res)=>{
   res.status(ok?200:400).json({ok,configured:!!discordWebhookUrl(),enabled:discordEnabled(),connected:ok,state,error:ok?'':(state.last_error||'ส่งข้อความทดสอบไม่สำเร็จ')});
 });
 
+
+app.delete('/api/admin/discord-notifications/logs',admin,(req,res)=>{
+  const st=readDiscordNotifyState();
+  st.logs=[];
+  st.last_error='';
+  st.last_checked_at=new Date().toISOString();
+  writeDiscordNotifyState(st);
+  res.json({ok:true,state:readDiscordNotifyState()});
+});
+
 function emitChatMessage(msg){
   try{
     const payload={...msg,from_name:user(msg.from_id)?.display_name||user(msg.from_id)?.username||'ผู้ใช้'};
